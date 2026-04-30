@@ -1,0 +1,16 @@
+node_modules/
+build/
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+*.log
+.env
+.idea/
+.vscode/
+*.iml
+.DS_Store
+workmate/build/
+workmate/.dart_tool/
+workmate_admin/node_modules/
+workmate_backend/node_modules/

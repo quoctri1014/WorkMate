@@ -1,0 +1,153 @@
+# ============================================================
+# HƯỚNG DẪN SETUP HOÀN CHỈNH - FACE ID CHO ĐỒ ÁN
+# ============================================================
+
+
+# ──────────────────────────────────────────────────────────────
+# BƯỚC 1: Thêm vào pubspec.yaml
+# ──────────────────────────────────────────────────────────────
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Camera
+  camera: ^0.10.5+9
+
+  # AI - Phát hiện khuôn mặt (Google)
+  google_ml_kit: ^0.16.3
+
+  # AI - Chạy mô hình TFLite (MobileFaceNet)
+  tflite_flutter: ^0.10.4
+
+  # Xử lý ảnh (crop, resize)
+  image: ^4.1.7
+
+  # HTTP - Gọi API server
+  http: ^1.2.0
+
+flutter:
+  assets:
+    - assets/mobilefacenet.tflite   # Mô hình AI nhận diện mặt
+
+
+# ──────────────────────────────────────────────────────────────
+# BƯỚC 2: Tải mô hình TFLite
+# ──────────────────────────────────────────────────────────────
+#
+# Tải file mobilefacenet.tflite từ link sau:
+# https://github.com/sirius-ai/MobileFaceNet_TF/blob/master/output_model/MobileFaceNet.tflite
+#
+# Hoặc tìm "mobilefacenet.tflite" trên Google / Kaggle.
+# Đặt file vào thư mục: your_app/assets/mobilefacenet.tflite
+
+
+# ──────────────────────────────────────────────────────────────
+# BƯỚC 3: Cấp quyền Android
+# ──────────────────────────────────────────────────────────────
+#
+# File: android/app/src/main/AndroidManifest.xml
+# Thêm vào trước thẻ <application>:
+#
+# <uses-permission android:name="android.permission.CAMERA"/>
+# <uses-feature android:name="android.hardware.camera" android:required="false"/>
+
+
+# ──────────────────────────────────────────────────────────────
+# BƯỚC 4: Cấp quyền iOS
+# ──────────────────────────────────────────────────────────────
+#
+# File: ios/Runner/Info.plist
+# Thêm vào trong thẻ <dict>:
+#
+# <key>NSCameraUsageDescription</key>
+# <string>Ứng dụng cần camera để nhận diện khuôn mặt chấm công.</string>
+
+
+# ──────────────────────────────────────────────────────────────
+# BƯỚC 5: Khởi tạo trong main.dart
+# ──────────────────────────────────────────────────────────────
+#
+# void main() async {
+#   WidgetsFlutterBinding.ensureInitialized();
+#   await FaceIdService.instance.initialize(); // Khởi tạo AI
+#   runApp(const MyApp());
+# }
+
+
+# ──────────────────────────────────────────────────────────────
+# BƯỚC 6: Cách dùng màn hình đăng ký khuôn mặt
+# ──────────────────────────────────────────────────────────────
+#
+# Navigator.push(context, MaterialPageRoute(
+#   builder: (_) => FaceRegistrationScreen(
+#     employeeId: 123,
+#     employeeName: 'Nguyễn Văn A',
+#     onSuccess: (embedding) async {
+#       // Gửi embedding lên server
+#       await http.post(
+#         Uri.parse('http://your-server/api/face/register'),
+#         headers: {'Content-Type': 'application/json'},
+#         body: jsonEncode({
+#           'employee_id': 123,
+#           'embedding': embedding,
+#         }),
+#       );
+#     },
+#   ),
+# ));
+
+
+# ──────────────────────────────────────────────────────────────
+# BƯỚC 7: Cách dùng màn hình chấm công
+# ──────────────────────────────────────────────────────────────
+#
+# Navigator.push(context, MaterialPageRoute(
+#   builder: (_) => FaceCheckinScreen(
+#     fetchSavedEmbedding: () async {
+#       // Lấy embedding từ server
+#       final resp = await http.get(
+#         Uri.parse('http://your-server/api/face/embedding/123'),
+#       );
+#       final data = jsonDecode(resp.body);
+#       if (data['success']) {
+#         return List<double>.from(data['embedding']);
+#       }
+#       return null;
+#     },
+#     onCheckinSuccess: (result) async {
+#       // Ghi nhận chấm công
+#       print('Độ chính xác: ${result.confidence}%');
+#     },
+#   ),
+# ));
+
+
+# ──────────────────────────────────────────────────────────────
+# BƯỚC 8: SQL Migration (chạy 1 lần trong PostgreSQL)
+# ──────────────────────────────────────────────────────────────
+#
+# ALTER TABLE employees
+#   ADD COLUMN IF NOT EXISTS face_embedding JSONB,
+#   ADD COLUMN IF NOT EXISTS face_registered_at TIMESTAMPTZ;
+
+
+# ──────────────────────────────────────────────────────────────
+# CẤU TRÚC FILE TRONG DỰ ÁN
+# ──────────────────────────────────────────────────────────────
+#
+# Flutter App:
+# lib/
+# ├── services/
+# │   └── face_id_service.dart       ← Logic AI chính
+# ├── screens/
+# │   ├── face_registration_screen.dart  ← Màn hình đăng ký
+# │   └── face_checkin_screen.dart       ← Màn hình chấm công
+# └── main.dart
+#
+# assets/
+# └── mobilefacenet.tflite           ← Mô hình AI
+#
+# Backend Node.js:
+# routes/
+# └── face_routes.js                 ← API endpoints
