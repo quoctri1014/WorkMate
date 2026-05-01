@@ -61,25 +61,47 @@ class FaceIdService {
 
   Future<DetectedFaceInfo?> detectFaceFromCameraImage(CameraImage image, InputImageRotation rotation) async {
     if (!_isInitialized) return null;
+
+    final format = _getInputImageFormat(image.format.group);
+    if (format == null) return null;
+
+    // Trên iOS bgra8888 chỉ có 1 plane. Trên Android nv21 thường có bytes ở plane[0] hoặc cần ghép.
+    // Với permission_handler và camera plugin bản mới, dùng bytes của plane đầu tiên là đủ cho bgra8888/nv21.
+    final bytes = image.planes[0].bytes;
+
     final inputImage = InputImage.fromBytes(
-      bytes: image.planes[0].bytes,
+      bytes: bytes,
       metadata: InputImageMetadata(
         size: ui.Size(image.width.toDouble(), image.height.toDouble()),
         rotation: rotation,
-        format: InputImageFormat.nv21,
+        format: format,
         bytesPerRow: image.planes[0].bytesPerRow,
       ),
     );
+
     final faces = await _faceDetector.processImage(inputImage);
     if (faces.isEmpty) return null;
+
     final face = faces.first;
+    // Tỉ lệ khuôn mặt so với khung hình (dùng cạnh lớn nhất để khách quan)
+    final faceSizeRatio = face.boundingBox.width / image.width;
+
     return DetectedFaceInfo(
       face: face,
       isBlinking: (face.leftEyeOpenProbability ?? 1.0) < 0.2 && (face.rightEyeOpenProbability ?? 1.0) < 0.2,
-      isTooClose: face.boundingBox.width / image.width > 0.65,
-      isTooFar: face.boundingBox.width / image.width < 0.2,
-      isCentered: (face.boundingBox.center.dx - image.width / 2).abs() / image.width < 0.15,
+      isTooClose: faceSizeRatio > 0.65,
+      isTooFar: faceSizeRatio < 0.15,
+      // Kiểm tra tâm khuôn mặt có nằm gần tâm khung hình không
+      isCentered: (face.boundingBox.center.dx - image.width / 2).abs() / image.width < 0.20 &&
+                  (face.boundingBox.center.dy - image.height / 2).abs() / image.height < 0.20,
     );
+  }
+
+  InputImageFormat? _getInputImageFormat(ImageFormatGroup group) {
+    if (group == ImageFormatGroup.bgra8888) return InputImageFormat.bgra8888;
+    if (group == ImageFormatGroup.nv21) return InputImageFormat.nv21;
+    if (group == ImageFormatGroup.yuv420) return InputImageFormat.yuv420;
+    return null;
   }
 
   Future<List<double>> extractEmbedding(Uint8List bytes, Rect rect) async {
