@@ -86,27 +86,56 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
     _cameras = await availableCameras();
     if (_cameras == null || _cameras!.isEmpty) return;
 
-    // Đảm bảo FaceIdService đã khởi tạo xong
+    // 1. Đảm bảo FaceIdService đã khởi tạo xong
     await FaceIdService.instance.initialize();
+
+    // 2. KIỂM TRA ĐĂNG KÝ NGAY LẬP TỨC
+    final user = context.read<AuthViewModel>().currentUser;
+    if (user != null) {
+      final savedEmbedding = await _api.fetchSavedEmbedding(user.id);
+      if (savedEmbedding == null) {
+        _updateState(FaceScanState.failed, 'Gương mặt chưa được đăng ký!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hệ thống chưa có dữ liệu khuôn mặt của bạn. Đang chuyển sang trang đăng ký...'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) _showRegisterDialog(user.id, user.name);
+        });
+        return; 
+      }
+    }
 
     final frontCamera = _cameras!.firstWhere(
       (c) => c.lensDirection == CameraLensDirection.front,
       orElse: () => _cameras!.first,
     );
 
-    // Sử dụng ResolutionPreset.medium để tăng tốc độ nhận diện khuôn mặt
+    // 3. Khởi tạo Camera - Bỏ ép định dạng BGRA trên iOS để tránh lỗi màn hình đen ở một số dòng máy
     _cameraController = CameraController(
       frontCamera,
       ResolutionPreset.medium,
       enableAudio: false,
-      imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21,
+      // Để mặc định (YUV420) giúp preview ổn định hơn trên iOS
     );
 
-    await _cameraController!.initialize();
-    if (!mounted) return;
+    try {
+      await _cameraController!.initialize();
+      if (!mounted) return;
 
-    _cameraController!.startImageStream(_onCameraFrame);
-    setState(() => _isCameraReady = true);
+      setState(() => _isCameraReady = true);
+      
+      // Đợi một chút cho preview hiển thị rồi mới start stream
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      
+      _cameraController!.startImageStream(_onCameraFrame);
+    } catch (e) {
+      debugPrint("Camera Init Error: $e");
+      _updateState(FaceScanState.failed, 'Lỗi camera: $e');
+    }
   }
 
   void _onCameraFrame(CameraImage image) async {

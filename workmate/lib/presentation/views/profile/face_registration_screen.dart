@@ -72,18 +72,28 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     if (_cameras == null || _cameras!.isEmpty) return;
     final frontCamera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front, orElse: () => _cameras!.first);
     
-    // Sử dụng ResolutionPreset.medium để tăng hiệu năng nhận diện khuôn mặt
     _cameraController = CameraController(
       frontCamera, 
       ResolutionPreset.medium, 
       enableAudio: false, 
-      imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21
+      // Bỏ ImageFormatGroup.bgra8888 để tránh lỗi preview đen trên iOS
     );
     
-    await _cameraController!.initialize();
-    if (!mounted) return;
-    _cameraController!.startImageStream(_onCameraFrame);
-    setState(() => _isCameraReady = true);
+    try {
+      await _cameraController!.initialize();
+      if (!mounted) return;
+      
+      setState(() => _isCameraReady = true);
+
+      // Thêm độ trễ ngắn trước khi stream để ổn định preview
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+
+      _cameraController!.startImageStream(_onCameraFrame);
+    } catch (e) {
+      print('Camera Error: $e');
+      _updateState(FaceScanState.failed, 'Lỗi Camera: $e');
+    }
   }
 
   void _onCameraFrame(CameraImage image) async {
