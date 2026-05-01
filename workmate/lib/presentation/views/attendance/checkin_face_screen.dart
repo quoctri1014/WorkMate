@@ -14,7 +14,7 @@ import 'package:workmate/presentation/viewmodels/viewmodels.dart';
 import 'package:workmate/data/repositories/api_service.dart';
 import 'dart:io';
 import 'attendance_success_screen.dart';
-import 'package:workmate/screens/face_registration_screen.dart';
+import 'package:workmate/presentation/views/profile/face_registration_screen.dart';
 
 class CheckInFaceScreen extends StatefulWidget {
   final bool isCheckIn;
