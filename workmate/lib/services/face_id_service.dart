@@ -53,15 +53,18 @@ class FaceIdService {
 
   Future<void> initialize() async {
     if (_isInitialized) return;
+    print('[FaceIdService] Đang khởi tạo FaceDetector...');
     _faceDetector = FaceDetector(options: FaceDetectorOptions(
       enableLandmarks: true,
       enableClassification: true,
       enableTracking: true,
-      performanceMode: FaceDetectorMode.accurate,
+      performanceMode: FaceDetectorMode.fast, // Dùng fast để quét thời gian thực mượt hơn
     ));
     try {
+      print('[FaceIdService] Đang nạp model TFLite...');
       _interpreter = await Interpreter.fromAsset('assets/mobilefacenet.tflite', options: InterpreterOptions()..threads = 4);
       _isInitialized = true;
+      print('[FaceIdService] Khởi tạo THÀNH CÔNG');
     } catch (e) {
       print('[FaceIdService] Lỗi nạp model: $e');
     }

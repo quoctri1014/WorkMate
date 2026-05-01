@@ -64,11 +64,22 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       _updateState(FaceScanState.failed, 'Cần quyền Camera!');
       return;
     }
+
+    // Đảm bảo FaceIdService đã khởi tạo xong
+    await FaceIdService.instance.initialize();
     
     _cameras = await availableCameras();
     if (_cameras == null || _cameras!.isEmpty) return;
     final frontCamera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front, orElse: () => _cameras!.first);
-    _cameraController = CameraController(frontCamera, ResolutionPreset.high, enableAudio: false, imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21);
+    
+    // Sử dụng ResolutionPreset.medium để tăng hiệu năng nhận diện khuôn mặt
+    _cameraController = CameraController(
+      frontCamera, 
+      ResolutionPreset.medium, 
+      enableAudio: false, 
+      imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21
+    );
+    
     await _cameraController!.initialize();
     if (!mounted) return;
     _cameraController!.startImageStream(_onCameraFrame);

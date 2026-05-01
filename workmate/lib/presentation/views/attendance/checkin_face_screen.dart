@@ -86,14 +86,18 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
     _cameras = await availableCameras();
     if (_cameras == null || _cameras!.isEmpty) return;
 
+    // Đảm bảo FaceIdService đã khởi tạo xong
+    await FaceIdService.instance.initialize();
+
     final frontCamera = _cameras!.firstWhere(
       (c) => c.lensDirection == CameraLensDirection.front,
       orElse: () => _cameras!.first,
     );
 
+    // Sử dụng ResolutionPreset.medium để tăng tốc độ nhận diện khuôn mặt
     _cameraController = CameraController(
       frontCamera,
-      ResolutionPreset.high,
+      ResolutionPreset.medium,
       enableAudio: false,
       imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21,
     );
@@ -184,8 +188,16 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       final savedEmbedding = await _api.fetchSavedEmbedding(user.id);
       
       if (savedEmbedding == null) {
-        _updateState(FaceScanState.failed, 'Bạn chưa đăng ký khuôn mặt!');
-        _showRegisterDialog(user.id, user.name);
+        _updateState(FaceScanState.failed, 'Gương mặt chưa được đăng ký!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hệ thống chưa có dữ liệu khuôn mặt của bạn. Đang chuyển sang trang đăng ký...'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) _showRegisterDialog(user.id, user.name);
+        });
         return;
       }
 
@@ -253,7 +265,13 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       } else {
         _updateState(
           FaceScanState.failed,
-          'Không khớp (${result.confidence.toStringAsFixed(0)}%)',
+          'Không nhận diện được khuôn mặt (${result.confidence.toStringAsFixed(0)}%)',
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Xác thực thất bại! Độ khớp chỉ đạt ${result.confidence.toStringAsFixed(1)}%'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
         _resultController.forward();
         _resetAfterDelay();
