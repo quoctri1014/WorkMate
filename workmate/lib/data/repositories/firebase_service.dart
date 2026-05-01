@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workmate/data/models/models.dart';
 
 class FirebaseService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   // --- AUTH SERVICE ---
   

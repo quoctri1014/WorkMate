@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:workmate/data/repositories/api_service.dart';
-import 'package:workmate/data/repositories/firebase_service.dart';
+// import 'package:workmate/data/repositories/firebase_service.dart';
 import '../../services/notification_service.dart';
 
 class NotificationEvents {
@@ -20,7 +20,7 @@ class _RefreshBus extends ChangeNotifier {
 
 class AuthViewModel extends ChangeNotifier {
   final ApiService _api = ApiService();
-  final FirebaseService _firebase = FirebaseService();
+  // Không dùng FirebaseService nữa vì đã chuyển sang Node.js/PostgreSQL
   
   bool _isLoading = false;
   String? _errorMessage;
@@ -109,11 +109,8 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
-    try {
-      await _firebase.changePassword(oldPassword, newPassword);
-    } catch (e) {
-      rethrow;
-    }
+    // Đã chuyển sang Node.js, nên dùng changePasswordWithOTP
+    throw UnimplementedError("Sử dụng changePasswordWithOTP thay thế");
   }
 
   Future<bool> resetPassword(String email) async {

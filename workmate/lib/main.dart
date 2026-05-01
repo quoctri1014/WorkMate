@@ -28,9 +28,14 @@ import 'package:workmate/presentation/views/profile/bank_account_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Khởi tạo Firebase ĐỒNG BỘ để tránh lỗi crash AuthViewModel
-  await Firebase.initializeApp();
-  print('✅ Firebase initialized');
+  // Khởi tạo Firebase ĐỒNG BỘ với try-catch để tránh crash nếu đã bỏ config Firebase
+  try {
+    await Firebase.initializeApp();
+    print('✅ Firebase initialized');
+  } catch (e) {
+    print('⚠️ Firebase init skipped (không còn dùng Firebase): $e');
+  }
+  
   FaceIdService.instance.initialize();
 
   await NotificationService().init();

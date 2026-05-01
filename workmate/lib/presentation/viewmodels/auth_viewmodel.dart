@@ -3,11 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:workmate/data/models/models.dart';
 import 'package:workmate/data/repositories/api_service.dart';
-import 'package:workmate/data/repositories/firebase_service.dart';
-
+// import 'package:workmate/data/repositories/firebase_service.dart';
 class AuthViewModel extends ChangeNotifier {
   final ApiService _api = ApiService();
-  final FirebaseService _firebase = FirebaseService();
+  // Không dùng FirebaseService nữa vì đã chuyển sang Node.js/PostgreSQL
   
   bool _isLoading = false;
   String? _errorMessage;
@@ -51,19 +50,13 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<void> resetPassword(String email) async {
-    try {
-      await _firebase.resetPassword(email);
-    } catch (e) {
-      rethrow;
-    }
+    // Đã chuyển sang Node.js
+    throw UnimplementedError();
   }
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
-    try {
-      await _firebase.changePassword(oldPassword, newPassword);
-    } catch (e) {
-      rethrow;
-    }
+    // Đã chuyển sang Node.js
+    throw UnimplementedError();
   }
 
   Future<void> logout() async {
