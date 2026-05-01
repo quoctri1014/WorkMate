@@ -32,23 +32,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
 
   FaceScanState _scanState = FaceScanState.searching;
   String _guideText = 'Đưa khuôn mặt vào khung';
-  DetectedFaceInfo? _lastDetected;
-  FaceMatchResult? _matchResult;
-  String _debugLog = "";
-  String? _initError;
-
-  bool _isProcessingFrame = false;
-  bool _isDone = false;
-
-  int _stableFrameCount = 0;
-  static const int _requiredStableFrames = 5;
-
-  late AnimationController _scanLineController;
-  late Animation<double> _scanLineAnim;
-  late AnimationController _resultController;
-  late Animation<double> _resultAnim;
-
-  final ApiService _api = ApiService();
+  CompanyConfigModel? _companyConfig;
 
   @override
   void initState() {
@@ -56,6 +40,16 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
     _checkPermissions();
     _initAnimations();
     _initCamera();
+    _fetchConfig();
+  }
+
+  Future<void> _fetchConfig() async {
+    try {
+      final config = await _api.getCompanyConfig();
+      if (mounted) setState(() => _companyConfig = config);
+    } catch (e) {
+      debugPrint("Config Error: $e");
+    }
   }
 
   Future<void> _checkPermissions() async {
@@ -213,6 +207,72 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       await _cameraController!.stopImageStream();
       _updateState(FaceScanState.processing, 'Đang nhận diện...');
 
+      // 1. Kiểm tra GPS và WiFi TRƯỚC KHI xử lý khuôn mặt (Yêu cầu của USER)
+      _updateState(FaceScanState.processing, 'Đang kiểm tra vị trí & WiFi...');
+      
+      double? lat, lng;
+      String? wifiSsid;
+      
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 5),
+        );
+        lat = position.latitude;
+        lng = position.longitude;
+      } catch (e) {
+        debugPrint("GPS Error: $e");
+      }
+
+      try {
+        wifiSsid = await NetworkInfo().getWifiName();
+        // Xử lý dấu ngoặc kép nếu có (một số máy trả về "SSID")
+        if (wifiSsid != null) {
+          wifiSsid = wifiSsid.replaceAll('"', '');
+        }
+      } catch (e) {
+        debugPrint("WiFi Error: $e");
+      }
+
+      // RÀNG BUỘC: Nếu có CompanyConfig thì phải kiểm tra
+      if (_companyConfig != null) {
+        bool isWifiValid = true;
+        bool isGpsValid = true;
+
+        if (_companyConfig!.safeWifiSsid != null && _companyConfig!.safeWifiSsid!.isNotEmpty) {
+          if (wifiSsid == null || !wifiSsid.contains(_companyConfig!.safeWifiSsid!)) {
+            isWifiValid = false;
+          }
+        }
+
+        if (_companyConfig!.safeLat != null && _companyConfig!.safeLng != null) {
+          if (lat != null && lng != null) {
+            double distance = Geolocator.distanceBetween(
+              lat, lng, 
+              _companyConfig!.safeLat!, 
+              _companyConfig!.safeLng!
+            );
+            if (distance > 200) { // Bán kính 200m
+              isGpsValid = false;
+            }
+          } else {
+            isGpsValid = false; // Không lấy được tọa độ nhưng yêu cầu GPS
+          }
+        }
+
+        if (!isWifiValid || !isGpsValid) {
+          String msg = "Không hợp lệ:";
+          if (!isWifiValid) msg += "\n- Sai WiFi (${wifiSsid ?? 'Không rõ'})";
+          if (!isGpsValid) msg += "\n- Sai vị trí GPS";
+          
+          _updateState(FaceScanState.failed, msg);
+          _resetAfterDelay();
+          return;
+        }
+      }
+
+      // 2. Chụp ảnh và trích xuất embedding
+      _updateState(FaceScanState.processing, 'Đang phân tích khuôn mặt...');
       final xFile = await _cameraController!.takePicture();
       final imageBytes = await xFile.readAsBytes();
       final faceRect = _lastDetected!.face.boundingBox;
@@ -254,33 +314,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         _updateState(FaceScanState.success, 'Nhận diện thành công!');
         _resultController.forward();
         
-        // 1. Lấy vị trí GPS
-        double? lat, lng;
-        try {
-          Position position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high,
-            timeLimit: const Duration(seconds: 5),
-          );
-          lat = position.latitude;
-          lng = position.longitude;
-        } catch (e) {
-          debugPrint("GPS Error: $e");
-          // Nếu máy ảo không có GPS, dùng tạm tọa độ mẫu để test nếu muốn
-          // lat = 10.7946; lng = 106.7218; 
-        }
-
-        // 2. Lấy thông tin WiFi
-        String? wifiSsid;
-        try {
-          wifiSsid = await NetworkInfo().getWifiName();
-          // Nếu máy ảo trả về null, ta có thể mock để test
-          if (wifiSsid == null || wifiSsid.isEmpty) {
-            wifiSsid = "WorkMate_Office_5G"; // MOCK cho máy ảo
-          }
-        } catch (e) {
-          debugPrint("WiFi Error: $e");
-        }
-
         // 3. Gửi kết quả chấm công lên server
         final resultApi = await _api.submitCheckIn(
           user.id, 
@@ -400,7 +433,11 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
           Container(color: Colors.grey[900]), // Background đậm hơn để dễ phân biệt nếu camera đen
           if (_isCameraReady && _cameraController != null)
             Center(
-              child: CameraPreview(_cameraController!),
+              child: Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.rotationY(3.14159), // LẬT NGANG CAMERA (MIRROR) THEO YÊU CẦU USER
+                child: CameraPreview(_cameraController!),
+              ),
             ),
           _buildOverlay(),
           _buildScanRing(),

@@ -166,7 +166,14 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          if (_isCameraReady && _cameraController != null) CameraPreview(_cameraController!),
+          if (_isCameraReady && _cameraController != null)
+            Center(
+              child: Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.rotationY(3.14159), // LẬT NGANG CAMERA (MIRROR) THEO YÊU CẦU USER
+                child: CameraPreview(_cameraController!),
+              ),
+            ),
           _buildDarkOverlay(),
           _buildScanFrame(),
           _buildTopBar(),
