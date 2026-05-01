@@ -32,6 +32,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
 
   FaceScanState _scanState = FaceScanState.searching;
   String _guideText = 'Đưa khuôn mặt vào khung';
+  DetectedFaceInfo? _lastDetected;
   FaceMatchResult? _matchResult;
   String _debugLog = "";
   String? _initError;
