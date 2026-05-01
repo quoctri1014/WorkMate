@@ -52,6 +52,9 @@ post_install do |installer|
         'PERMISSION_PHOTOS=1',
         'PERMISSION_NOTIFICATIONS=1',
       ]
+
+      # Loại bỏ arm64 để fix lỗi ML Kit trên Simulator Apple Silicon
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
     end
   end
 end
