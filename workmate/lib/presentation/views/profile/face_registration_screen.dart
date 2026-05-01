@@ -303,9 +303,10 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: Colors.red.withOpacity(0.9), borderRadius: BorderRadius.circular(12)),
-        child: SingleChildScrollView(
-          maxHeight: 200,
-          child: Column(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 200),
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('STACK TRACE:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
