@@ -45,33 +45,51 @@ class FaceIdService {
   FaceIdService._internal();
   static final FaceIdService instance = FaceIdService._internal();
 
-  late final FaceDetector _faceDetector;
+  FaceDetector? _faceDetector;
   Interpreter? _interpreter;
   bool _isInitialized = false;
+  bool _isInitializing = false;
   static const double _matchThreshold = 0.70;
   static const int _modelInputSize = 112;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
-    print('[FaceIdService] Đang khởi tạo FaceDetector...');
-    _faceDetector = FaceDetector(options: FaceDetectorOptions(
-      enableLandmarks: true,
-      enableClassification: true,
-      enableTracking: true,
-      performanceMode: FaceDetectorMode.fast, // Dùng fast để quét thời gian thực mượt hơn
-    ));
+    if (_isInitializing) {
+      // Đợi cho đến khi quá trình khởi tạo khác hoàn tất
+      while (_isInitializing) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      return;
+    }
+
+    _isInitializing = true;
     try {
+      print('[FaceIdService] Đang khởi tạo FaceDetector...');
+      _faceDetector = FaceDetector(options: FaceDetectorOptions(
+        enableLandmarks: true,
+        enableClassification: true,
+        enableTracking: true,
+        performanceMode: FaceDetectorMode.fast,
+      ));
+      
       print('[FaceIdService] Đang nạp model TFLite...');
-      _interpreter = await Interpreter.fromAsset('assets/mobilefacenet.tflite', options: InterpreterOptions()..threads = 4);
+      _interpreter = await Interpreter.fromAsset(
+        'assets/mobilefacenet.tflite', 
+        options: InterpreterOptions()..threads = 4
+      );
+      
       _isInitialized = true;
-      print('[FaceIdService] Khởi tạo THÀNH CÔNG');
+      print('[FaceIdService] Khởi tạo FaceIdService THÀNH CÔNG');
     } catch (e) {
-      print('[FaceIdService] Lỗi nạp model: $e');
+      print('[FaceIdService] Lỗi khởi tạo: $e');
+      rethrow;
+    } finally {
+      _isInitializing = false;
     }
   }
 
   Future<DetectedFaceInfo?> detectFaceFromCameraImage(CameraImage image, InputImageRotation rotation) async {
-    if (!_isInitialized) return null;
+    if (!_isInitialized || _faceDetector == null) return null;
 
     final format = _getInputImageFormat(image.format.group);
     if (format == null) return null;
@@ -101,7 +119,7 @@ class FaceIdService {
       ),
     );
 
-    final faces = await _faceDetector.processImage(inputImage);
+    final faces = await _faceDetector!.processImage(inputImage);
     if (faces.isEmpty) {
       return isLowLight ? DetectedFaceInfo(
         face: Face(boundingBox: Rect.zero, landmarks: {}, contours: {}),
@@ -163,5 +181,9 @@ class FaceIdService {
     return FaceMatchResult(isMatch: dist < _matchThreshold, distance: dist, confidence: ((1 - dist / _matchThreshold) * 100).clamp(0, 100));
   }
 
-  void dispose() { _faceDetector.close(); _interpreter?.close(); }
+  void dispose() { 
+    _faceDetector?.close(); 
+    _interpreter?.close(); 
+    _isInitialized = false; 
+  }
 }
