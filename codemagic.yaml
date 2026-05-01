@@ -7,7 +7,10 @@ workflows:
       flutter: default
     scripts:
       - name: Lấy các thư viện
-        script: flutter pub get
+        script: |
+          flutter pub get
+          cd ios
+          pod repo update
       - name: Biên dịch iOS (Lách luật Apple)
         script: flutter build ios --release --no-codesign
       - name: Đóng gói thành file .ipa
