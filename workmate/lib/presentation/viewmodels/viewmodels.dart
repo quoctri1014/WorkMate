@@ -153,6 +153,22 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateFaceId(List<double> embedding) async {
+    if (_currentUser == null) return false;
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final success = await _api.registerFace(_currentUser!.id, embedding);
+      _isLoading = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     _isLoggedIn = false;
     _currentUser = null;
