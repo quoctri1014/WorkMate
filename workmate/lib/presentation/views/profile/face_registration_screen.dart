@@ -84,7 +84,6 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         return;
       }
       
-      // Tìm camera trước
       CameraDescription? frontCamera;
       try {
         frontCamera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front);
@@ -129,10 +128,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       } else if (!faceInfo.isCentered) {
         _updateState(FaceScanState.detected, 'Đưa mặt vào giữa khung');
       } else {
-        // Lưu lại faceInfo để dùng cho việc cắt ảnh sau này
         _lastDetected = faceInfo;
         
-        // Kiểm tra hướng đầu (Y-angle)
         double headY = faceInfo.face.headEulerAngleY ?? 0; 
         
         bool correctPos = false;
@@ -140,12 +137,12 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
           correctPos = headY.abs() < 10;
           if (!correctPos) _updateState(FaceScanState.detected, 'Nhìn thẳng vào camera');
         } else if (_regStep == RegistrationStep.left) {
-          // Quay sang TRÁI (về vai trái của mình) -> headY âm
-          correctPos = headY < -15; 
+          // ĐẢO NGƯỢC LOGIC THEO YÊU CẦU: Quay sang TRÁI ứng với headY dương
+          correctPos = headY > 15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang TRÁI một chút');
         } else if (_regStep == RegistrationStep.right) {
-          // Quay sang PHẢI (về vai phải của mình) -> headY dương
-          correctPos = headY > 15; 
+          // ĐẢO NGƯỢC LOGIC THEO YÊU CẦU: Quay sang PHẢI ứng với headY âm
+          correctPos = headY < -15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang PHẢI một chút');
         }
 
@@ -159,8 +156,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         }
       }
     } catch (e, stack) {
-      print('DEBUG_FACE_ERROR: $e\n$stack');
-      // Không hiện lỗi ngay lập tức để tránh làm gián đoạn frame stream trừ khi lỗi nghiêm trọng
+      debugPrint('DEBUG_FACE_ERROR: $e\n$stack');
     } finally {
       _isProcessingFrame = false;
     }
@@ -179,22 +175,18 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     final controller = _cameraController;
     final lastFace = _lastDetected;
     
-    if (controller == null || lastFace == null) {
-      print('DEBUG_CAPTURE: Controller or Face is null');
-      return;
-    }
+    if (controller == null || lastFace == null) return;
     
     try {
-      // Dừng stream tạm thời
       await controller.stopImageStream();
-      
       final xFile = await controller.takePicture();
       final imageBytes = await xFile.readAsBytes();
       
-      // Face detection lại lần nữa trên ảnh vừa chụp để lấy bounding box chính xác nhất
       final embedding = await FaceIdService.instance.extractEmbedding(imageBytes, lastFace.face.boundingBox);
       
-      _capturedEmbeddings.add(embedding);
+      if (embedding.isNotEmpty) {
+        _capturedEmbeddings.add(embedding);
+      }
 
       if (_capturedEmbeddings.length < 3) {
         setState(() {
@@ -210,14 +202,15 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         await _finishRegistration();
       }
     } catch (e, stack) {
-      print('DEBUG_CAPTURE_ERROR: $e\n$stack');
-      _updateState(FaceScanState.failed, 'Lỗi: $e');
+      debugPrint('DEBUG_CAPTURE_ERROR: $e\n$stack');
+      _updateState(FaceScanState.failed, 'Lỗi chụp ảnh: $e');
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) controller.startImageStream(_onCameraFrame);
     }
   }
 
   Future<void> _finishRegistration() async {
+    if (!mounted) return;
     _updateState(FaceScanState.processing, 'Đang tổng hợp dữ liệu gương mặt...');
     
     if (_capturedEmbeddings.isEmpty) {
@@ -226,22 +219,36 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     }
 
     try {
+      // Đảm bảo không có embedding nào null hoặc sai kích thước
+      List<List<double>> validEmbeddings = _capturedEmbeddings.where((e) => e.length == 192).toList();
+      
+      if (validEmbeddings.isEmpty) {
+        _updateState(FaceScanState.failed, 'Dữ liệu không hợp lệ!');
+        return;
+      }
+
       List<double> finalEmbedding = List.filled(192, 0.0);
-      for (var emb in _capturedEmbeddings) {
-        if (emb.length == 192) {
-          for (int i = 0; i < 192; i++) {
-            finalEmbedding[i] += emb[i];
-          }
+      for (var emb in validEmbeddings) {
+        for (int i = 0; i < 192; i++) {
+          finalEmbedding[i] += emb[i];
         }
       }
       for (int i = 0; i < 192; i++) {
-        finalEmbedding[i] /= _capturedEmbeddings.length;
+        finalEmbedding[i] /= validEmbeddings.length;
       }
 
+      // Gọi callback an toàn
       await widget.onSuccess(finalEmbedding);
-      _hasFinished = true;
-      _updateState(FaceScanState.success, 'Đăng ký thành công!');
-    } catch (e) {
+      
+      if (mounted) {
+        setState(() {
+          _hasFinished = true;
+          _scanState = FaceScanState.success;
+          _guideText = 'Đăng ký thành công!';
+        });
+      }
+    } catch (e, stack) {
+      debugPrint('DEBUG_FINISH_ERROR: $e\n$stack');
       _updateState(FaceScanState.failed, 'Lỗi tổng hợp: $e');
     }
   }
