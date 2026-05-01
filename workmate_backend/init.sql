@@ -27,12 +27,9 @@ CREATE TABLE attendance (
     id SERIAL PRIMARY KEY,
     employee_id INTEGER REFERENCES employees(id),
     employee_name VARCHAR(255),
-    check_in VARCHAR(10),
-    check_out VARCHAR(10),
-    method VARCHAR(50),
-    lat DECIMAL,
-    lng DECIMAL,
-    status VARCHAR(50),
+    check_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    check_out_time TIMESTAMP,
+    check_in_method VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

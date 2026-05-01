@@ -83,7 +83,7 @@ function euclideanDistance(a, b) {
   }
   return Math.sqrt(sum);
 }
-const MATCH_THRESHOLD = 1.0; // Tăng ngưỡng từ 0.7 lên 1.0
+const MATCH_THRESHOLD = 1.15; // Tăng ngưỡng từ 1.0 lên 1.15 để nhận diện dễ hơn
 
 // --- DATABASE MIGRATION (Tự động nâng cấp cấu trúc) ---
 const initDB = async () => {
@@ -99,7 +99,7 @@ const initDB = async () => {
       ALTER TABLE employees ADD COLUMN IF NOT EXISTS face_embedding JSONB;
       ALTER TABLE employees ADD COLUMN IF NOT EXISTS join_date DATE;
       ALTER TABLE employees ADD COLUMN IF NOT EXISTS birthday DATE;
-      ALTER TABLE employees ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
+      ALTER TABLE employees ADD COLUMN IF NOT EXISTS phone VARCHAR(255);
       ALTER TABLE departments ADD COLUMN IF NOT EXISTS positions JSONB DEFAULT '[]';
       CREATE TABLE IF NOT EXISTS company_config (id SERIAL PRIMARY KEY);
       ALTER TABLE company_config ADD COLUMN IF NOT EXISTS company_name VARCHAR(255);
@@ -116,6 +116,7 @@ const initDB = async () => {
       ALTER TABLE approvals ADD COLUMN IF NOT EXISTS total_hours DOUBLE PRECISION;
       ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
       ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_out_time TIMESTAMP;
+      ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_in_method VARCHAR(50);
       
       CREATE TABLE IF NOT EXISTS employee_banks (
         id SERIAL PRIMARY KEY,
