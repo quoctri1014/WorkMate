@@ -32,6 +32,21 @@ class AuthViewModel extends ChangeNotifier {
   UserModel? get currentUser => _currentUser;
   bool get isLoggedIn => _isLoggedIn;
 
+  Future<void> checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userData = prefs.getString('user_data');
+    if (userData != null) {
+      try {
+        _currentUser = UserModel.fromMap(json.decode(userData));
+        _isLoggedIn = true;
+        notifyListeners();
+      } catch (e) {
+        _isLoggedIn = false;
+        _currentUser = null;
+      }
+    }
+  }
+
   Future<bool> loginWithEmployeeCode(String code, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -670,7 +685,7 @@ class NotificationViewModel extends ChangeNotifier {
 
   void _initSocket() {
     try {
-      _socket = IO.io('http://10.0.2.2:5000', 
+      _socket = IO.io(ApiService.baseHost, 
         IO.OptionBuilder()
           .setTransports(['websocket'])
           .enableAutoConnect()
@@ -813,6 +828,7 @@ class NotificationViewModel extends ChangeNotifier {
     );
     _notifications.insert(0, newNotif);
     _saveNotifications();
+    NotificationService().showInstantNotification(title: title, body: body);
     notifyListeners();
   }
 

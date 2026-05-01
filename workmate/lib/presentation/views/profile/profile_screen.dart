@@ -8,6 +8,7 @@ import 'qr_screen.dart';
 import 'bank_account_screen.dart';
 import 'package:workmate/presentation/views/profile/face_registration_screen.dart';
 import 'package:workmate/core/i18n/app_translations.dart';
+import 'package:workmate/data/repositories/api_service.dart';
 import 'package:workmate/core/utils/support_utils.dart';
 import 'personal_info_screen.dart';
 
@@ -29,10 +30,6 @@ class ProfileScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
         centerTitle: true,
         title: Text(t('settings'), style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 18)),
       ),
@@ -53,7 +50,7 @@ class ProfileScreen extends StatelessWidget {
                     backgroundImage: (user.avatarUrl.isNotEmpty) 
                       ? NetworkImage(user.avatarUrl.startsWith('http') 
                           ? user.avatarUrl 
-                          : 'http://10.0.2.2:5000${user.avatarUrl}') 
+                          : '${ApiService.baseHost}${user.avatarUrl}') 
                       : null,
                     child: (user.avatarUrl.isEmpty) 
                       ? Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U', 

@@ -162,27 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 24),
                       _buildLoginButton(),
-                      const SizedBox(height: 24),
-                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                      const SizedBox(height: 24),
-                      Center(
-                        child: Text(
-                          'Bạn gặp sự cố khi đăng nhập?',
-                          style: AppTextStyles.bodySmall,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Center(
-                        child: TextButton.icon(
-                          onPressed: () => SupportUtils.showSupportOptions(context),
-                          icon: const Icon(Icons.help_outline_rounded, size: 18),
-                          label: const Text('Liên hệ hỗ trợ'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.primary,
-                            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
+                      // Removed help and support section
                     ],
                   ),
                 ),

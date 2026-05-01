@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:workmate/data/repositories/api_service.dart';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 
@@ -11,7 +13,7 @@ class UploadResult {
 }
 
 class UploadService {
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
+  static String get baseUrl => ApiService.baseUrl;
 
   static Future<UploadResult> uploadImage(File imageFile) async {
     try {

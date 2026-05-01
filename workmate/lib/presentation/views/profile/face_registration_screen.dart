@@ -5,6 +5,8 @@
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:workmate/services/face_id_service.dart';
 
@@ -57,10 +59,16 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   }
 
   Future<void> _initCamera() async {
+    final status = await Permission.camera.request();
+    if (!status.isGranted) {
+      _updateState(FaceScanState.failed, 'Cần quyền Camera!');
+      return;
+    }
+    
     _cameras = await availableCameras();
     if (_cameras == null || _cameras!.isEmpty) return;
     final frontCamera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front, orElse: () => _cameras!.first);
-    _cameraController = CameraController(frontCamera, ResolutionPreset.high, enableAudio: false, imageFormatGroup: ImageFormatGroup.nv21);
+    _cameraController = CameraController(frontCamera, ResolutionPreset.high, enableAudio: false, imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21);
     await _cameraController!.initialize();
     if (!mounted) return;
     _cameraController!.startImageStream(_onCameraFrame);

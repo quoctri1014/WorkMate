@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:provider/provider.dart';
@@ -60,9 +61,12 @@ NGÀY VÀO LÀM: ${AppDateUtils.formatDate(user.joinDate)}
             const SizedBox(height: 28),
             SizedBox(width: double.infinity, height: 52,
               child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.share_rounded, color: Colors.white),
-                label: const Text('Chia sẻ mã QR', style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: qrData));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã sao chép thông tin vào bộ nhớ tạm'), backgroundColor: AppColors.success));
+                },
+                icon: const Icon(Icons.copy_rounded, color: Colors.white),
+                label: const Text('Sao chép thông tin', style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
               ),
             ),

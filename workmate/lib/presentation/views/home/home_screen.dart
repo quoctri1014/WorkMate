@@ -5,6 +5,7 @@ import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/constants/app_routes.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
+import 'package:workmate/data/repositories/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmate/presentation/views/attendance/checkin_permission_screen.dart';
 import 'package:workmate/presentation/views/attendance/checkin_face_screen.dart';
@@ -71,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Xử lý URL ảnh
     String avatarUrl = user.avatarUrl;
     if (avatarUrl.isNotEmpty && !avatarUrl.startsWith('http')) {
-      avatarUrl = 'http://10.0.2.2:5000$avatarUrl';
+      avatarUrl = '${ApiService.baseHost}$avatarUrl';
     }
 
     return Scaffold(
@@ -319,9 +320,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       letterSpacing: 1.5,
                     ),
                   ),
-                  const Spacer(),
-                  const Icon(Icons.more_horiz_rounded,
-                      color: AppColors.textSecondary, size: 20),
                 ],
               ),
             ),

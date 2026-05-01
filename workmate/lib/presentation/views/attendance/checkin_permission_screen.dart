@@ -35,30 +35,27 @@ class _CheckInPermissionScreenState extends State<CheckInPermissionScreen> {
       _cameraGranted = cameraStatus.isGranted;
       _locationGranted = locationStatus.isGranted;
       _wifiGranted = wifiStatus.isGranted;
-      _galleryGranted = galleryStatus.isGranted;
+      _galleryGranted = galleryStatus.isGranted || galleryStatus.isLimited;
     });
   }
 
   Future<void> _requestPermission(String type) async {
-    PermissionStatus status;
     if (type == 'camera') {
-      status = await Permission.camera.request();
-      if (status.isGranted) setState(() => _cameraGranted = true);
+      final status = await Permission.camera.request();
+      if (status.isGranted) { setState(() => _cameraGranted = true); return; }
     } else if (type == 'location') {
-      status = await Permission.location.request();
-      if (status.isGranted) setState(() => _locationGranted = true);
+      final status = await Permission.location.request();
+      if (status.isGranted) { setState(() => _locationGranted = true); return; }
     } else if (type == 'wifi') {
-      status = await Permission.locationWhenInUse.request();
-      if (status.isGranted) setState(() => _wifiGranted = true);
+      final status = await Permission.locationWhenInUse.request();
+      if (status.isGranted) { setState(() => _wifiGranted = true); return; }
     } else if (type == 'gallery') {
-      status = await Permission.photos.request();
-      if (status.isGranted) setState(() => _galleryGranted = true);
+      final status = await Permission.photos.request();
+      if (status.isGranted || status.isLimited) { setState(() => _galleryGranted = true); return; }
     }
     
-    if (await Permission.camera.isPermanentlyDenied || 
-        await Permission.location.isPermanentlyDenied) {
-      openAppSettings();
-    }
+    // Nếu chưa cấp được (bị từ chối), mở cài đặt ứng dụng
+    openAppSettings();
   }
 
   Future<void> _onContinue() async {

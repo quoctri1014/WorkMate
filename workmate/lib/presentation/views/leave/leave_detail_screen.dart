@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/data/models/models.dart';
+import 'package:workmate/data/repositories/api_service.dart';
 
 class LeaveDetailScreen extends StatelessWidget {
   final LeaveModel leave;
@@ -185,7 +186,7 @@ class LeaveDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 image: DecorationImage(
-                  image: NetworkImage(urls[i].startsWith('http') ? urls[i] : 'http://10.0.2.2:5000${urls[i]}'),
+                  image: NetworkImage(urls[i].startsWith('http') ? urls[i] : '${ApiService.baseHost}${urls[i]}'),
                   fit: BoxFit.cover,
                 ),
               ),

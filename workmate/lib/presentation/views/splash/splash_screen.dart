@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/constants/app_text_styles.dart';
 import 'package:workmate/core/constants/app_routes.dart';
+import 'package:provider/provider.dart';
+import 'package:workmate/presentation/viewmodels/viewmodels.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -28,9 +30,17 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
+        final authVM = context.read<AuthViewModel>();
+        await authVM.checkLoginStatus();
+        if (mounted) {
+          if (authVM.isLoggedIn) {
+            Navigator.pushReplacementNamed(context, AppRoutes.main);
+          } else {
+            Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
+          }
+        }
       }
     });
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:workmate/data/repositories/api_service.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
@@ -66,7 +67,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     // Xử lý URL ảnh (nếu là đường dẫn tương đối thì thêm base url)
     String avatarUrl = user.avatarUrl;
     if (avatarUrl.isNotEmpty && !avatarUrl.startsWith('http')) {
-      avatarUrl = 'http://10.0.2.2:5000$avatarUrl';
+      avatarUrl = '${ApiService.baseHost}$avatarUrl';
     }
 
     return Scaffold(

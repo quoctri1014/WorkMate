@@ -12,6 +12,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:workmate/services/face_id_service.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
 import 'package:workmate/data/repositories/api_service.dart';
+import 'dart:io';
 import 'attendance_success_screen.dart';
 
 class CheckInFaceScreen extends StatefulWidget {
@@ -93,7 +94,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       frontCamera,
       ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.nv21,
+      imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21,
     );
 
     await _cameraController!.initialize();
