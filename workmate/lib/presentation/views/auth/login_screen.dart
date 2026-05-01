@@ -19,6 +19,23 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final authVM = context.read<AuthViewModel>();
+    final creds = await authVM.getSavedCredentials();
+    if (creds['code']!.isNotEmpty) {
+      setState(() {
+        _idController.text = creds['code']!;
+        _passwordController.text = creds['password']!;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _idController.dispose();
     _passwordController.dispose();

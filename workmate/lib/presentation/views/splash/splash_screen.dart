@@ -32,15 +32,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        final authVM = context.read<AuthViewModel>();
-        await authVM.checkLoginStatus();
-        if (mounted) {
-          if (authVM.isLoggedIn) {
-            Navigator.pushReplacementNamed(context, AppRoutes.main);
-          } else {
-            Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
-          }
-        }
+        // Luôn đi tới LoginScreen để user tự ấn đăng nhập (có pre-fill thông tin)
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     });
   }

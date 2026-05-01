@@ -40,22 +40,41 @@ class _CheckInPermissionScreenState extends State<CheckInPermissionScreen> {
   }
 
   Future<void> _requestPermission(String type) async {
+    PermissionStatus status;
     if (type == 'camera') {
-      final status = await Permission.camera.request();
-      if (status.isGranted) { setState(() => _cameraGranted = true); return; }
+      status = await Permission.camera.request();
+      if (status.isGranted) setState(() => _cameraGranted = true);
     } else if (type == 'location') {
-      final status = await Permission.location.request();
-      if (status.isGranted) { setState(() => _locationGranted = true); return; }
+      status = await Permission.location.request();
+      if (status.isGranted) setState(() => _locationGranted = true);
     } else if (type == 'wifi') {
-      final status = await Permission.locationWhenInUse.request();
-      if (status.isGranted) { setState(() => _wifiGranted = true); return; }
+      status = await Permission.locationWhenInUse.request();
+      if (status.isGranted) setState(() => _wifiGranted = true);
     } else if (type == 'gallery') {
-      final status = await Permission.photos.request();
-      if (status.isGranted || status.isLimited) { setState(() => _galleryGranted = true); return; }
+      status = await Permission.photos.request();
+      if (status.isGranted || status.isLimited) setState(() => _galleryGranted = true);
     }
     
-    // Nếu chưa cấp được (bị từ chối), mở cài đặt ứng dụng
-    openAppSettings();
+    // Nếu bị từ chối vĩnh viễn mới nhắc mở Settings
+    if (await Permission.camera.isPermanentlyDenied || 
+        await Permission.location.isPermanentlyDenied) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Cần quyền hệ thống'),
+            content: const Text('Quyền này đã bị từ chối vĩnh viễn. Vui lòng mở Cài đặt để cấp quyền thủ công.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('HỦY')),
+              TextButton(onPressed: () {
+                openAppSettings();
+                Navigator.pop(ctx);
+              }, child: const Text('CÀI ĐẶT')),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _onContinue() async {

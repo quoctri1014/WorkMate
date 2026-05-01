@@ -34,17 +34,19 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final userData = prefs.getString('user_data');
-    if (userData != null) {
-      try {
-        _currentUser = UserModel.fromMap(json.decode(userData));
-        _isLoggedIn = true;
-        notifyListeners();
-      } catch (e) {
-        _isLoggedIn = false;
-        _currentUser = null;
-      }
-    }
+    final savedCode = prefs.getString('saved_employee_code');
+    final savedPassword = prefs.getString('saved_password');
+    
+    // We don't auto-login anymore, just load data for pre-fill if needed
+    // or we can just leave this for the LoginScreen to call getSavedCredentials
+  }
+
+  Future<Map<String, String>> getSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'code': prefs.getString('saved_employee_code') ?? '',
+      'password': prefs.getString('saved_password') ?? '',
+    };
   }
 
   Future<bool> loginWithEmployeeCode(String code, String password) async {
@@ -60,6 +62,10 @@ class AuthViewModel extends ChangeNotifier {
         
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_data', json.encode(user.toMap()));
+        
+        // Lưu thông tin đăng nhập để pre-fill lần sau
+        await prefs.setString('saved_employee_code', code);
+        await prefs.setString('saved_password', password);
         
         _isLoading = false;
         notifyListeners();
