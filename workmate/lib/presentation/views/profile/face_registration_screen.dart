@@ -156,7 +156,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          if (_isCameraReady && _cameraController != null) Transform.scale(scaleX: -1, child: CameraPreview(_cameraController!)),
+          if (_isCameraReady && _cameraController != null) CameraPreview(_cameraController!),
           _buildDarkOverlay(),
           _buildScanFrame(),
           _buildTopBar(),

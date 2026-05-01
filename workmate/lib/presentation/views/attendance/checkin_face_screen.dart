@@ -357,10 +357,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         fit: StackFit.expand,
         children: [
           if (_isCameraReady && _cameraController != null)
-            Transform.scale(
-              scaleX: -1, // Fix lỗi ngược cam
-              child: CameraPreview(_cameraController!),
-            ),
+            CameraPreview(_cameraController!),
           _buildOverlay(),
           _buildScanRing(),
           _buildTopBar(),
