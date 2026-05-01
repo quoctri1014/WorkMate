@@ -8,6 +8,7 @@ workflows:
     scripts:
       - name: Lấy các thư viện
         script: |
+          flutter clean
           flutter pub upgrade google_mlkit_face_detection google_mlkit_commons
           flutter pub get
           cd ios
