@@ -42,6 +42,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   FaceScanState _scanState = FaceScanState.searching;
   RegistrationStep _regStep = RegistrationStep.center;
   String _guideText = 'Đưa khuôn mặt vào khung';
+  String _debugError = ''; // Lưu lỗi chi tiết để debug
   
   final List<List<double>> _capturedEmbeddings = [];
   DetectedFaceInfo? _lastDetected;
@@ -104,8 +105,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
       _cameraController!.startImageStream(_onCameraFrame);
-    } catch (e) {
-      _updateState(FaceScanState.failed, 'Lỗi Camera: $e');
+    } catch (e, stack) {
+      _handleError('Lỗi khởi tạo Camera', e, stack);
     }
   }
 
@@ -137,11 +138,9 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
           correctPos = headY.abs() < 10;
           if (!correctPos) _updateState(FaceScanState.detected, 'Nhìn thẳng vào camera');
         } else if (_regStep == RegistrationStep.left) {
-          // ĐẢO NGƯỢC LOGIC THEO YÊU CẦU: Quay sang TRÁI ứng với headY dương
           correctPos = headY > 15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang TRÁI một chút');
         } else if (_regStep == RegistrationStep.right) {
-          // ĐẢO NGƯỢC LOGIC THEO YÊU CẦU: Quay sang PHẢI ứng với headY âm
           correctPos = headY < -15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang PHẢI một chút');
         }
@@ -202,9 +201,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         await _finishRegistration();
       }
     } catch (e, stack) {
-      debugPrint('DEBUG_CAPTURE_ERROR: $e\n$stack');
-      _updateState(FaceScanState.failed, 'Lỗi chụp ảnh: $e');
-      await Future.delayed(const Duration(seconds: 2));
+      _handleError('Lỗi chụp ảnh', e, stack);
+      await Future.delayed(const Duration(seconds: 3));
       if (mounted) controller.startImageStream(_onCameraFrame);
     }
   }
@@ -219,7 +217,6 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     }
 
     try {
-      // Đảm bảo không có embedding nào null hoặc sai kích thước
       List<List<double>> validEmbeddings = _capturedEmbeddings.where((e) => e.length == 192).toList();
       
       if (validEmbeddings.isEmpty) {
@@ -237,7 +234,6 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         finalEmbedding[i] /= validEmbeddings.length;
       }
 
-      // Gọi callback an toàn
       await widget.onSuccess(finalEmbedding);
       
       if (mounted) {
@@ -248,14 +244,23 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         });
       }
     } catch (e, stack) {
-      debugPrint('DEBUG_FINISH_ERROR: $e\n$stack');
-      _updateState(FaceScanState.failed, 'Lỗi tổng hợp: $e');
+      _handleError('Lỗi tổng hợp', e, stack);
     }
+  }
+
+  void _handleError(String title, Object e, StackTrace stack) {
+    debugPrint('$title: $e\n$stack');
+    if (!mounted) return;
+    setState(() {
+      _scanState = FaceScanState.failed;
+      _guideText = '$title: $e';
+      _debugError = stack.toString();
+    });
   }
 
   void _updateState(FaceScanState state, String guide) {
     if (!mounted) return;
-    setState(() { _scanState = state; _guideText = guide; });
+    setState(() { _scanState = state; _guideText = guide; _debugError = ''; });
   }
 
   InputImageRotation _getRotation() {
@@ -285,8 +290,30 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
           _buildTopBar(),
           _buildStepIndicator(),
           _buildBottomGuide(),
+          if (_debugError.isNotEmpty) _buildDebugErrorView(),
           if (_scanState == FaceScanState.success) _buildSuccessOverlay(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDebugErrorView() {
+    return Positioned(
+      bottom: 200, left: 20, right: 20,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: Colors.red.withOpacity(0.9), borderRadius: BorderRadius.circular(12)),
+        child: SingleChildScrollView(
+          maxHeight: 200,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('STACK TRACE:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+              const SizedBox(height: 4),
+              SelectableText(_debugError, style: const TextStyle(color: Colors.white, fontSize: 10, fontFamily: 'monospace')),
+            ],
+          ),
+        ),
       ),
     );
   }
