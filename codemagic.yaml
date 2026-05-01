@@ -4,7 +4,7 @@ workflows:
     instance_type: mac_mini_m1
     working_directory: workmate
     environment:
-      flutter: default
+      flutter: stable
     scripts:
       - name: Lấy các thư viện
         script: |
