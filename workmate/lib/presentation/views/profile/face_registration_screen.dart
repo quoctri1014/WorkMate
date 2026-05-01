@@ -79,12 +79,20 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     
     _cameras = await availableCameras();
     if (_cameras == null || _cameras!.isEmpty) return;
-    final frontCamera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front, orElse: () => _cameras!.first);
+    
+    // Tìm camera trước
+    CameraDescription? frontCamera;
+    try {
+      frontCamera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front);
+    } catch (_) {
+      frontCamera = _cameras!.first;
+    }
     
     _cameraController = CameraController(
       frontCamera, 
       ResolutionPreset.medium, 
       enableAudio: false,
+      imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.yuv420,
     );
     
     try {
@@ -102,6 +110,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   void _onCameraFrame(CameraImage image) async {
     if (_isProcessingFrame || _hasFinished) return;
     if (_scanState == FaceScanState.processing || _scanState == FaceScanState.success) return;
+    
     _isProcessingFrame = true;
     try {
       final rotation = _getRotation();
@@ -117,6 +126,9 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       } else if (!faceInfo.isCentered) {
         _updateState(FaceScanState.detected, 'Đưa mặt vào giữa khung');
       } else {
+        // Lưu lại faceInfo để dùng cho việc cắt ảnh sau này
+        _lastDetected = faceInfo;
+        
         // Kiểm tra hướng đầu (Y-angle)
         double headY = faceInfo.face.headEulerAngleY ?? 0; // Quay trái/phải
         
@@ -125,17 +137,18 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
           correctPos = headY.abs() < 10;
           if (!correctPos) _updateState(FaceScanState.detected, 'Nhìn thẳng vào camera');
         } else if (_regStep == RegistrationStep.left) {
-          correctPos = headY > 20; // Quay sang phải (nhưng trong gương là sang trái)
+          // Trong gương, quay trái nghĩa là headY âm (quay về phía phải của camera)
+          correctPos = headY < -15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang TRÁI một chút');
         } else if (_regStep == RegistrationStep.right) {
-          correctPos = headY < -20; // Quay sang trái
+          // Trong gương, quay phải nghĩa là headY dương (quay về phía trái của camera)
+          correctPos = headY > 15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang PHẢI một chút');
         }
 
         if (correctPos) {
           if (_scanState != FaceScanState.waitingBlink && _scanState != FaceScanState.capturing) {
             _updateState(FaceScanState.waitingBlink, 'Giữ nguyên và nháy mắt');
-            _lastDetected = faceInfo;
           } else if (faceInfo.isBlinking && _scanState == FaceScanState.waitingBlink) {
             _updateState(FaceScanState.capturing, 'Đang ghi nhận mẫu ${_capturedEmbeddings.length + 1}/3...');
             await _captureSample();
@@ -157,14 +170,19 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   }
 
   Future<void> _captureSample() async {
-    if (_cameraController == null) return;
+    final controller = _cameraController;
+    final lastFace = _lastDetected;
+    
+    if (controller == null || lastFace == null) return;
+    
     try {
       // Dừng stream tạm thời
-      await _cameraController!.stopImageStream();
+      await controller.stopImageStream();
       
-      final xFile = await _cameraController!.takePicture();
+      final xFile = await controller.takePicture();
       final imageBytes = await xFile.readAsBytes();
-      final faceRect = _lastDetected!.face.boundingBox;
+      final faceRect = lastFace.face.boundingBox;
+      
       final embedding = await FaceIdService.instance.extractEmbedding(imageBytes, faceRect);
       
       _capturedEmbeddings.add(embedding);
@@ -178,7 +196,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         
         _updateState(FaceScanState.searching, _getStepGuide());
         await Future.delayed(const Duration(milliseconds: 500));
-        _cameraController?.startImageStream(_onCameraFrame);
+        if (mounted) controller.startImageStream(_onCameraFrame);
       } else {
         // Hoàn tất và trung bình cộng
         _regStep = RegistrationStep.done;
@@ -187,13 +205,18 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     } catch (e) {
       _updateState(FaceScanState.failed, 'Lỗi: $e');
       await Future.delayed(const Duration(seconds: 2));
-      _cameraController?.startImageStream(_onCameraFrame);
+      if (mounted) controller.startImageStream(_onCameraFrame);
     }
   }
 
   Future<void> _finishRegistration() async {
     _updateState(FaceScanState.processing, 'Đang tổng hợp dữ liệu gương mặt...');
     
+    if (_capturedEmbeddings.isEmpty) {
+      _updateState(FaceScanState.failed, 'Không có dữ liệu mẫu!');
+      return;
+    }
+
     // Tính trung bình cộng của 3 vector embedding
     List<double> finalEmbedding = List.filled(192, 0.0);
     for (var emb in _capturedEmbeddings) {
@@ -216,6 +239,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   }
 
   InputImageRotation _getRotation() {
+    if (_cameras == null || _cameras!.isEmpty) return InputImageRotation.rotation0deg;
+    
     final camera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front, orElse: () => _cameras!.first);
     switch (camera.sensorOrientation) {
       case 90: return InputImageRotation.rotation90deg;
@@ -236,6 +261,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
             Center(
               child: Transform(
                 alignment: Alignment.center,
+                // Mirror the preview for a natural feel
                 transform: Matrix4.rotationY(3.14159),
                 child: CameraPreview(_cameraController!),
               ),
