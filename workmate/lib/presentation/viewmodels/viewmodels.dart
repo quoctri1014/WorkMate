@@ -153,7 +153,7 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateFaceId(List<double> embedding) async {
+  Future<bool> updateFaceId(dynamic embedding) async {
     if (_currentUser == null) return false;
     _isLoading = true;
     notifyListeners();
