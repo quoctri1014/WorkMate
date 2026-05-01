@@ -83,7 +83,7 @@ function euclideanDistance(a, b) {
   }
   return Math.sqrt(sum);
 }
-const MATCH_THRESHOLD = 1.15; // Tăng ngưỡng từ 1.0 lên 1.15 để nhận diện dễ hơn
+const MATCH_THRESHOLD = 1.25; // Tăng lên 1.25 theo yêu cầu test của người dùng
 
 // --- DATABASE MIGRATION (Tự động nâng cấp cấu trúc) ---
 const initDB = async () => {

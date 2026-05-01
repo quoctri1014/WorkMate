@@ -6,6 +6,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:math';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:workmate/services/face_id_service.dart';
@@ -232,6 +233,12 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       }
       for (int i = 0; i < 192; i++) {
         finalEmbedding[i] /= validEmbeddings.length;
+      }
+
+      // Re-normalize để đảm bảo vector nằm trên hypersphere
+      double norm = sqrt(finalEmbedding.fold(0, (sum, val) => sum + val * val));
+      if (norm > 0) {
+        for (int i = 0; i < 192; i++) finalEmbedding[i] /= norm;
       }
 
       await widget.onSuccess(finalEmbedding);

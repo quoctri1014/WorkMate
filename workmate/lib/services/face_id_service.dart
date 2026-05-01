@@ -49,8 +49,8 @@ class FaceIdService {
   Interpreter? _interpreter;
   bool _isInitialized = false;
   bool _isInitializing = false;
-  // Tăng ngưỡng lên 1.15 để nhận diện dễ hơn (tương ứng với độ chính xác cao hơn cho người dùng)
-  static const double _matchThreshold = 1.15;
+  // Tăng ngưỡng lên 1.25 để nhận diện dễ hơn nữa cho mục đích test
+  static const double _matchThreshold = 1.25;
   static const int _modelInputSize = 112;
 
   Future<void> initialize() async {
