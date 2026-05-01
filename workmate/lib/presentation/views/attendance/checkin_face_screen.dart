@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:workmate/services/face_id_service.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
@@ -34,7 +35,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
   FaceScanState _scanState = FaceScanState.searching;
   String _guideText = 'Đưa khuôn mặt vào khung';
   
-  // Các biến bị thiếu dẫn đến lỗi biên dịch
   final _api = ApiService();
   CompanyConfigModel? _companyConfig;
   late AnimationController _scanLineController;
@@ -54,7 +54,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
   @override
   void initState() {
     super.initState();
-    _checkPermissions();
     _initAnimations();
     _initCamera();
     _fetchConfig();
@@ -66,13 +65,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       if (mounted) setState(() => _companyConfig = config);
     } catch (e) {
       debugPrint("Config Error: $e");
-    }
-  }
-
-  Future<void> _checkPermissions() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      await Geolocator.requestPermission();
     }
   }
 
@@ -96,69 +88,114 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
   }
 
   Future<void> _initCamera() async {
-    _cameras = await availableCameras();
-    if (_cameras == null || _cameras!.isEmpty) return;
-
-    // 1. Đảm bảo FaceIdService đã khởi tạo xong
-    await FaceIdService.instance.initialize();
-
-    // 2. KIỂM TRA ĐĂNG KÝ NGAY LẬP TỨC
-    final user = context.read<AuthViewModel>().currentUser;
-    if (user != null) {
-      final savedEmbedding = await _api.fetchSavedEmbedding(user.id);
-      if (savedEmbedding == null) {
-        _updateState(FaceScanState.failed, 'Gương mặt chưa được đăng ký!');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Hệ thống chưa có dữ liệu khuôn mặt của bạn. Đang chuyển sang trang đăng ký...'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) _showRegisterDialog(user.id, user.name);
-        });
-        return; 
-      }
-    }
-
-    final frontCamera = _cameras!.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.front,
-      orElse: () => _cameras!.first,
-    );
-
-    // 3. Khởi tạo Camera - Bỏ ép định dạng BGRA trên iOS để tránh lỗi màn hình đen ở một số dòng máy
-    _cameraController = CameraController(
-      frontCamera,
-      ResolutionPreset.medium,
-      enableAudio: false,
-      // Để mặc định (YUV420) giúp preview ổn định hơn trên iOS
-    );
-
+    if (!mounted) return;
+    setState(() {
+      _debugLog = "";
+      _isCameraReady = false;
+      _initError = null;
+    });
+    _addLog("--- BẮT ĐẦU INIT CAMERA ---");
+    
     try {
-      _addLog("Đang khởi tạo camera...");
-      await _cameraController!.initialize();
+      _addLog("1. Kiểm tra quyền Camera...");
+      var status = await Permission.camera.request();
+      if (!status.isGranted) {
+        _addLog("❌ QUYỀN CAMERA BỊ TỪ CHỐI");
+        _updateState(FaceScanState.failed, 'Vui lòng cấp quyền Camera trong cài đặt');
+        return;
+      }
+
+      _addLog("2. Kiểm tra quyền Vị trí...");
+      var locStatus = await Permission.locationWhenInUse.request();
+      if (!locStatus.isGranted) {
+        _addLog("⚠️ Quyền vị trí bị từ chối (Vẫn tiếp tục camera)");
+      }
+
+      _addLog("3. Đang lấy danh sách camera...");
+      _cameras = await availableCameras();
+      if (_cameras == null || _cameras!.isEmpty) {
+        _addLog("❌ KHÔNG TÌM THẤY CAMERA");
+        _updateState(FaceScanState.failed, 'Không tìm thấy camera trên thiết bị');
+        return;
+      }
+      _addLog("Tìm thấy ${_cameras!.length} camera");
+
+      _addLog("4. Đang khởi tạo FaceIdService...");
+      await FaceIdService.instance.initialize().timeout(const Duration(seconds: 10), onTimeout: () {
+        _addLog("⚠️ FaceIdService init timeout!");
+      });
+
+      _addLog("5. Đang kiểm tra thông tin user...");
+      final user = context.read<AuthViewModel>().currentUser;
+      if (user != null) {
+        _addLog("Đang lấy embedding của user ${user.id}...");
+        final savedEmbedding = await _api.fetchSavedEmbedding(user.id).timeout(const Duration(seconds: 10), onTimeout: () {
+          _addLog("⚠️ Fetch embedding timeout!");
+          return null;
+        });
+        
+        if (savedEmbedding == null) {
+          _addLog("⚠️ User chưa đăng ký khuôn mặt");
+          _updateState(FaceScanState.failed, 'Gương mặt chưa được đăng ký!');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Hệ thống chưa có dữ liệu khuôn mặt của bạn. Đang chuyển sang trang đăng ký...'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) _showRegisterDialog(user.id, user.name);
+          });
+          return; 
+        }
+        _addLog("Đã có embedding, sẵn sàng quét");
+      }
+
+      final frontCamera = _cameras!.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.front,
+        orElse: () => _cameras!.first,
+      );
+
+      _cameraController = CameraController(
+        frontCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.yuv420,
+      );
+
+      _addLog("6. Đang controller.initialize()...");
+      await _cameraController!.initialize().timeout(const Duration(seconds: 15), onTimeout: () {
+        _addLog("❌ Camera Controller init timeout!");
+        throw Exception("Camera timeout (15s)");
+      });
+
       if (!mounted) return;
 
-      _addLog("Camera initialized thành công");
+      _addLog("✅ Camera initialized THÀNH CÔNG");
       setState(() => _isCameraReady = true);
       
-      // Đợi một chút cho preview hiển thị rồi mới start stream
       await Future.delayed(const Duration(milliseconds: 1000));
       if (!mounted) return;
       
-      _addLog("Bắt đầu Image Stream...");
+      _addLog("7. Bắt đầu Image Stream...");
       _cameraController!.startImageStream(_onCameraFrame);
     } catch (e) {
-      _addLog("LỖI KHỞI TẠO: $e");
+      _addLog("💥 LỖI TỔNG: $e");
       debugPrint("Camera Init Error: $e");
-      setState(() => _initError = e.toString());
-      _updateState(FaceScanState.failed, 'Lỗi camera: $e');
+      if (mounted) {
+        setState(() => _initError = e.toString());
+        _updateState(FaceScanState.failed, 'Lỗi hệ thống: $e');
+      }
     }
   }
 
   void _addLog(String msg) {
     print("📸 [CameraDebug] $msg");
-    if (mounted) setState(() => _debugLog += "$msg\n");
+    if (mounted) {
+      setState(() {
+        _debugLog += "$msg\n";
+      });
+    }
   }
 
   void _onCameraFrame(CameraImage image) async {
@@ -224,7 +261,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       await _cameraController!.stopImageStream();
       _updateState(FaceScanState.processing, 'Đang nhận diện...');
 
-      // 1. Kiểm tra GPS và WiFi TRƯỚC KHI xử lý khuôn mặt (Yêu cầu của USER)
+      // 1. Kiểm tra GPS và WiFi
       _updateState(FaceScanState.processing, 'Đang kiểm tra vị trí & WiFi...');
       
       double? lat, lng;
@@ -243,7 +280,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
 
       try {
         wifiSsid = await NetworkInfo().getWifiName();
-        // Xử lý dấu ngoặc kép nếu có (một số máy trả về "SSID")
         if (wifiSsid != null) {
           wifiSsid = wifiSsid.replaceAll('"', '');
         }
@@ -251,7 +287,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         debugPrint("WiFi Error: $e");
       }
 
-      // RÀNG BUỘC: Nếu có CompanyConfig thì phải kiểm tra
       if (_companyConfig != null) {
         bool isWifiValid = true;
         bool isGpsValid = true;
@@ -269,11 +304,11 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
               _companyConfig!.safeLat!, 
               _companyConfig!.safeLng!
             );
-            if (distance > 200) { // Bán kính 200m
+            if (distance > 200) {
               isGpsValid = false;
             }
           } else {
-            isGpsValid = false; // Không lấy được tọa độ nhưng yêu cầu GPS
+            isGpsValid = false;
           }
         }
 
@@ -288,7 +323,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         }
       }
 
-      // 2. Chụp ảnh và trích xuất embedding
+      // 2. Chụp ảnh và so sánh
       _updateState(FaceScanState.processing, 'Đang phân tích khuôn mặt...');
       final xFile = await _cameraController!.takePicture();
       final imageBytes = await xFile.readAsBytes();
@@ -307,15 +342,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       
       if (savedEmbedding == null) {
         _updateState(FaceScanState.failed, 'Gương mặt chưa được đăng ký!');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Hệ thống chưa có dữ liệu khuôn mặt của bạn. Đang chuyển sang trang đăng ký...'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) _showRegisterDialog(user.id, user.name);
-        });
+        _resetAfterDelay();
         return;
       }
 
@@ -331,7 +358,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         _updateState(FaceScanState.success, 'Nhận diện thành công!');
         _resultController.forward();
         
-        // 3. Gửi kết quả chấm công lên server
         final resultApi = await _api.submitCheckIn(
           user.id, 
           currentEmbedding,
@@ -358,12 +384,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
           FaceScanState.failed,
           'Không nhận diện được khuôn mặt (${result.confidence.toStringAsFixed(0)}%)',
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Xác thực thất bại! Độ khớp chỉ đạt ${result.confidence.toStringAsFixed(1)}%'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
         _resultController.forward();
         _resetAfterDelay();
       }
@@ -384,7 +404,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // Đóng dialog
+              Navigator.pop(context);
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -415,7 +435,9 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         _guideText = 'Đưa khuôn mặt vào khung';
         _matchResult = null;
       });
-      _cameraController?.startImageStream(_onCameraFrame);
+      if (!_isDone) {
+        _cameraController?.startImageStream(_onCameraFrame);
+      }
     });
   }
 
@@ -447,12 +469,12 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Container(color: Colors.grey[900]), // Background đậm hơn để dễ phân biệt nếu camera đen
+          Container(color: const Color(0xFF1A1A1A)),
           if (_isCameraReady && _cameraController != null)
             Center(
               child: Transform(
                 alignment: Alignment.center,
-                transform: Matrix4.rotationY(3.14159), // LẬT NGANG CAMERA (MIRROR) THEO YÊU CẦU USER
+                transform: Matrix4.rotationY(3.14159),
                 child: CameraPreview(_cameraController!),
               ),
             ),
@@ -461,7 +483,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
           _buildTopBar(),
           _buildBottomInfo(),
           if (_matchResult != null) _buildResultBadge(),
-          _buildDiagnosticOverlay(), // THÊM LỚP CHẨN ĐOÁN
+          _buildDiagnosticOverlay(),
         ],
       ),
     );
@@ -470,7 +492,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
   Widget _buildOverlay() {
     return CustomPaint(
       painter: _CheckinOverlayPainter(
-        color: Colors.black.withOpacity(0.55),
+        color: Colors.black.withOpacity(0.65),
       ),
     );
   }
@@ -498,41 +520,58 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
   Widget _buildDiagnosticOverlay() {
     return Positioned(
       top: 100, left: 20, right: 20,
-      child: IgnorePointer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_initError != null)
-              Container(
-                padding: const EdgeInsets.all(8),
-                color: Colors.red.withOpacity(0.8),
-                child: Text("🔴 LỖI CAMERA: $_initError", style: const TextStyle(color: Colors.white, fontSize: 12)),
-              ),
-            const SizedBox(height: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_initError != null)
             Container(
               padding: const EdgeInsets.all(8),
-              color: Colors.black.withOpacity(0.4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("🔍 LOGS:\n$_debugLog", style: const TextStyle(color: Colors.greenAccent, fontSize: 10, fontFamily: 'Courier')),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () {
-                      _cameraController?.dispose();
+              width: double.infinity,
+              decoration: BoxDecoration(color: Colors.red.withOpacity(0.8), borderRadius: BorderRadius.circular(4)),
+              child: Text("🔴 LỖI: $_initError", style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            width: 200,
+            decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white10)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.bug_report, color: Colors.greenAccent, size: 14),
+                    const SizedBox(width: 6),
+                    const Text("LOGS:", style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    if (!_isCameraReady) const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.greenAccent)),
+                  ],
+                ),
+                const Divider(color: Colors.white12),
+                Text(_debugLog.isEmpty ? "Đang chờ..." : _debugLog, style: const TextStyle(color: Colors.greenAccent, fontSize: 9, fontFamily: 'Courier')),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      await _cameraController?.dispose();
+                      _cameraController = null;
                       _initCamera();
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(4)),
-                      child: const Text("🔄 THỬ LẠI CAMERA", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    icon: const Icon(Icons.refresh, size: 14),
+                    label: const Text("THỬ LẠI CAMERA", style: TextStyle(fontSize: 10)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
