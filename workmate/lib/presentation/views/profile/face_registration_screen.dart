@@ -290,35 +290,12 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
           _buildTopBar(),
           _buildStepIndicator(),
           _buildBottomGuide(),
-          if (_debugError.isNotEmpty) _buildDebugErrorView(),
           if (_scanState == FaceScanState.success) _buildSuccessOverlay(),
         ],
       ),
     );
   }
 
-  Widget _buildDebugErrorView() {
-    return Positioned(
-      bottom: 200, left: 20, right: 20,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.red.withOpacity(0.9), borderRadius: BorderRadius.circular(12)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('STACK TRACE:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                const SizedBox(height: 4),
-                SelectableText(_debugError, style: const TextStyle(color: Colors.white, fontSize: 10, fontFamily: 'monospace')),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildDarkOverlay() {
     return CustomPaint(painter: FaceOverlayPainter(circleRadius: 150, overlayColor: Colors.black.withOpacity(0.6)));

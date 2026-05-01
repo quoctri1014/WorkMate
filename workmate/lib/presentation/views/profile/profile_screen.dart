@@ -133,9 +133,11 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showFaceRegConfirmation(BuildContext context, dynamic user, ProfileViewModel vm) {
+    final authVm = context.read<AuthViewModel>();
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         contentPadding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
@@ -164,7 +166,7 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(dialogContext),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -176,13 +178,13 @@ class ProfileScreen extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context); // Đóng dialog
+                      Navigator.pop(dialogContext); // Đóng dialog
                       Navigator.push(context, MaterialPageRoute(builder: (_) => FaceRegistrationScreen(
                         employeeId: user.id, 
                         employeeName: user.name, 
                         onSuccess: (emb) async {
                           // Gọi API cập nhật và đóng màn hình registration
-                          await context.read<AuthViewModel>().updateFaceId(emb);
+                          await authVm.updateFaceId(emb);
                           if (context.mounted) Navigator.pop(context);
                         },
                       )));
