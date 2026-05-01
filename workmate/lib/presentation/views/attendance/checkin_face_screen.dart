@@ -254,7 +254,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       } else {
         _updateState(FaceScanState.detected, 'Giữ yên trong giây lát...');
       }
-      }
     } finally {
       _isProcessingFrame = false;
     }

@@ -430,8 +430,10 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   String _getSubText() {
     switch (_regStep) {
       case RegistrationStep.center: return 'Bước 1: Nhìn thẳng trực diện';
-      case RegistrationStep.left: return 'Bước 2: Nghiêng mặt sang Trái 15-30 độ';
-      case RegistrationStep.right: return 'Bước 3: Nghiêng mặt sang Phải 15-30 độ';
+      case RegistrationStep.left: return 'Bước 2: Nghiêng mặt sang Trái';
+      case RegistrationStep.right: return 'Bước 3: Nghiêng mặt sang Phải';
+      case RegistrationStep.up: return 'Bước 4: Ngẩng mặt Lên';
+      case RegistrationStep.down: return 'Bước 5: Cúi mặt Xuống';
       case RegistrationStep.done: return 'Đang xử lý dữ liệu...';
     }
     return '';
