@@ -45,5 +45,20 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Cấp quyền cho iOS -->
+	<key>NSCameraUsageDescription</key>
+	<string>WorkMate cần quyền sử dụng Camera để thực hiện chấm công bằng khuôn mặt (Face ID).</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>WorkMate cần quyền Vị trí để xác định bạn có đang ở trong phạm vi văn phòng khi chấm công hay không.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>WorkMate cần quyền Vị trí để xác định bạn có đang ở trong phạm vi văn phòng khi chấm công hay không.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>WorkMate cần quyền truy cập Thư viện ảnh để bạn có thể tải lên các tài liệu minh chứng như đơn xin nghỉ phép.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
