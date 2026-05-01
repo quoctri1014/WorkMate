@@ -243,11 +243,17 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
 
       _stableFrameCount++;
       _lastDetected = faceInfo;
-      _updateState(FaceScanState.detected, 'Giữ yên trong giây lát...');
 
-      if (_stableFrameCount >= _requiredStableFrames) {
-        _stableFrameCount = 0;
-        await _captureAndCompare();
+      if (_scanState != FaceScanState.waitingBlink && _stableFrameCount >= _requiredStableFrames) {
+        _updateState(FaceScanState.waitingBlink, 'Giữ nguyên và NHÁY MẮT (Liveness Check)');
+      } else if (_scanState == FaceScanState.waitingBlink) {
+        if (faceInfo.isBlinking) {
+          _stableFrameCount = 0;
+          await _captureAndCompare();
+        }
+      } else {
+        _updateState(FaceScanState.detected, 'Giữ yên trong giây lát...');
+      }
       }
     } finally {
       _isProcessingFrame = false;

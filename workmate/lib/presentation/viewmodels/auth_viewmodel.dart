@@ -59,12 +59,12 @@ class AuthViewModel extends ChangeNotifier {
     throw UnimplementedError();
   }
 
-  Future<bool> updateFaceId(List<double> embedding) async {
+  Future<bool> updateFaceId(dynamic embeddings) async {
     if (_currentUser == null) return false;
     _isLoading = true;
     notifyListeners();
     try {
-      final success = await _api.registerFace(_currentUser!.id, embedding);
+      final success = await _api.registerFace(_currentUser!.id, embeddings);
       _isLoading = false;
       notifyListeners();
       return success;

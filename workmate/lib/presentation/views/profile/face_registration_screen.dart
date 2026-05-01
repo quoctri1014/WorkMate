@@ -15,13 +15,15 @@ enum RegistrationStep {
   center,
   left,
   right,
+  up,
+  down,
   done
 }
 
 class FaceRegistrationScreen extends StatefulWidget {
   final int employeeId;
   final String employeeName;
-  final Future<void> Function(List<double> embedding) onSuccess;
+  final Future<void> Function(dynamic embeddings) onSuccess;
 
   const FaceRegistrationScreen({
     super.key,
@@ -133,10 +135,11 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         _lastDetected = faceInfo;
         
         double headY = faceInfo.face.headEulerAngleY ?? 0; 
+        double headX = faceInfo.face.headEulerAngleX ?? 0;
         
         bool correctPos = false;
         if (_regStep == RegistrationStep.center) {
-          correctPos = headY.abs() < 10;
+          correctPos = headY.abs() < 10 && headX.abs() < 10;
           if (!correctPos) _updateState(FaceScanState.detected, 'Nhìn thẳng vào camera');
         } else if (_regStep == RegistrationStep.left) {
           correctPos = headY > 15; 
@@ -144,13 +147,19 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         } else if (_regStep == RegistrationStep.right) {
           correctPos = headY < -15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang PHẢI một chút');
+        } else if (_regStep == RegistrationStep.up) {
+          correctPos = headX > 15; 
+          if (!correctPos) _updateState(FaceScanState.detected, 'Ngẩng mặt lên một chút');
+        } else if (_regStep == RegistrationStep.down) {
+          correctPos = headX < -15; 
+          if (!correctPos) _updateState(FaceScanState.detected, 'Cúi mặt xuống một chút');
         }
 
         if (correctPos) {
           if (_scanState != FaceScanState.waitingBlink && _scanState != FaceScanState.capturing) {
             _updateState(FaceScanState.waitingBlink, 'Giữ nguyên và nháy mắt');
           } else if (faceInfo.isBlinking && _scanState == FaceScanState.waitingBlink) {
-            _updateState(FaceScanState.capturing, 'Đang ghi nhận mẫu ${_capturedEmbeddings.length + 1}/3...');
+            _updateState(FaceScanState.capturing, 'Đang ghi nhận mẫu ${_capturedEmbeddings.length + 1}/5...');
             await _captureSample();
           }
         }
@@ -167,6 +176,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       case RegistrationStep.center: return 'Nhìn thẳng vào khung';
       case RegistrationStep.left: return 'Nghiêng mặt sang TRÁI';
       case RegistrationStep.right: return 'Nghiêng mặt sang PHẢI';
+      case RegistrationStep.up: return 'Ngẩng mặt LÊN';
+      case RegistrationStep.down: return 'Cúi mặt XUỐNG';
       default: return '';
     }
   }
@@ -188,10 +199,12 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         _capturedEmbeddings.add(embedding);
       }
 
-      if (_capturedEmbeddings.length < 3) {
+      if (_capturedEmbeddings.length < 5) {
         setState(() {
           if (_regStep == RegistrationStep.center) _regStep = RegistrationStep.left;
           else if (_regStep == RegistrationStep.left) _regStep = RegistrationStep.right;
+          else if (_regStep == RegistrationStep.right) _regStep = RegistrationStep.up;
+          else if (_regStep == RegistrationStep.up) _regStep = RegistrationStep.down;
         });
         
         _updateState(FaceScanState.searching, _getStepGuide());
@@ -225,23 +238,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         return;
       }
 
-      List<double> finalEmbedding = List.filled(192, 0.0);
-      for (var emb in validEmbeddings) {
-        for (int i = 0; i < 192; i++) {
-          finalEmbedding[i] += emb[i];
-        }
-      }
-      for (int i = 0; i < 192; i++) {
-        finalEmbedding[i] /= validEmbeddings.length;
-      }
-
-      // Re-normalize để đảm bảo vector nằm trên hypersphere
-      double norm = sqrt(finalEmbedding.fold(0, (sum, val) => sum + val * val));
-      if (norm > 0) {
-        for (int i = 0; i < 192; i++) finalEmbedding[i] /= norm;
-      }
-
-      await widget.onSuccess(finalEmbedding);
+      // Trả về danh sách embeddings thay vì trung bình
+      await widget.onSuccess(validEmbeddings);
       
       if (mounted) {
         setState(() {
@@ -327,9 +325,9 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       top: 120, left: 0, right: 0,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(3, (index) {
-          bool isDone = index < _capturedEmbeddings.length;
-          bool isCurrent = index == _capturedEmbeddings.length;
+        children: List.generate(5, (index) {
+          bool isCurrent = _regStep.index == index;
+          bool isDone = _regStep.index > index;
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 6),
             width: isCurrent ? 40 : 10,

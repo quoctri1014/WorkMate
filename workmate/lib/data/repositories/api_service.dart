@@ -59,12 +59,17 @@ class ApiService {
     }
   }
 
-  Future<List<double>?> fetchSavedEmbedding(int employeeId) async {
+  Future<List<List<double>>?> fetchSavedEmbedding(int employeeId) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/face/embedding/$employeeId'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return (data['embedding'] as List).cast<double>();
+        if (data['embeddings'] != null) {
+          return (data['embeddings'] as List)
+              .map((e) => (e as List).cast<double>())
+              .toList();
+        }
+        return [(data['embedding'] as List).cast<double>()];
       }
       return null;
     } catch (e) {
@@ -97,14 +102,14 @@ class ApiService {
     }
   }
 
-  Future<bool> registerFace(int employeeId, List<double> embedding) async {
+  Future<bool> registerFace(int employeeId, dynamic embeddings) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/face/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'employee_id': employeeId,
-          'embedding': embedding,
+          'embeddings': embeddings,
         }),
       );
       return response.statusCode == 200;

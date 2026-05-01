@@ -83,7 +83,20 @@ function euclideanDistance(a, b) {
   }
   return Math.sqrt(sum);
 }
-const MATCH_THRESHOLD = 1.5; // Tăng lên 1.5 cực kỳ thoải mái để test
+
+function cosineSimilarity(a, b) {
+  if (a.length !== b.length) return 0;
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+const MATCH_THRESHOLD = 0.75; // Thay đổi sang Cosine Similarity threshold
 
 // --- DATABASE MIGRATION (Tự động nâng cấp cấu trúc) ---
 const initDB = async () => {
@@ -391,12 +404,32 @@ app.post('/api/auth/login', async (req, res) => {
 
 // --- 2. FACE ID ROUTES ---
 app.post('/api/face/register', async (req, res) => {
-  const { employee_id, embedding } = req.body;
+  const { employee_id, embeddings } = req.body;
   try {
-    await pool.query(
-      'UPDATE employees SET face_embedding = $1, face_registered_at = NOW() WHERE id = $2',
-      [JSON.stringify(embedding), employee_id]
-    );
+    // Nếu client gửi 1 embedding (bản cũ) thì đưa vào mảng
+    const embs = Array.isArray(embeddings) && embeddings.length > 0 && Array.isArray(embeddings[0]) 
+      ? embeddings 
+      : (req.body.embedding ? [req.body.embedding] : []);
+      
+    if (embs.length === 0) {
+      return res.status(400).json({ success: false, message: "Không có dữ liệu khuôn mặt" });
+    }
+
+    // Xóa dữ liệu cũ
+    await pool.query('DELETE FROM face_embeddings WHERE employee_id = $1', [employee_id]);
+    
+    // Lưu các góc mặt mới
+    const angles = ['center', 'left', 'right', 'up', 'down'];
+    for (let i = 0; i < embs.length; i++) {
+      await pool.query(
+        'INSERT INTO face_embeddings (employee_id, embedding, angle) VALUES ($1, $2, $3)',
+        [employee_id, JSON.stringify(embs[i]), angles[i] || 'unknown']
+      );
+    }
+    
+    // Đánh dấu đã đăng ký trong bảng employees
+    await pool.query('UPDATE employees SET face_registered_at = NOW() WHERE id = $1', [employee_id]);
+
     res.json({ success: true, message: "Đăng ký thành công" });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -405,10 +438,13 @@ app.post('/api/face/register', async (req, res) => {
 
 app.get('/api/face/embedding/:id', async (req, res) => {
   try {
-    const r = await pool.query('SELECT face_embedding FROM employees WHERE id = $1', [req.params.id]);
-    if (r.rows.length === 0 || !r.rows[0].face_embedding) return res.status(404).json({ message: "Chưa có dữ liệu" });
-    const embedding = typeof r.rows[0].face_embedding === 'string' ? JSON.parse(r.rows[0].face_embedding) : r.rows[0].face_embedding;
-    res.json({ success: true, embedding });
+    const r = await pool.query('SELECT embedding FROM face_embeddings WHERE employee_id = $1', [req.params.id]);
+    if (r.rows.length === 0) return res.status(404).json({ message: "Chưa có dữ liệu" });
+    
+    // Trả về danh sách embeddings
+    const embeddings = r.rows.map(row => typeof row.embedding === 'string' ? JSON.parse(row.embedding) : row.embedding);
+    // Để tương thích ngược với client cũ, trả về embedding đầu tiên (nhưng client mới sẽ dùng mảng)
+    res.json({ success: true, embedding: embeddings[0], embeddings: embeddings });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -449,12 +485,17 @@ app.post('/api/face/checkin', async (req, res) => {
     }
 
     // 4. Kiểm tra khuôn mặt
-    const r = await pool.query('SELECT face_embedding FROM employees WHERE id = $1', [employee_id]);
-    if (r.rows.length === 0 || !r.rows[0].face_embedding) return res.status(400).json({ message: "Chưa đăng ký khuôn mặt" });
+    const r = await pool.query('SELECT embedding FROM face_embeddings WHERE employee_id = $1', [employee_id]);
+    if (r.rows.length === 0) return res.status(400).json({ message: "Chưa đăng ký khuôn mặt" });
     
-    const saved = typeof r.rows[0].face_embedding === 'string' ? JSON.parse(r.rows[0].face_embedding) : r.rows[0].face_embedding;
-    const dist = euclideanDistance(embedding, saved);
-    const isMatch = dist < MATCH_THRESHOLD;
+    let maxSimilarity = -1;
+    for (let row of r.rows) {
+      const saved = typeof row.embedding === 'string' ? JSON.parse(row.embedding) : row.embedding;
+      const sim = cosineSimilarity(embedding, saved);
+      if (sim > maxSimilarity) maxSimilarity = sim;
+    }
+    
+    const isMatch = maxSimilarity >= MATCH_THRESHOLD;
 
     if (!isMatch) return res.status(403).json({ success: false, message: "Khuôn mặt không khớp" });
 

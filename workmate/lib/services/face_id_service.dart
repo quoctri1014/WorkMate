@@ -49,8 +49,8 @@ class FaceIdService {
   Interpreter? _interpreter;
   bool _isInitialized = false;
   bool _isInitializing = false;
-  // Tăng ngưỡng lên 1.5 cực kỳ thoải mái để test theo yêu cầu
-  static const double _matchThreshold = 1.5;
+  // Dùng Cosine Similarity, ngưỡng chuẩn là 0.75
+  static const double _matchThreshold = 0.75;
   static const int _modelInputSize = 112;
 
   Future<void> initialize() async {
@@ -183,16 +183,31 @@ class FaceIdService {
     return embedding.map((v) => v / (norm == 0 ? 1 : norm)).toList();
   }
 
-  FaceMatchResult compareFaces(List<double> curr, List<double> saved) {
-    double sum = 0;
-    for (int i = 0; i < curr.length; i++) sum += pow(curr[i] - saved[i], 2);
-    final dist = sqrt(sum);
+  double _cosineSimilarity(List<double> a, List<double> b) {
+    double dot = 0, normA = 0, normB = 0;
+    for (int i = 0; i < a.length; i++) {
+      dot += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
+    if (normA == 0 || normB == 0) return 0;
+    return dot / (sqrt(normA) * sqrt(normB));
+  }
+
+  FaceMatchResult compareFaces(List<double> curr, List<List<double>> savedList) {
+    if (savedList.isEmpty) return FaceMatchResult(isMatch: false, distance: 0, confidence: 0);
     
-    // Công thức tính độ chính xác cực kỳ lạc quan để đạt > 80% khi test
-    // Nếu dist = 0.9 (thực tế), confidence = 100 - 18 = 82%
-    double confidence = (100 - (dist * 20)).clamp(0, 100);
+    double maxSimilarity = -1.0;
+    for (var saved in savedList) {
+      double sim = _cosineSimilarity(curr, saved);
+      if (sim > maxSimilarity) maxSimilarity = sim;
+    }
     
-    return FaceMatchResult(isMatch: dist < _matchThreshold, distance: dist, confidence: confidence);
+    // Đã chuyển sang cosine similarity, nên distance thực chất là similarity.
+    // Độ chính xác (Confidence) = similarity * 100
+    double confidence = (maxSimilarity * 100).clamp(0, 100);
+    
+    return FaceMatchResult(isMatch: maxSimilarity >= _matchThreshold, distance: maxSimilarity, confidence: confidence);
   }
 
   void dispose() { 
