@@ -54,10 +54,14 @@ class _CheckInPermissionScreenState extends State<CheckInPermissionScreen> {
       status = await Permission.photos.request();
       if (status.isGranted || status.isLimited) setState(() => _galleryGranted = true);
     }
+    // Luôn cập nhật lại trạng thái sau khi yêu cầu
+    await _checkCurrentPermissions();
     
-    // Nếu bị từ chối vĩnh viễn mới nhắc mở Settings
-    if (await Permission.camera.isPermanentlyDenied || 
-        await Permission.location.isPermanentlyDenied) {
+    // Chỉ hiện cảnh báo mở Settings nếu status vẫn là permanentlyDenied
+    final cameraStatus = await Permission.camera.status;
+    final locationStatus = await Permission.location.status;
+
+    if (cameraStatus.isPermanentlyDenied || locationStatus.isPermanentlyDenied) {
       if (mounted) {
         showDialog(
           context: context,
@@ -138,11 +142,12 @@ class _PermissionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      onTap: isOk ? null : onTap, // Cho phép nhấn vào toàn bộ dòng
       leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: isOk ? AppColors.successLight : AppColors.background, borderRadius: BorderRadius.circular(10)),
         child: Icon(icon, color: isOk ? AppColors.success : AppColors.primary)),
       title: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
       subtitle: Text(sub, style: const TextStyle(fontSize: 11)),
-      trailing: isOk ? const Icon(Icons.check_circle_rounded, color: AppColors.success) : TextButton(onPressed: onTap, child: const Text('Cấp phép')),
+      trailing: isOk ? const Icon(Icons.check_circle_rounded, color: AppColors.success) : const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
     );
   }
 }
