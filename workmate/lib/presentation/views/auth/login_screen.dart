@@ -256,37 +256,35 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLoginButton() {
     return Consumer<AuthViewModel>(
       builder: (context, authVM, child) {
-        return Container(
+        return SizedBox(
           width: double.infinity,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF9AD6FF).withOpacity(0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
+          height: 56,
           child: ElevatedButton(
             onPressed: authVM.isLoading ? null : _handleLogin,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9AD6FF),
+              backgroundColor: const Color(0xFF1C6185), // Sử dụng màu xanh đậm đồng nhất với logo
               foregroundColor: Colors.white,
-              elevation: 0,
+              elevation: 2,
+              shadowColor: Colors.black.withOpacity(0.2),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: authVM.isLoading
-                ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                ? const SizedBox(
+                    height: 24, 
+                    width: 24, 
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Đăng nhập', style: AppTextStyles.buttonLarge),
+                      Text(
+                        'Đăng nhập', 
+                        style: AppTextStyles.buttonLarge.copyWith(color: Colors.white),
+                      ),
                       const SizedBox(width: 12),
-                      const Icon(Icons.arrow_forward_rounded, size: 20),
+                      const Icon(Icons.arrow_forward_rounded, size: 20, color: Colors.white),
                     ],
                   ),
           ),
