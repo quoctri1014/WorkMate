@@ -32,8 +32,9 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
 
   FaceScanState _scanState = FaceScanState.searching;
   String _guideText = 'Đưa khuôn mặt vào khung';
-  DetectedFaceInfo? _lastDetected;
   FaceMatchResult? _matchResult;
+  String _debugLog = "";
+  String? _initError;
 
   bool _isProcessingFrame = false;
   bool _isDone = false;
@@ -122,20 +123,30 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
     );
 
     try {
+      _addLog("Đang khởi tạo camera...");
       await _cameraController!.initialize();
       if (!mounted) return;
 
+      _addLog("Camera initialized thành công");
       setState(() => _isCameraReady = true);
       
       // Đợi một chút cho preview hiển thị rồi mới start stream
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 1000));
       if (!mounted) return;
       
+      _addLog("Bắt đầu Image Stream...");
       _cameraController!.startImageStream(_onCameraFrame);
     } catch (e) {
+      _addLog("LỖI KHỞI TẠO: $e");
       debugPrint("Camera Init Error: $e");
+      setState(() => _initError = e.toString());
       _updateState(FaceScanState.failed, 'Lỗi camera: $e');
     }
+  }
+
+  void _addLog(String msg) {
+    print("📸 [CameraDebug] $msg");
+    if (mounted) setState(() => _debugLog += "$msg\n");
   }
 
   void _onCameraFrame(CameraImage image) async {
@@ -385,13 +396,17 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
+          Container(color: Colors.grey[900]), // Background đậm hơn để dễ phân biệt nếu camera đen
           if (_isCameraReady && _cameraController != null)
-            CameraPreview(_cameraController!),
+            Center(
+              child: CameraPreview(_cameraController!),
+            ),
           _buildOverlay(),
           _buildScanRing(),
           _buildTopBar(),
           _buildBottomInfo(),
           if (_matchResult != null) _buildResultBadge(),
+          _buildDiagnosticOverlay(), // THÊM LỚP CHẨN ĐOÁN
         ],
       ),
     );
@@ -421,6 +436,48 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildDiagnosticOverlay() {
+    return Positioned(
+      top: 100, left: 20, right: 20,
+      child: IgnorePointer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_initError != null)
+              Container(
+                padding: const EdgeInsets.all(8),
+                color: Colors.red.withOpacity(0.8),
+                child: Text("🔴 LỖI CAMERA: $_initError", style: const TextStyle(color: Colors.white, fontSize: 12)),
+              ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              color: Colors.black.withOpacity(0.4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("🔍 LOGS:\n$_debugLog", style: const TextStyle(color: Colors.greenAccent, fontSize: 10, fontFamily: 'Courier')),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () {
+                      _cameraController?.dispose();
+                      _initCamera();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(4)),
+                      child: const Text("🔄 THỬ LẠI CAMERA", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
