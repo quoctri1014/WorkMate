@@ -123,27 +123,33 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         return;
       }
 
+      if (faceInfo.isLowLight) {
+        _stableFrameCount = 0;
+        _updateState(FaceScanState.detected, 'Môi trường quá tối, hãy bật thêm đèn');
+        return;
+      }
+
       if (faceInfo.isTooClose) {
         _stableFrameCount = 0;
-        _updateState(FaceScanState.detected, 'Lùi ra xa hơn');
+        _updateState(FaceScanState.detected, 'Lùi ra xa hơn một chút');
         return;
       }
 
       if (faceInfo.isTooFar) {
         _stableFrameCount = 0;
-        _updateState(FaceScanState.detected, 'Lại gần hơn');
+        _updateState(FaceScanState.detected, 'Lại gần hơn một chút');
         return;
       }
 
       if (!faceInfo.isCentered) {
         _stableFrameCount = 0;
-        _updateState(FaceScanState.detected, 'Đưa mặt vào giữa khung');
+        _updateState(FaceScanState.detected, 'Đưa mặt vào giữa khung hình');
         return;
       }
 
       _stableFrameCount++;
       _lastDetected = faceInfo;
-      _updateState(FaceScanState.detected, 'Giữ yên...');
+      _updateState(FaceScanState.detected, 'Giữ yên trong giây lát...');
 
       if (_stableFrameCount >= _requiredStableFrames) {
         _stableFrameCount = 0;
@@ -173,14 +179,12 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       final user = context.read<AuthViewModel>().currentUser;
       if (user == null) throw Exception("User not found");
 
-      // Giả lập hoặc gọi API lấy embedding thật
-      // Vì tôi chưa cập nhật API nên tôi sẽ tạm thời để logic so sánh ở đây
-      // nhma tôi sẽ cập nhật API sớm
+      _updateState(FaceScanState.processing, 'Đang xác thực...');
       final savedEmbedding = await _api.fetchSavedEmbedding(user.id);
       
       if (savedEmbedding == null) {
-        _updateState(FaceScanState.failed, 'Chưa đăng ký khuôn mặt');
-        _resetAfterDelay();
+        _updateState(FaceScanState.failed, 'Bạn chưa đăng ký khuôn mặt!');
+        _showRegisterDialog(user.id, user.name);
         return;
       }
 
@@ -224,7 +228,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         }
 
         // 3. Gửi kết quả chấm công lên server
-        final success = await _api.submitCheckIn(
+        final resultApi = await _api.submitCheckIn(
           user.id, 
           currentEmbedding,
           lat: lat,
@@ -232,7 +236,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
           wifiSsid: wifiSsid,
         );
 
-        if (success) {
+        if (resultApi['success'] == true) {
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) {
               Navigator.pushReplacement(
@@ -242,7 +246,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
             }
           });
         } else {
-          _updateState(FaceScanState.failed, 'Chấm công thất bại (Sai vị trí/WiFi)');
+          _updateState(FaceScanState.failed, resultApi['message'] ?? 'Thất bại');
           _resetAfterDelay();
         }
       } else {
@@ -254,9 +258,42 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         _resetAfterDelay();
       }
     } catch (e) {
-      _updateState(FaceScanState.failed, 'Lỗi xử lý, thử lại');
+      _updateState(FaceScanState.failed, 'Lỗi: $e');
       _resetAfterDelay();
     }
+  }
+
+  void _showRegisterDialog(int employeeId, String name) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Chưa có dữ liệu'),
+        content: const Text('Bạn chưa đăng ký khuôn mặt để sử dụng tính năng này. Đăng ký ngay?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Đóng dialog
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FaceRegistrationScreen(
+                    employeeId: employeeId,
+                    employeeName: name,
+                    onSuccess: (embedding) async {
+                      await _api.registerFace(employeeId, embedding);
+                      if (mounted) Navigator.pop(context);
+                    },
+                  ),
+                ),
+              );
+            },
+            child: const Text('Đăng ký'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _resetAfterDelay() {
@@ -302,7 +339,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         children: [
           if (_isCameraReady && _cameraController != null)
             Transform.scale(
-              scaleX: -1,
+              scaleX: -1, // Fix lỗi ngược cam
               child: CameraPreview(_cameraController!),
             ),
           _buildOverlay(),

@@ -30,7 +30,15 @@ class DetectedFaceInfo {
   final bool isTooClose;
   final bool isTooFar;
   final bool isCentered;
-  const DetectedFaceInfo({required this.face, required this.isBlinking, required this.isTooClose, required this.isTooFar, required this.isCentered});
+  final bool isLowLight;
+  const DetectedFaceInfo({
+    required this.face, 
+    required this.isBlinking, 
+    required this.isTooClose, 
+    required this.isTooFar, 
+    required this.isCentered,
+    this.isLowLight = false,
+  });
 }
 
 class FaceIdService {
@@ -65,9 +73,20 @@ class FaceIdService {
     final format = _getInputImageFormat(image.format.group);
     if (format == null) return null;
 
-    // Trên iOS bgra8888 chỉ có 1 plane. Trên Android nv21 thường có bytes ở plane[0] hoặc cần ghép.
-    // Với permission_handler và camera plugin bản mới, dùng bytes của plane đầu tiên là đủ cho bgra8888/nv21.
     final bytes = image.planes[0].bytes;
+    
+    // Kiểm tra độ sáng (đơn giản bằng cách tính trung bình giá trị pixel plane 0 - Luminance)
+    double avgBrightness = 0;
+    // Lấy mẫu một số điểm để tiết kiệm hiệu năng
+    int step = bytes.length ~/ 100; 
+    int sum = 0;
+    int count = 0;
+    for (int i = 0; i < bytes.length; i += step) {
+      sum += bytes[i];
+      count++;
+    }
+    avgBrightness = sum / count;
+    bool isLowLight = avgBrightness < 45; // Ngưỡng tối thường khoảng 40-50
 
     final inputImage = InputImage.fromBytes(
       bytes: bytes,
@@ -80,10 +99,15 @@ class FaceIdService {
     );
 
     final faces = await _faceDetector.processImage(inputImage);
-    if (faces.isEmpty) return null;
+    if (faces.isEmpty) {
+      return isLowLight ? DetectedFaceInfo(
+        face: Face(boundingBox: Rect.zero, landmarks: {}, contours: {}),
+        isBlinking: false, isTooClose: false, isTooFar: false, isCentered: false,
+        isLowLight: true,
+      ) : null;
+    }
 
     final face = faces.first;
-    // Tỉ lệ khuôn mặt so với khung hình (dùng cạnh lớn nhất để khách quan)
     final faceSizeRatio = face.boundingBox.width / image.width;
 
     return DetectedFaceInfo(
@@ -91,9 +115,9 @@ class FaceIdService {
       isBlinking: (face.leftEyeOpenProbability ?? 1.0) < 0.2 && (face.rightEyeOpenProbability ?? 1.0) < 0.2,
       isTooClose: faceSizeRatio > 0.65,
       isTooFar: faceSizeRatio < 0.15,
-      // Kiểm tra tâm khuôn mặt có nằm gần tâm khung hình không
       isCentered: (face.boundingBox.center.dx - image.width / 2).abs() / image.width < 0.20 &&
                   (face.boundingBox.center.dy - image.height / 2).abs() / image.height < 0.20,
+      isLowLight: isLowLight,
     );
   }
 
@@ -107,7 +131,14 @@ class FaceIdService {
   Future<List<double>> extractEmbedding(Uint8List bytes, Rect rect) async {
     final raw = img.decodeImage(bytes);
     if (raw == null || _interpreter == null) return [];
-    final cropped = img.copyCrop(raw, x: rect.left.toInt(), y: rect.top.toInt(), width: rect.width.toInt(), height: rect.height.toInt());
+    
+    // Đảm bảo rect nằm trong khung hình
+    int left = rect.left.toInt().clamp(0, raw.width);
+    int top = rect.top.toInt().clamp(0, raw.height);
+    int width = rect.width.toInt().clamp(0, raw.width - left);
+    int height = rect.height.toInt().clamp(0, raw.height - top);
+
+    final cropped = img.copyCrop(raw, x: left, y: top, width: width, height: height);
     final resized = img.copyResize(cropped, width: _modelInputSize, height: _modelInputSize);
     
     var input = List.generate(1, (_) => List.generate(_modelInputSize, (y) => List.generate(_modelInputSize, (x) {

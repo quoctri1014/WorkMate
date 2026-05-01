@@ -72,7 +72,7 @@ class ApiService {
     }
   }
 
-  Future<bool> submitCheckIn(int employeeId, List<double> embedding, {double? lat, double? lng, String? wifiSsid}) async {
+  Future<Map<String, dynamic>> submitCheckIn(int employeeId, List<double> embedding, {double? lat, double? lng, String? wifiSsid}) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/face/checkin'),
@@ -85,9 +85,15 @@ class ApiService {
           'wifi_ssid': wifiSsid,
         }),
       );
-      return response.statusCode == 200;
+      
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Chấm công thành công'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Thất bại'};
+      }
     } catch (e) {
-      return false;
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
     }
   }
 
