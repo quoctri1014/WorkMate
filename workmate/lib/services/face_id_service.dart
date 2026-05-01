@@ -72,9 +72,17 @@ class FaceIdService {
         performanceMode: FaceDetectorMode.fast,
       ));
       
-      print('[FaceIdService] Đang nạp model TFLite...');
-      _interpreter = await Interpreter.fromAsset(
-        'assets/mobilefacenet.tflite', 
+      print('[FaceIdService] Đang nạp model TFLite từ buffer...');
+      final data = await rootBundle.load('assets/mobilefacenet.tflite');
+      final buffer = data.buffer.asUint8List();
+      print('[FaceIdService] Đã nạp buffer: ${buffer.length} bytes');
+      
+      if (buffer.isEmpty) {
+        throw Exception("Buffer model bị trống!");
+      }
+
+      _interpreter = Interpreter.fromBuffer(
+        buffer, 
         options: InterpreterOptions()..threads = 4
       );
       
