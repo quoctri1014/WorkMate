@@ -75,27 +75,30 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       return;
     }
 
-    await FaceIdService.instance.initialize();
-    
-    _cameras = await availableCameras();
-    if (_cameras == null || _cameras!.isEmpty) return;
-    
-    // Tìm camera trước
-    CameraDescription? frontCamera;
     try {
-      frontCamera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front);
-    } catch (_) {
-      frontCamera = _cameras!.first;
-    }
-    
-    _cameraController = CameraController(
-      frontCamera, 
-      ResolutionPreset.medium, 
-      enableAudio: false,
-      imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.yuv420,
-    );
-    
-    try {
+      await FaceIdService.instance.initialize();
+      
+      _cameras = await availableCameras();
+      if (_cameras == null || _cameras!.isEmpty) {
+        _updateState(FaceScanState.failed, 'Không tìm thấy camera');
+        return;
+      }
+      
+      // Tìm camera trước
+      CameraDescription? frontCamera;
+      try {
+        frontCamera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front);
+      } catch (_) {
+        frontCamera = _cameras!.first;
+      }
+      
+      _cameraController = CameraController(
+        frontCamera, 
+        ResolutionPreset.medium, 
+        enableAudio: false,
+        imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.yuv420,
+      );
+      
       await _cameraController!.initialize();
       if (!mounted) return;
       setState(() => _isCameraReady = true);
@@ -130,18 +133,18 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         _lastDetected = faceInfo;
         
         // Kiểm tra hướng đầu (Y-angle)
-        double headY = faceInfo.face.headEulerAngleY ?? 0; // Quay trái/phải
+        double headY = faceInfo.face.headEulerAngleY ?? 0; 
         
         bool correctPos = false;
         if (_regStep == RegistrationStep.center) {
           correctPos = headY.abs() < 10;
           if (!correctPos) _updateState(FaceScanState.detected, 'Nhìn thẳng vào camera');
         } else if (_regStep == RegistrationStep.left) {
-          // Trong gương, quay trái nghĩa là headY âm (quay về phía phải của camera)
+          // Quay sang TRÁI (về vai trái của mình) -> headY âm
           correctPos = headY < -15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang TRÁI một chút');
         } else if (_regStep == RegistrationStep.right) {
-          // Trong gương, quay phải nghĩa là headY dương (quay về phía trái của camera)
+          // Quay sang PHẢI (về vai phải của mình) -> headY dương
           correctPos = headY > 15; 
           if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang PHẢI một chút');
         }
@@ -155,6 +158,9 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
           }
         }
       }
+    } catch (e, stack) {
+      print('DEBUG_FACE_ERROR: $e\n$stack');
+      // Không hiện lỗi ngay lập tức để tránh làm gián đoạn frame stream trừ khi lỗi nghiêm trọng
     } finally {
       _isProcessingFrame = false;
     }
@@ -173,7 +179,10 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     final controller = _cameraController;
     final lastFace = _lastDetected;
     
-    if (controller == null || lastFace == null) return;
+    if (controller == null || lastFace == null) {
+      print('DEBUG_CAPTURE: Controller or Face is null');
+      return;
+    }
     
     try {
       // Dừng stream tạm thời
@@ -181,14 +190,13 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       
       final xFile = await controller.takePicture();
       final imageBytes = await xFile.readAsBytes();
-      final faceRect = lastFace.face.boundingBox;
       
-      final embedding = await FaceIdService.instance.extractEmbedding(imageBytes, faceRect);
+      // Face detection lại lần nữa trên ảnh vừa chụp để lấy bounding box chính xác nhất
+      final embedding = await FaceIdService.instance.extractEmbedding(imageBytes, lastFace.face.boundingBox);
       
       _capturedEmbeddings.add(embedding);
 
       if (_capturedEmbeddings.length < 3) {
-        // Chuyển sang bước tiếp theo
         setState(() {
           if (_regStep == RegistrationStep.center) _regStep = RegistrationStep.left;
           else if (_regStep == RegistrationStep.left) _regStep = RegistrationStep.right;
@@ -198,11 +206,11 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) controller.startImageStream(_onCameraFrame);
       } else {
-        // Hoàn tất và trung bình cộng
         _regStep = RegistrationStep.done;
         await _finishRegistration();
       }
-    } catch (e) {
+    } catch (e, stack) {
+      print('DEBUG_CAPTURE_ERROR: $e\n$stack');
       _updateState(FaceScanState.failed, 'Lỗi: $e');
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) controller.startImageStream(_onCameraFrame);
@@ -217,20 +225,25 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       return;
     }
 
-    // Tính trung bình cộng của 3 vector embedding
-    List<double> finalEmbedding = List.filled(192, 0.0);
-    for (var emb in _capturedEmbeddings) {
-      for (int i = 0; i < 192; i++) {
-        finalEmbedding[i] += emb[i];
+    try {
+      List<double> finalEmbedding = List.filled(192, 0.0);
+      for (var emb in _capturedEmbeddings) {
+        if (emb.length == 192) {
+          for (int i = 0; i < 192; i++) {
+            finalEmbedding[i] += emb[i];
+          }
+        }
       }
-    }
-    for (int i = 0; i < 192; i++) {
-      finalEmbedding[i] /= _capturedEmbeddings.length;
-    }
+      for (int i = 0; i < 192; i++) {
+        finalEmbedding[i] /= _capturedEmbeddings.length;
+      }
 
-    await widget.onSuccess(finalEmbedding);
-    _hasFinished = true;
-    _updateState(FaceScanState.success, 'Đăng ký thành công!');
+      await widget.onSuccess(finalEmbedding);
+      _hasFinished = true;
+      _updateState(FaceScanState.success, 'Đăng ký thành công!');
+    } catch (e) {
+      _updateState(FaceScanState.failed, 'Lỗi tổng hợp: $e');
+    }
   }
 
   void _updateState(FaceScanState state, String guide) {
@@ -240,7 +253,6 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
 
   InputImageRotation _getRotation() {
     if (_cameras == null || _cameras!.isEmpty) return InputImageRotation.rotation0deg;
-    
     final camera = _cameras!.firstWhere((c) => c.lensDirection == CameraLensDirection.front, orElse: () => _cameras!.first);
     switch (camera.sensorOrientation) {
       case 90: return InputImageRotation.rotation90deg;
@@ -259,12 +271,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
         children: [
           if (_isCameraReady && _cameraController != null)
             Center(
-              child: Transform(
-                alignment: Alignment.center,
-                // Mirror the preview for a natural feel
-                transform: Matrix4.rotationY(3.14159),
-                child: CameraPreview(_cameraController!),
-              ),
+              child: CameraPreview(_cameraController!),
             ),
           _buildDarkOverlay(),
           _buildScanFrame(),
