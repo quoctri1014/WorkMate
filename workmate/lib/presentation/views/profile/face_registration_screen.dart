@@ -307,12 +307,13 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
           constraints: const BoxConstraints(maxHeight: 200),
           child: SingleChildScrollView(
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('STACK TRACE:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-              const SizedBox(height: 4),
-              SelectableText(_debugError, style: const TextStyle(color: Colors.white, fontSize: 10, fontFamily: 'monospace')),
-            ],
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('STACK TRACE:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(height: 4),
+                SelectableText(_debugError, style: const TextStyle(color: Colors.white, fontSize: 10, fontFamily: 'monospace')),
+              ],
+            ),
           ),
         ),
       ),
