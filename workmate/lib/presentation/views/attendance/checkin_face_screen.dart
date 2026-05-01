@@ -11,6 +11,7 @@ import 'package:network_info_plus/network_info_plus.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:workmate/services/face_id_service.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
+import 'package:workmate/data/models/models.dart';
 import 'package:workmate/data/repositories/api_service.dart';
 import 'dart:io';
 import 'attendance_success_screen.dart';
@@ -32,7 +33,23 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
 
   FaceScanState _scanState = FaceScanState.searching;
   String _guideText = 'Đưa khuôn mặt vào khung';
+  
+  // Các biến bị thiếu dẫn đến lỗi biên dịch
+  final _api = ApiService();
   CompanyConfigModel? _companyConfig;
+  late AnimationController _scanLineController;
+  late Animation<double> _scanLineAnim;
+  late AnimationController _resultController;
+  late Animation<double> _resultAnim;
+  
+  bool _isProcessingFrame = false;
+  bool _isDone = false;
+  int _stableFrameCount = 0;
+  static const int _requiredStableFrames = 5;
+  DetectedFaceInfo? _lastDetected;
+  FaceMatchResult? _matchResult;
+  String? _initError;
+  String _debugLog = "";
 
   @override
   void initState() {
