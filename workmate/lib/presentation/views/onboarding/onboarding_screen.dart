@@ -151,7 +151,22 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ),
                       ),
                     ),
-                    // Support buttons removed as requested
+                    // "Liên hệ hỗ trợ" removed as requested
+                    const SizedBox(height: 14),
+                    TextButton.icon(
+                      onPressed: () => SupportUtils.showSupportOptions(context),
+                      icon: const Icon(Icons.help_outline_rounded,
+                          size: 18, color: AppColors.textSecondary),
+                      label: const Text(
+                        'Trung tâm trợ giúp',
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       'WORKMATE ECOSYSTEM © 2025',
