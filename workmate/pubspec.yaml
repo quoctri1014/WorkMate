@@ -36,7 +36,7 @@ dependencies:
 
   # QR
   qr_flutter: ^4.1.0
-  mobile_scanner: ^3.5.7
+  mobile_scanner: ^5.2.0
 
   # Charts
   fl_chart: ^0.67.0

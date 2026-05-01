@@ -12,7 +12,9 @@ workflows:
           flutter pub upgrade google_mlkit_face_detection google_mlkit_commons
           flutter pub get
           cd ios
+          rm -f Podfile.lock
           pod repo update
+          pod install
       - name: Biên dịch iOS (Lách luật Apple)
         script: flutter build ios --release --no-codesign
       - name: Đóng gói thành file .ipa
