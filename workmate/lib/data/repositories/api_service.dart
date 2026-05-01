@@ -4,10 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:workmate/data/models/models.dart';
 
 class ApiService {
-  // Tự động nhận diện IP cho Android Emulator (10.0.2.2) và iOS Simulator (localhost)
+  // Tự động nhận diện IP cho Android Emulator (10.0.2.2) và iOS thực tế (Dùng IP máy tính)
   static String get baseUrl {
     if (Platform.isAndroid) return 'http://10.0.2.2:5000/api';
-    return 'http://127.0.0.1:5000/api';
+    return 'http://172.20.10.2:5000/api'; // IP máy tính khi kết nối Điểm truy cập cá nhân từ iPhone
   }
 
   Future<UserModel?> login(String code, String password) async {
