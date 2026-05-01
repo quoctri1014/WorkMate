@@ -83,9 +83,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             _SettingTile(
               icon: Icons.face_retouching_natural_rounded, color: AppColors.success, label: t('face_id_security'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FaceRegistrationScreen(
-                employeeId: user.id, employeeName: user.name, onSuccess: (emb) async { Navigator.pop(context); },
-              ))),
+              onTap: () => _showFaceRegConfirmation(context, user, vm),
             ),
             _SettingTile(
               icon: Icons.qr_code_rounded, color: AppColors.wsMeeting, label: t('qr_code'),
@@ -128,6 +126,79 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 100),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFaceRegConfirmation(BuildContext context, dynamic user, ProfileViewModel vm) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 70, height: 70,
+              decoration: BoxDecoration(color: AppColors.success.withOpacity(0.1), shape: BoxShape.circle),
+              child: const Icon(Icons.face_retouching_natural_rounded, color: AppColors.success, size: 36),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Cập nhật FaceID?',
+              style: TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Bạn có muốn thiết lập lại dữ liệu khuôn mặt? Dữ liệu cũ sẽ được thay thế hoàn toàn.',
+              style: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: AppColors.textSecondary.withOpacity(0.8), height: 1.5),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('Hủy bỏ', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: AppColors.textSecondary)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Đóng dialog
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => FaceRegistrationScreen(
+                        employeeId: user.id, 
+                        employeeName: user.name, 
+                        onSuccess: (emb) async {
+                          // Gọi API cập nhật và đóng màn hình registration
+                          await context.read<AuthViewModel>().updateFaceId(emb);
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                      )));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('Xác nhận', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900)),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

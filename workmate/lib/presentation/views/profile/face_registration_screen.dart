@@ -1,6 +1,6 @@
 // ============================================================
 // face_registration_screen.dart
-// Màn hình ĐĂNG KÝ khuôn mặt (THẬT)
+// Màn hình ĐĂNG KÝ khuôn mặt (THẬT) - Hỗ trợ đa hướng (3 mẫu)
 // ============================================================
 
 import 'package:camera/camera.dart';
@@ -9,6 +9,13 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:workmate/services/face_id_service.dart';
+
+enum RegistrationStep {
+  center,
+  left,
+  right,
+  done
+}
 
 class FaceRegistrationScreen extends StatefulWidget {
   final int employeeId;
@@ -33,11 +40,14 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   bool _isCameraReady = false;
 
   FaceScanState _scanState = FaceScanState.searching;
+  RegistrationStep _regStep = RegistrationStep.center;
   String _guideText = 'Đưa khuôn mặt vào khung';
+  
+  final List<List<double>> _capturedEmbeddings = [];
   DetectedFaceInfo? _lastDetected;
 
   bool _isProcessingFrame = false;
-  bool _hasRegistered = false;
+  bool _hasFinished = false;
 
   late AnimationController _scanLineController;
   late Animation<double> _scanLineAnim;
@@ -65,7 +75,6 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       return;
     }
 
-    // Đảm bảo FaceIdService đã khởi tạo xong
     await FaceIdService.instance.initialize();
     
     _cameras = await availableCameras();
@@ -75,73 +84,130 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     _cameraController = CameraController(
       frontCamera, 
       ResolutionPreset.medium, 
-      enableAudio: false, 
-      // Bỏ ImageFormatGroup.bgra8888 để tránh lỗi preview đen trên iOS
+      enableAudio: false,
     );
     
     try {
       await _cameraController!.initialize();
       if (!mounted) return;
-      
       setState(() => _isCameraReady = true);
-
-      // Thêm độ trễ ngắn trước khi stream để ổn định preview
       await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
-
       _cameraController!.startImageStream(_onCameraFrame);
     } catch (e) {
-      print('Camera Error: $e');
       _updateState(FaceScanState.failed, 'Lỗi Camera: $e');
     }
   }
 
   void _onCameraFrame(CameraImage image) async {
-    if (_isProcessingFrame || _hasRegistered) return;
+    if (_isProcessingFrame || _hasFinished) return;
     if (_scanState == FaceScanState.processing || _scanState == FaceScanState.success) return;
     _isProcessingFrame = true;
     try {
       final rotation = _getRotation();
       final faceInfo = await FaceIdService.instance.detectFaceFromCameraImage(image, rotation);
       if (!mounted) return;
+      
       if (faceInfo == null) {
-        _updateState(FaceScanState.searching, 'Đưa khuôn mặt vào khung');
+        _updateState(FaceScanState.searching, _getStepGuide());
       } else if (faceInfo.isTooClose) {
         _updateState(FaceScanState.detected, 'Lùi ra xa hơn một chút');
       } else if (faceInfo.isTooFar) {
         _updateState(FaceScanState.detected, 'Lại gần hơn một chút');
       } else if (!faceInfo.isCentered) {
         _updateState(FaceScanState.detected, 'Đưa mặt vào giữa khung');
-      } else if (_scanState != FaceScanState.waitingBlink && _scanState != FaceScanState.capturing) {
-        _updateState(FaceScanState.waitingBlink, 'Vui lòng nháy mắt để xác nhận');
-        _lastDetected = faceInfo;
-      } else if (faceInfo.isBlinking && _scanState == FaceScanState.waitingBlink) {
-        _updateState(FaceScanState.capturing, 'Đang chụp...');
-        await _captureAndRegister();
+      } else {
+        // Kiểm tra hướng đầu (Y-angle)
+        double headY = faceInfo.face.headEulerAngleY ?? 0; // Quay trái/phải
+        
+        bool correctPos = false;
+        if (_regStep == RegistrationStep.center) {
+          correctPos = headY.abs() < 10;
+          if (!correctPos) _updateState(FaceScanState.detected, 'Nhìn thẳng vào camera');
+        } else if (_regStep == RegistrationStep.left) {
+          correctPos = headY > 20; // Quay sang phải (nhưng trong gương là sang trái)
+          if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang TRÁI một chút');
+        } else if (_regStep == RegistrationStep.right) {
+          correctPos = headY < -20; // Quay sang trái
+          if (!correctPos) _updateState(FaceScanState.detected, 'Nghiêng mặt sang PHẢI một chút');
+        }
+
+        if (correctPos) {
+          if (_scanState != FaceScanState.waitingBlink && _scanState != FaceScanState.capturing) {
+            _updateState(FaceScanState.waitingBlink, 'Giữ nguyên và nháy mắt');
+            _lastDetected = faceInfo;
+          } else if (faceInfo.isBlinking && _scanState == FaceScanState.waitingBlink) {
+            _updateState(FaceScanState.capturing, 'Đang ghi nhận mẫu ${_capturedEmbeddings.length + 1}/3...');
+            await _captureSample();
+          }
+        }
       }
     } finally {
       _isProcessingFrame = false;
     }
   }
 
-  Future<void> _captureAndRegister() async {
+  String _getStepGuide() {
+    switch (_regStep) {
+      case RegistrationStep.center: return 'Nhìn thẳng vào khung';
+      case RegistrationStep.left: return 'Nghiêng mặt sang TRÁI';
+      case RegistrationStep.right: return 'Nghiêng mặt sang PHẢI';
+      default: return '';
+    }
+  }
+
+  Future<void> _captureSample() async {
     if (_cameraController == null) return;
     try {
+      // Dừng stream tạm thời
       await _cameraController!.stopImageStream();
-      _updateState(FaceScanState.processing, 'Đang xử lý khuôn mặt...');
+      
       final xFile = await _cameraController!.takePicture();
       final imageBytes = await xFile.readAsBytes();
       final faceRect = _lastDetected!.face.boundingBox;
       final embedding = await FaceIdService.instance.extractEmbedding(imageBytes, faceRect);
-      await widget.onSuccess(embedding);
-      _hasRegistered = true;
-      _updateState(FaceScanState.success, 'Đăng ký thành công!');
+      
+      _capturedEmbeddings.add(embedding);
+
+      if (_capturedEmbeddings.length < 3) {
+        // Chuyển sang bước tiếp theo
+        setState(() {
+          if (_regStep == RegistrationStep.center) _regStep = RegistrationStep.left;
+          else if (_regStep == RegistrationStep.left) _regStep = RegistrationStep.right;
+        });
+        
+        _updateState(FaceScanState.searching, _getStepGuide());
+        await Future.delayed(const Duration(milliseconds: 500));
+        _cameraController?.startImageStream(_onCameraFrame);
+      } else {
+        // Hoàn tất và trung bình cộng
+        _regStep = RegistrationStep.done;
+        await _finishRegistration();
+      }
     } catch (e) {
-      _updateState(FaceScanState.failed, 'Có lỗi xảy ra, thử lại');
+      _updateState(FaceScanState.failed, 'Lỗi: $e');
       await Future.delayed(const Duration(seconds: 2));
       _cameraController?.startImageStream(_onCameraFrame);
-      _updateState(FaceScanState.searching, 'Đưa khuôn mặt vào khung');
     }
+  }
+
+  Future<void> _finishRegistration() async {
+    _updateState(FaceScanState.processing, 'Đang tổng hợp dữ liệu gương mặt...');
+    
+    // Tính trung bình cộng của 3 vector embedding
+    List<double> finalEmbedding = List.filled(192, 0.0);
+    for (var emb in _capturedEmbeddings) {
+      for (int i = 0; i < 192; i++) {
+        finalEmbedding[i] += emb[i];
+      }
+    }
+    for (int i = 0; i < 192; i++) {
+      finalEmbedding[i] /= _capturedEmbeddings.length;
+    }
+
+    await widget.onSuccess(finalEmbedding);
+    _hasFinished = true;
+    _updateState(FaceScanState.success, 'Đăng ký thành công!');
   }
 
   void _updateState(FaceScanState state, String guide) {
@@ -170,13 +236,14 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
             Center(
               child: Transform(
                 alignment: Alignment.center,
-                transform: Matrix4.rotationY(3.14159), // LẬT NGANG CAMERA (MIRROR) THEO YÊU CẦU USER
+                transform: Matrix4.rotationY(3.14159),
                 child: CameraPreview(_cameraController!),
               ),
             ),
           _buildDarkOverlay(),
           _buildScanFrame(),
           _buildTopBar(),
+          _buildStepIndicator(),
           _buildBottomGuide(),
           if (_scanState == FaceScanState.success) _buildSuccessOverlay(),
         ],
@@ -202,6 +269,28 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
     );
   }
 
+  Widget _buildStepIndicator() {
+    return Positioned(
+      top: 120, left: 0, right: 0,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(3, (index) {
+          bool isDone = index < _capturedEmbeddings.length;
+          bool isCurrent = index == _capturedEmbeddings.length;
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            width: isCurrent ? 40 : 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: isDone ? const Color(0xFF00E676) : isCurrent ? const Color(0xFF40C4FF) : Colors.white24,
+              borderRadius: BorderRadius.circular(5),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
   Widget _buildTopBar() {
     return Positioned(
       top: 0, left: 0, right: 0,
@@ -215,7 +304,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text('ĐĂNG KÝ KHUÔN MẶT', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                  const Text('ĐĂNG KÝ ĐA HƯỚNG', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
                   Text(widget.employeeName, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13)),
                 ],
               ),
@@ -257,9 +346,9 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
           children: [
             Icon(Icons.check_circle_rounded, color: Color(0xFF00E676), size: 80),
             SizedBox(height: 16),
-            Text('Đăng ký thành công!', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            Text('Hoàn tất!', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('Khuôn mặt đã được lưu vào hệ thống', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Text('Hệ thống đã ghi nhớ các góc cạnh gương mặt bạn', style: TextStyle(color: Colors.white70, fontSize: 14)),
           ],
         ),
       ),
@@ -288,12 +377,13 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   }
 
   String _getSubText() {
-    switch (_scanState) {
-      case FaceScanState.waitingBlink: return 'Nháy mắt để xác nhận bạn là người thật';
-      case FaceScanState.processing: return 'AI đang phân tích khuôn mặt của bạn...';
-      case FaceScanState.success: return 'Dữ liệu đã được gửi lên hệ thống';
-      default: return 'Giữ khuôn mặt thẳng, đủ ánh sáng';
+    switch (_regStep) {
+      case RegistrationStep.center: return 'Bước 1: Nhìn thẳng trực diện';
+      case RegistrationStep.left: return 'Bước 2: Nghiêng mặt sang Trái 15-30 độ';
+      case RegistrationStep.right: return 'Bước 3: Nghiêng mặt sang Phải 15-30 độ';
+      case RegistrationStep.done: return 'Đang xử lý dữ liệu...';
     }
+    return '';
   }
 
   @override

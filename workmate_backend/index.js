@@ -83,7 +83,7 @@ function euclideanDistance(a, b) {
   }
   return Math.sqrt(sum);
 }
-const MATCH_THRESHOLD = 0.70;
+const MATCH_THRESHOLD = 1.0; // Tăng ngưỡng từ 0.7 lên 1.0
 
 // --- DATABASE MIGRATION (Tự động nâng cấp cấu trúc) ---
 const initDB = async () => {
@@ -495,31 +495,38 @@ app.post('/api/employees/avatar', async (req, res) => {
 });
 
 // --- 1.5. API CẤU HÌNH HỆ THỐNG (CONFIG) ---
-app.get('/api/config', async (req, res) => {
+// Hỗ trợ cả 2 endpoint để tương thích với Frontend
+const getConfig = async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM company_config LIMIT 1');
-    res.json(r.rows[0] || {});
+    res.json(r.rows[0] || { company_name: 'WorkMate HQ' });
   } catch (err) { res.status(500).json({ error: err.message }); }
-});
+};
 
-app.post('/api/config', async (req, res) => {
+const postConfig = async (req, res) => {
   const { company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters } = req.body;
   try {
     const existing = await pool.query('SELECT id FROM company_config LIMIT 1');
     if (existing.rows.length > 0) {
-      await pool.query(
-        'UPDATE company_config SET company_name = $1, safe_lat = $2, safe_lng = $3, safe_wifi_ssid = $4, safe_wifi_bssid = $5, radius_meters = $6 WHERE id = $7',
+      const r = await pool.query(
+        'UPDATE company_config SET company_name = $1, safe_lat = $2, safe_lng = $3, safe_wifi_ssid = $4, safe_wifi_bssid = $5, radius_meters = $6 WHERE id = $7 RETURNING *',
         [company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters, existing.rows[0].id]
       );
+      res.json(r.rows[0]);
     } else {
-      await pool.query(
-        'INSERT INTO company_config (company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters) VALUES ($1, $2, $3, $4, $5, $6)',
+      const r = await pool.query(
+        'INSERT INTO company_config (company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
         [company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters]
       );
+      res.json(r.rows[0]);
     }
-    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
-});
+};
+
+app.get('/api/config', getConfig);
+app.get('/api/company/config', getConfig);
+app.post('/api/config', postConfig);
+app.post('/api/company/config', postConfig);
 
 app.delete('/api/system/clear', async (req, res) => {
   await pool.query('TRUNCATE attendance, approvals, meetings, employees, departments RESTART IDENTITY CASCADE');
@@ -909,25 +916,6 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-// --- 4. API CẤU HÌNH HỆ THỐNG ---
-app.get('/api/company/config', async (req, res) => {
-  try {
-    const r = await pool.query('SELECT * FROM company_config LIMIT 1');
-    res.json(r.rows[0] || { company_name: 'QUẬN 12' });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/company/config', async (req, res) => {
-  try {
-    const { company_name, safe_lat, safe_lng, safe_wifi_ssid } = req.body;
-    const r = await pool.query(
-      'UPDATE company_config SET company_name = $1, safe_lat = $2, safe_lng = $3, safe_wifi_ssid = $4 WHERE id = (SELECT id FROM company_config LIMIT 1) RETURNING *',
-      [company_name, safe_lat, safe_lng, safe_wifi_ssid]
-    );
-    res.json(r.rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // --- KHỞI CHẠY SERVER ---
