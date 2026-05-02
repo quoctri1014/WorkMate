@@ -134,9 +134,9 @@ const App = () => {
 
            <button className="relative p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400 group">
              <Icon name="notifications" className="group-hover:scale-110 transition-transform" />
-             {notifications.length > 0 && (
+             {approvals.filter(a => a.status === 'pending').length > 0 && (
                <span className="absolute top-1.5 right-1.5 bg-rose-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-slate-900 shadow-sm animate-bounce">
-                 {notifications.length > 9 ? '9+' : notifications.length}
+                 {approvals.filter(a => a.status === 'pending').length > 9 ? '9+' : approvals.filter(a => a.status === 'pending').length}
                </span>
              )}
            </button>
