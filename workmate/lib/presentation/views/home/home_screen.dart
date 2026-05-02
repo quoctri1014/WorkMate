@@ -151,6 +151,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
+                          IconButton(
+                            onPressed: () => Navigator.pushNamed(context, AppRoutes.chat),
+                            icon: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 24),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 20),

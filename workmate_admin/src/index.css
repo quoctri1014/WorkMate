@@ -31,7 +31,7 @@
 @layer base {
   body {
     @apply bg-surface text-on-surface antialiased;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     margin: 0;
   }
 }

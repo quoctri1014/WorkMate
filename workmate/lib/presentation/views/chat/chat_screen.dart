@@ -288,7 +288,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                 controller: _textController,
                 decoration: const InputDecoration(
                   hintText: 'Nhập câu hỏi tại đây...',
-                  border: InputNavigator.none,
+                  border: InputBorder.none,
                   hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 onSubmitted: (_) => _handleSend(),

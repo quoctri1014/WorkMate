@@ -25,6 +25,7 @@ import 'package:workmate/presentation/views/profile/change_password_screen.dart'
 import 'package:workmate/presentation/views/profile/qr_screen.dart';
 import 'package:workmate/presentation/views/profile/bank_account_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:workmate/presentation/views/chat/chat_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -102,6 +103,7 @@ class WorkMateApp extends StatelessWidget {
           AppRoutes.changePassword: (_) => ChangePasswordScreen(),
           AppRoutes.qrCode: (_) => QRScreen(),
           AppRoutes.bankAccount: (_) => BankAccountScreen(),
+          AppRoutes.chat: (_) => const ChatScreen(),
         },
       ),
     );
