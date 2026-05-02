@@ -118,6 +118,10 @@ const DepartmentsView = ({ depts = [], onRefresh }) => {
               key={d.id} 
               className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 p-10 flex flex-col gap-8 relative group hover:shadow-2xl hover:shadow-primary/5 transition-all overflow-hidden"
             >
+               {/* Decorative background element */}
+               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 transition-all group-hover:scale-125 duration-700"></div>
+               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-slate-50 dark:bg-slate-800/20 rounded-full transition-all group-hover:translate-x-5 duration-500"></div>
+
                <div className="flex justify-between items-start relative z-10">
                   <div className="flex items-center gap-8">
                      <div className="w-24 h-24 rounded-[2rem] bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border-2 border-white dark:border-slate-800 shadow-xl transition-transform group-hover:rotate-6 duration-500">
@@ -127,7 +131,7 @@ const DepartmentsView = ({ depts = [], onRefresh }) => {
                      <div>
                        <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight mb-2 group-hover:text-primary transition-colors">{d.name}</h3>
                        <div className="flex items-center gap-3">
-                         <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Mã định danh hệ thống ID: {d.id}</span>
+                         <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">ID: {d.id}</span>
                        </div>
                      </div>
                   </div>
