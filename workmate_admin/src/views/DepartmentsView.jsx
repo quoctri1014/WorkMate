@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Icon, API_URL } from '../components/Common';
 
 export const AddDeptModal = ({ dept, onClose, onRefresh }) => {
@@ -37,42 +37,48 @@ export const AddDeptModal = ({ dept, onClose, onRefresh }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-surface-container-lowest w-full max-w-2xl rounded-[2.5rem] p-12 shadow-2xl relative border border-border">
-        <button onClick={onClose} className="absolute top-10 right-10 text-on-surface-variant hover:rotate-90 transition-all duration-300"><Icon name="close" /></button>
-        <h2 className="text-4xl font-black mb-12 text-on-surface tracking-tighter">{dept ? 'Cập nhật phòng ban' : 'Thêm phòng ban mới'}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={onClose} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
+      <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl relative border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div className="brand-gradient h-3 absolute top-0 left-0 right-0" />
+        <button onClick={onClose} className="absolute top-8 right-8 w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all duration-300"><Icon name="close" /></button>
+        
+        <div className="mb-10">
+          <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{dept ? 'Cập nhật phòng ban' : 'Thêm phòng ban mới'}</h2>
+          <p className="text-slate-500 font-medium mt-1">Thiết lập bộ nhận diện và chức danh chuyên môn.</p>
+        </div>
 
-        <form onSubmit={handleSave} className="space-y-8 text-left">
-            <div className="grid grid-cols-2 gap-8">
-               <div className="space-y-3">
-                  <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">Tên phòng ban</label>
-                  <input required placeholder="Vd: Phòng Kỹ thuật" className="w-full bg-surface-container-low border-2 border-transparent focus:border-primary/20 rounded-[1.5rem] py-5 px-6 outline-none font-bold text-on-surface transition-all placeholder:text-on-surface-variant/30" value={data.name} onChange={e => setData({...data, name: e.target.value})} />
+        <form onSubmit={handleSave} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               <div className="md:col-span-2 space-y-3">
+                  <label className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-2">Tên phòng ban</label>
+                  <input required placeholder="Vd: Phòng Kỹ thuật" className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-primary/20 rounded-2xl py-5 px-6 outline-none font-bold text-slate-900 dark:text-white transition-all placeholder:text-slate-300" value={data.name} onChange={e => setData({...data, name: e.target.value})} />
                </div>
                <div className="space-y-3">
-                  <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">Mã phòng (2-3 ký tự)</label>
-                  <input required maxLength="3" placeholder="Vd: TECH" className="w-full bg-surface-container-low border-2 border-transparent focus:border-primary/20 rounded-[1.5rem] py-5 px-6 outline-none font-bold uppercase text-on-surface transition-all placeholder:text-on-surface-variant/30" value={data.code} onChange={e => setData({...data, code: e.target.value.toUpperCase()})} />
+                  <label className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-2">Mã định danh</label>
+                  <input required maxLength="5" placeholder="TECH" className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-primary/20 rounded-2xl py-5 px-6 outline-none font-black uppercase text-primary transition-all text-center tracking-widest" value={data.code} onChange={e => setData({...data, code: e.target.value.toUpperCase()})} />
                </div>
             </div>
 
             <div className="space-y-4">
-               <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">Thiết lập các chức danh</label>
+               <label className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-2">Thiết lập các chức danh</label>
                <div className="flex gap-4">
-                  <input className="flex-1 bg-surface-container-low border-2 border-transparent focus:border-primary/20 rounded-[1.5rem] py-5 px-6 outline-none font-bold text-on-surface transition-all placeholder:text-on-surface-variant/30" placeholder="Vd: Senior Developer" value={newPos} onChange={e => setNewPos(e.target.value)} onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), handleAddPos())} />
-                  <button type="button" onClick={handleAddPos} className="w-16 h-16 brand-gradient text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all"><Icon name="add" className="!text-3xl" /></button>
+                  <input className="flex-1 bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-primary/20 rounded-2xl py-5 px-6 outline-none font-bold text-slate-900 dark:text-white transition-all" placeholder="Vd: Senior Developer" value={newPos} onChange={e => setNewPos(e.target.value)} onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), handleAddPos())} />
+                  <button type="button" onClick={handleAddPos} className="w-16 h-16 brand-gradient text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"><Icon name="add" className="!text-3xl" /></button>
                </div>
-               <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 custom-scrollbar">
+               <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 no-scrollbar">
                   {data.positions.map((p, i) => (
-                     <div key={i} className="flex items-center gap-3 px-6 py-3 bg-primary/10 text-primary rounded-2xl text-xs font-black border border-primary/20 group hover:bg-primary/20 transition-all">
+                     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={i} className="flex items-center gap-2 px-5 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 group hover:border-primary/30 transition-all">
                         {p} 
-                        <button type="button" onClick={() => handleRemovePos(i)} className="text-on-surface-variant/50 hover:text-error transition-colors">
-                          <Icon name="close" className="!text-[16px]" />
+                        <button type="button" onClick={() => handleRemovePos(i)} className="text-slate-400 hover:text-red-500 transition-colors">
+                          <Icon name="close" className="!text-[14px]" />
                         </button>
-                     </div>
+                     </motion.div>
                   ))}
                </div>
             </div>
 
-           <button className="w-full py-5 brand-gradient text-white rounded-full font-black shadow-xl uppercase text-sm tracking-[0.2em] mt-4">XÁC NHẬN LƯU THÔNG TIN</button>
+           <button className="w-full py-5 brand-gradient text-white rounded-3xl font-black shadow-xl shadow-primary/20 uppercase text-xs tracking-[0.3em] mt-6 hover:opacity-90 transition-opacity">XÁC NHẬN LƯU THÔNG TIN</button>
         </form>
       </motion.div>
     </div>
@@ -85,72 +91,104 @@ const DepartmentsView = ({ depts = [], onRefresh }) => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa phòng ban này? Nhân viên thuộc phòng này sẽ bị ảnh hưởng.")) return;
-    await axios.delete(`${API_URL}/departments/${id}`);
-    onRefresh();
+    try {
+      await axios.delete(`${API_URL}/departments/${id}`);
+      onRefresh();
+    } catch (err) { alert("Không thể xóa phòng ban đang có nhân viên!"); }
   };
 
   return (
-    <div className="space-y-10">
-      <div className="flex justify-between items-end">
-        <div><h2 className="text-4xl font-extrabold tracking-tight">Cấu trúc Tổ chức</h2><p className="text-on-surface-variant mt-1 font-medium">Quản lý các phòng ban và chức danh chuyên môn.</p></div>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 brand-gradient text-white px-8 py-4 rounded-full font-black shadow-xl hover:scale-105 transition-all"><Icon name="domain_add" /> THÊM PHÒNG BAN MỚI</button>
+    <div className="max-w-7xl mx-auto space-y-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+          <h2 className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">Cấu trúc Tổ chức</h2>
+          <p className="text-slate-500 font-medium text-lg mt-2 italic opacity-80">Quản lý các phòng ban và sơ đồ vị trí chuyên môn.</p>
+        </div>
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-3 brand-gradient text-white px-10 py-5 rounded-full font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest text-xs">
+          <Icon name="domain_add" className="!text-xl" /> THÊM PHÒNG BAN
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {depts.map(d => (
-          <div key={d.id} className="bg-surface-container-lowest p-8 rounded-[2.5rem] shadow-sm border border-border flex flex-col gap-8 relative group overflow-hidden transition-all hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 transition-all group-hover:scale-150"></div>
-             
-             <div className="flex justify-between items-start relative z-10">
-                <div className="flex items-center gap-6">
-                   <div className="w-16 h-16 rounded-2xl bg-primary-light flex items-center justify-center text-primary font-black text-2xl shadow-inner transition-colors group-hover:bg-primary group-hover:text-white">{d.code}</div>
-                   <div>
-                     <h3 className="text-2xl font-black text-on-surface transition-colors leading-none mb-2">{d.name}</h3>
-                     <div className="flex items-center gap-2">
-                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-black rounded-md uppercase">Mã PB: {d.code}</span>
-                       <span className="text-[9px] text-on-surface-variant font-bold uppercase tracking-widest">ID: {d.id}</span>
-                     </div>
-                   </div>
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
-                   <button onClick={() => setEditing(d)} className="p-2.5 text-primary hover:bg-primary/10 rounded-xl transition-all"><Icon name="edit" /></button>
-                   <button onClick={() => handleDelete(d.id)} className="p-2.5 text-error hover:bg-error/10 rounded-xl transition-all"><Icon name="delete" /></button>
-                </div>
-             </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+        {depts.map(d => {
+          const positions = Array.isArray(d.positions) ? d.positions : JSON.parse(d.positions || '[]').filter(p => p);
+          return (
+            <motion.div 
+              layout
+              key={d.id} 
+              className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 p-10 flex flex-col gap-8 relative group hover:shadow-2xl hover:shadow-primary/5 transition-all overflow-hidden"
+            >
+               {/* Decorative background element */}
+               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 transition-all group-hover:scale-125 duration-700"></div>
+               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-slate-50 dark:bg-slate-800/20 rounded-full transition-all group-hover:translate-x-5 duration-500"></div>
 
-             <div className="space-y-4 relative z-10 flex-1">
-                <div className="flex items-center gap-2">
-                   <div className="h-px flex-1 bg-border"></div>
-                   <p className="text-[9px] font-black text-on-surface-variant uppercase tracking-widest px-2">Nhóm chức danh chuyên môn</p>
-                   <div className="h-px flex-1 bg-border"></div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                   {(Array.isArray(d.positions) ? d.positions : JSON.parse(d.positions || '[]')).map((pos, idx) => (
-                     <span key={idx} className="px-4 py-2 bg-surface-container-low text-on-surface-variant rounded-xl text-[10px] font-bold border border-border/50 hover:border-primary/30 transition-all cursor-default">{pos}</span>
-                   ))}
-                   {(Array.isArray(d.positions) ? d.positions : JSON.parse(d.positions || '[]')).length === 0 && (
-                     <div className="w-full py-4 text-center border-2 border-dashed border-border rounded-2xl">
-                       <p className="text-[10px] italic text-on-surface-variant font-medium">Chưa thiết lập chức danh chuyên môn</p>
+               <div className="flex justify-between items-start relative z-10">
+                  <div className="flex items-center gap-8">
+                     <div className="w-24 h-24 rounded-[2rem] bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border-2 border-white dark:border-slate-800 shadow-xl transition-transform group-hover:rotate-6 duration-500">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mã PB</span>
+                        <span className="text-2xl font-black text-primary leading-none">{d.code}</span>
                      </div>
-                   )}
-                </div>
-             </div>
-             
-             <div className="pt-4 border-t border-border flex justify-between items-center relative z-10">
-               <div></div>
-               <button onClick={() => setEditing(d)} className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1 group-hover:underline">Chi tiết phòng ban <Icon name="arrow_forward" className="!text-[12px]" /></button>
-             </div>
-          </div>
-        ))}
+                     <div>
+                       <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight mb-2 group-hover:text-primary transition-colors">{d.name}</h3>
+                       <div className="flex items-center gap-3">
+                         <div className="flex -space-x-2">
+                           {[1,2,3].map(i => (
+                             <div key={i} className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-900" />
+                           ))}
+                         </div>
+                         <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">ID: {d.id}</span>
+                       </div>
+                     </div>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                     <button onClick={() => setEditing(d)} className="w-12 h-12 flex items-center justify-center text-primary bg-primary/5 hover:bg-primary hover:text-white rounded-2xl transition-all shadow-lg shadow-primary/5"><Icon name="edit" /></button>
+                     <button onClick={() => handleDelete(d.id)} className="w-12 h-12 flex items-center justify-center text-red-500 bg-red-500/5 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-lg shadow-red-500/5"><Icon name="delete" /></button>
+                  </div>
+               </div>
+
+               <div className="space-y-6 relative z-10 flex-1">
+                  <div className="flex items-center gap-4">
+                     <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
+                     <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em]">Cơ cấu nhân sự</p>
+                     <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
+                  </div>
+                  <div className="flex flex-wrap gap-2.5">
+                     {positions.map((pos, idx) => (
+                       <span key={idx} className="px-5 py-3 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 rounded-2xl text-[11px] font-bold border border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:bg-white dark:hover:bg-slate-800 transition-all cursor-default whitespace-normal break-words max-w-[200px] text-center">
+                         {pos}
+                       </span>
+                     ))}
+                     {positions.length === 0 && (
+                       <div className="w-full py-6 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl">
+                         <p className="text-xs italic text-slate-400 font-medium">Chưa thiết lập sơ đồ vị trí</p>
+                       </div>
+                     )}
+                  </div>
+               </div>
+               
+               <div className="pt-6 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center relative z-10">
+                 <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{positions.length} Vị trí chuyên môn</span>
+                 </div>
+                 <button onClick={() => setEditing(d)} className="text-[11px] font-black text-primary uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform group/btn">
+                   CHỈNH SỬA CƠ CẤU <Icon name="arrow_forward" className="!text-lg" />
+                 </button>
+               </div>
+            </motion.div>
+          );
+        })}
       </div>
 
-      {(showAdd || editing) && (
-        <AddDeptModal 
-          dept={editing} 
-          onClose={() => { setShowAdd(false); setEditing(null); }} 
-          onRefresh={onRefresh} 
-        />
-      )}
+      <AnimatePresence>
+        {(showAdd || editing) && (
+          <AddDeptModal 
+            dept={editing} 
+            onClose={() => { setShowAdd(false); setEditing(null); }} 
+            onRefresh={onRefresh} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
