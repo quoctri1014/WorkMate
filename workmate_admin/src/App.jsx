@@ -66,7 +66,8 @@ const App = () => {
         fetch('/approvals', setApprovals),
         fetch('/departments', setDepts),
         fetch('/meetings', setMeetings),
-        fetch('/config', setConfig)
+        fetch('/config', setConfig),
+        fetch('/notifications', setNotifications)
       ]);
     } finally {
       setLoading(false);
@@ -88,6 +89,7 @@ const App = () => {
     socket.on('new_attendance', () => fetchData({ date: attendanceFilterDate }));
     socket.on('new_approval', () => fetchData());
     socket.on('approval_updated', fetchData);
+    socket.on('new_notification', () => fetchData());
     socket.on('online_users', (users) => {
       setOnlineUsers(users.map(Number));
     });
@@ -96,6 +98,7 @@ const App = () => {
       socket.off('new_attendance');
       socket.off('new_approval');
       socket.off('approval_updated');
+      socket.off('new_notification');
       socket.off('online_users');
     };
   }, [user, attendanceFilterDate]);
@@ -129,9 +132,13 @@ const App = () => {
 
            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
 
-           <button className="relative p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400">
-             <Icon name="notifications" />
-             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900" />
+           <button className="relative p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400 group">
+             <Icon name="notifications" className="group-hover:scale-110 transition-transform" />
+             {notifications.length > 0 && (
+               <span className="absolute top-1.5 right-1.5 bg-rose-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-slate-900 shadow-sm animate-bounce">
+                 {notifications.length > 9 ? '9+' : notifications.length}
+               </span>
+             )}
            </button>
 
            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
