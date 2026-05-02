@@ -10,9 +10,15 @@ class NotificationService {
   NotificationService._internal();
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  FirebaseMessaging? _fcm;
 
   Future<void> init() async {
+    try {
+      _fcm = FirebaseMessaging.instance;
+    } catch (e) {
+      print('⚠️ Firebase Messaging instance not available: $e');
+    }
+    
     tz.initializeTimeZones();
     
     // 1. Local Notifications Setup
@@ -33,12 +39,12 @@ class NotificationService {
     );
 
     // 2. Firebase Messaging Setup
-    await _fcm.requestPermission(
+    await _fcm?.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
-
+    
     // Xử lý thông báo khi app đang mở (Foreground)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('📩 Foreground message: ${message.notification?.title}');
@@ -50,15 +56,15 @@ class NotificationService {
         );
       }
     });
-
+ 
     // Xử lý khi nhấn vào thông báo từ trạng thái đóng (Background/Terminated)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print('🚀 App opened from notification: ${message.data}');
     });
   }
-
+ 
   Future<String?> getToken() async {
-    return await _fcm.getToken();
+    return await _fcm?.getToken();
   }
 
   Future<void> updateTokenOnServer(int employeeId) async {
