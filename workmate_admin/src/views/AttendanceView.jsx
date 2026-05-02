@@ -10,6 +10,7 @@ const AttendanceView = ({ attendance = [] }) => (
           <tr className="text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider border-b border-surface-container-low">
             <th className="pb-4 pl-4">Nhân viên</th>
             <th className="pb-4 text-center">Giờ vào</th>
+            <th className="pb-4 text-center">Giờ ra</th>
             <th className="pb-4">Phương thức</th>
             <th className="pb-4 text-right pr-4">Trạng thái</th>
           </tr>
@@ -19,8 +20,9 @@ const AttendanceView = ({ attendance = [] }) => (
             <tr key={a.id} className="hover:bg-surface-container-low/20 transition-colors">
             <td className="py-5 pl-4 font-bold text-slate-800 dark:text-slate-100">{a.employee_name}</td>
               <td className="py-5 text-center font-mono font-bold text-primary">{a.check_in}</td>
+              <td className="py-5 text-center font-mono font-bold text-amber-500">{a.check_out || '--:--:--'}</td>
               <td className="py-5"><div className="flex items-center gap-2"><Icon name={a.method === 'WiFi' ? 'wifi' : 'location_on'} className="text-sky-500" /><span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{a.method}</span></div></td>
-              <td className="py-5 text-right pr-4"><span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-full text-[11px] font-bold">Hợp lệ</span></td>
+              <td className="py-5 text-right pr-4"><span className={`px-3 py-1 ${a.check_out ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'} rounded-full text-[11px] font-bold`}>{a.check_out ? 'Hoàn tất' : 'Đang làm'}</span></td>
             </tr>
           ))}
         </tbody>
