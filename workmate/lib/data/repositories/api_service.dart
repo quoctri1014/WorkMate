@@ -76,7 +76,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> submitCheckIn(int employeeId, List<double> embedding, {double? lat, double? lng, String? wifiSsid}) async {
+  Future<Map<String, dynamic>> submitCheckIn(int employeeId, List<double> embedding, String action, {double? lat, double? lng, String? wifiSsid}) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/face/checkin'),
@@ -84,6 +84,7 @@ class ApiService {
         body: jsonEncode({
           'employee_id': employeeId,
           'embedding': embedding,
+          'action': action,
           'lat': lat,
           'lng': lng,
           'wifi_ssid': wifiSsid,

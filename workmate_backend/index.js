@@ -465,18 +465,20 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 app.post('/api/face/checkin', async (req, res) => {
-  const { employee_id, embedding, lat, lng, wifi_ssid } = req.body;
+  const { employee_id, embedding, lat, lng, wifi_ssid, action } = req.body;
+  console.log(`📥 Nhận yêu cầu ${action} cho nhân viên ID: ${employee_id}`);
+  
   try {
     // 1. Lấy cấu hình Safe Zone
     const configResult = await pool.query('SELECT * FROM company_config LIMIT 1');
     const config = configResult.rows[0];
 
-    // 2. Kiểm tra WiFi (Nếu có cấu hình)
+    // 2. Kiểm tra WiFi
     if (config && config.safe_wifi_ssid && wifi_ssid !== config.safe_wifi_ssid) {
       return res.status(403).json({ success: false, message: `Vui lòng kết nối WiFi: ${config.safe_wifi_ssid}` });
     }
 
-    // 3. Kiểm tra GPS (Nếu có cấu hình)
+    // 3. Kiểm tra GPS
     if (config && config.safe_lat && config.safe_lng) {
       const distance = getDistance(lat, lng, config.safe_lat, config.safe_lng);
       if (distance > config.radius_meters) {
@@ -485,12 +487,8 @@ app.post('/api/face/checkin', async (req, res) => {
     }
 
     // 4. Kiểm tra khuôn mặt
-    console.log(`🔍 Đang kiểm tra khuôn mặt cho nhân viên ID: ${employee_id}`);
     const r = await pool.query('SELECT embedding FROM face_embeddings WHERE employee_id = $1', [employee_id]);
-    if (r.rows.length === 0) {
-      console.log('❌ Nhân viên chưa đăng ký khuôn mặt');
-      return res.status(400).json({ message: "Chưa đăng ký khuôn mặt" });
-    }
+    if (r.rows.length === 0) return res.status(400).json({ message: "Chưa đăng ký khuôn mặt" });
     
     let maxSimilarity = -1;
     for (let row of r.rows) {
@@ -499,44 +497,50 @@ app.post('/api/face/checkin', async (req, res) => {
       if (sim > maxSimilarity) maxSimilarity = sim;
     }
     
-    console.log(`📊 Độ tương đồng cao nhất: ${(maxSimilarity * 100).toFixed(2)}%`);
-    const isMatch = maxSimilarity >= MATCH_THRESHOLD;
-
-    if (!isMatch) {
-      console.log('❌ Khuôn mặt không khớp');
+    if (maxSimilarity < MATCH_THRESHOLD) {
       return res.status(403).json({ success: false, message: "Khuôn mặt không khớp" });
     }
 
-    console.log('✅ Khuôn mặt khớp. Đang kiểm tra trạng thái chấm công hôm nay (Vietnam Time)...');
+    // 5. Xử lý logic Chấm công theo ACTION
     const existing = await pool.query(
       "SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE", 
       [employee_id]
     );
-    console.log(`📅 Đã tìm thấy ${existing.rows.length} bản ghi hôm nay`);
 
-    if (existing.rows.length === 0) {
-      console.log('📝 Đang tạo bản ghi Check-in mới...');
+    if (action === 'check_in') {
+      if (existing.rows.length > 0) {
+        return res.status(400).json({ success: false, message: "Bạn đã check-in hôm nay rồi" });
+      }
       const result = await pool.query(
         "INSERT INTO attendance (employee_id, check_in_time, check_in_method) VALUES ($1, NOW(), 'FACE_ID') RETURNING *", 
         [employee_id]
       );
-      console.log('✨ Check-in thành công:', result.rows[0]);
       io.emit('new_attendance', result.rows[0]);
-    } else if (!existing.rows[0].check_out_time) {
-      console.log('📝 Đang cập nhật bản ghi Check-out...');
+    } else if (action === 'check_out') {
+      if (existing.rows.length === 0) {
+        return res.status(400).json({ success: false, message: "Bạn chưa check-in hôm nay" });
+      }
+      if (existing.rows[0].check_out_time) {
+        return res.status(400).json({ success: false, message: "Bạn đã check-out hôm nay rồi" });
+      }
+
+      // Ngăn chặn check-out quá nhanh (dưới 1 phút)
+      const checkInTime = new Date(existing.rows[0].check_in_time);
+      const now = new Date();
+      if (now - checkInTime < 60000) { // 1 phút
+        return res.status(400).json({ success: false, message: "Vui lòng đợi ít nhất 1 phút sau khi check-in" });
+      }
+
       const result = await pool.query(
         "UPDATE attendance SET check_out_time = NOW() WHERE id = $1 RETURNING *", 
         [existing.rows[0].id]
       );
-      console.log('✨ Check-out thành công:', result.rows[0]);
       io.emit('attendance_updated', result.rows[0]);
-    } else {
-      console.log('ℹ️ Nhân viên đã hoàn thành cả check-in và check-out hôm nay');
     }
 
-    res.json({ success: true, message: "Chấm công thành công" });
+    res.json({ success: true, message: "Thao tác thành công" });
   } catch (err) {
-    console.error('🔥 LỖI CHẤM CÔNG:', err);
+    console.error('🔥 LỖI:', err);
     res.status(500).json({ message: err.message });
   }
 });

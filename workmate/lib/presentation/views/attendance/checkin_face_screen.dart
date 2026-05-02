@@ -366,6 +366,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         final resultApi = await _api.submitCheckIn(
           user.id, 
           currentEmbedding,
+          widget.isCheckIn ? 'check_in' : 'check_out',
           lat: lat,
           lng: lng,
           wifiSsid: wifiSsid,
