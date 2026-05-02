@@ -925,8 +925,10 @@ app.get('/api/attendance/export', async (req, res) => {
     });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Báo cáo Chấm công');
+    const worksheet = workbook.addWorksheet('Báo cáo Chi tiết');
+    const summarySheet = workbook.addWorksheet('Tổng hợp Công');
 
+    // Sheet 1: Chi tiết
     worksheet.columns = [
       { header: 'Mã NV', key: 'code', width: 15 },
       { header: 'Họ tên', key: 'name', width: 25 },
@@ -937,6 +939,17 @@ app.get('/api/attendance/export', async (req, res) => {
       { header: 'Giờ hành chính', key: 'normal', width: 15 },
       { header: 'Giờ OT', key: 'ot', width: 12 }
     ];
+    worksheet.getRow(1).font = { bold: true };
+
+    // Sheet 2: Tổng hợp
+    summarySheet.columns = [
+      { header: 'Mã NV', key: 'code', width: 15 },
+      { header: 'Họ tên', key: 'name', width: 25 },
+      { header: 'Tổng giờ làm', key: 'totalHours', width: 15 }
+    ];
+    summarySheet.getRow(1).font = { bold: true };
+
+    const summaryMap = {}; // employee_code -> { name, total }
 
     r.rows.forEach(row => {
       const approvedOT = otMap[`${row.employee_id}_${row.date}`] || 0;
@@ -952,11 +965,23 @@ app.get('/api/attendance/export', async (req, res) => {
         normal: hours.normal,
         ot: hours.ot
       });
+
+      if (!summaryMap[row.employee_code]) {
+        summaryMap[row.employee_code] = { name: row.employee_name, total: 0 };
+      }
+      summaryMap[row.employee_code].total += hours.total;
+    });
+
+    Object.keys(summaryMap).forEach(code => {
+      summarySheet.addRow({
+        code: code,
+        name: summaryMap[code].name,
+        totalHours: parseFloat(summaryMap[code].total.toFixed(2))
+      });
     });
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=Bao_cao_cham_cong_${month}.xlsx`);
-
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) { res.status(500).json({ error: err.message }); }
