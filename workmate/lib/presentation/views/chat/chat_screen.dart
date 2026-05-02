@@ -24,12 +24,19 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     final user = context.read<ProfileViewModel>().user;
     if (user != null) {
       _chatService.initSocket(user.id, (data) {
         if (mounted) {
+          final newMsg = ChatMessage.fromMap(data);
           setState(() {
-            _messages.add(ChatMessage.fromMap(data));
+            // Tránh trùng lặp tin nhắn nếu đã có ID này
+            if (!_messages.any((m) => m.id != 0 && m.id == newMsg.id)) {
+              _messages.add(newMsg);
+            }
           });
           _scrollToBottom();
         }
@@ -87,7 +94,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         if (mounted) {
           setState(() {
             _messages.add(ChatMessage(
-              id: 0,
+              id: DateTime.now().millisecondsSinceEpoch, // Tạm thời
               senderId: 0, // Bot
               message: res['reply'],
               isAi: true,
@@ -121,6 +128,8 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         ),
         backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       ),
     );
   }
@@ -136,46 +145,90 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Trợ lý WorkMate', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5)),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppColors.primary,
-          indicatorWeight: 4,
-          tabs: const [
-            Tab(text: 'TRỢ LÝ AI', icon: Icon(Icons.smart_toy_rounded)),
-            Tab(text: 'QUẢN TRỊ VIÊN', icon: Icon(Icons.admin_panel_settings_rounded)),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Column(
+          children: [
+            const Text('Trợ lý WorkMate', 
+              style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black87, fontSize: 18)
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6, height: 6,
+                  decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 4),
+                const Text('Online', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.w700)),
+              ],
+            )
           ],
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey.shade600,
+              indicator: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: AppColors.primary,
+                boxShadow: [
+                  BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))
+                ]
+              ),
+              tabs: const [
+                Tab(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.auto_awesome, size: 16), SizedBox(width: 8), Text('TRỢ LÝ AI')])),
+                Tab(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.headset_mic_rounded, size: 16), SizedBox(width: 8), Text('ADMIN')])),
+              ],
+            ),
+          ),
         ),
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(20),
-              itemCount: _messages.length + (_isLoadingAI ? 1 : 0),
-              itemBuilder: (context, i) {
-                if (i == _messages.length) {
-                  return _buildLoadingBubble();
-                }
-                final msg = _messages[i];
-                final isMe = msg.senderId == context.read<ProfileViewModel>().user?.id;
-                
-                // Lọc tin nhắn theo Tab (AI messages only in AI tab, Admin messages only in Admin tab)
-                // Hoặc cho phép xem lịch sử chung nhưng đánh dấu.
-                // Theo yêu cầu User: "User chuyển sang tab Chat Admin" -> Tách biệt.
-                
-                if (_tabController.index == 0 && !msg.isAi && msg.receiverId != null) return const SizedBox();
-                if (_tabController.index == 1 && msg.isAi) return const SizedBox();
-                // Admin chat logic: receiverId is NULL for broadcast to admins or specific admin ID.
-                // In this simplified version, if not AI and not from Me to Me, it's admin chat.
-                
-                return _buildMessageBubble(msg, isMe);
-              },
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage('https://www.toptal.com/designers/subtlepatterns/patterns/double-bubble.png'),
+                  opacity: 0.03,
+                  repeat: ImageRepeat.repeat,
+                ),
+              ),
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+                itemCount: _messages.length + (_isLoadingAI ? 1 : 0),
+                itemBuilder: (context, i) {
+                  if (i == _messages.length) {
+                    return _buildLoadingBubble();
+                  }
+                  final msg = _messages[i];
+                  final isMe = msg.senderId == context.read<ProfileViewModel>().user?.id;
+                  
+                  if (_tabController.index == 0 && !msg.isAi && msg.receiverId != null) return const SizedBox();
+                  if (_tabController.index == 1 && msg.isAi) return const SizedBox();
+                  
+                  return _buildMessageBubble(msg, isMe);
+                },
+              ),
             ),
           ),
           _buildInput(),
@@ -186,71 +239,99 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   Widget _buildMessageBubble(ChatMessage msg, bool isMe) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.only(bottom: 20),
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          color: isMe 
-            ? AppColors.primary 
-            : (msg.isAi ? Colors.amber.shade50 : Colors.grey.shade100),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: Radius.circular(isMe ? 20 : 0),
-            bottomRight: Radius.circular(isMe ? 0 : 20),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (msg.isAi)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.auto_awesome, size: 12, color: Colors.amber),
-                    SizedBox(width: 4),
-                    Text('AI WORKMATE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.amber)),
-                  ],
-                ),
+      child: Column(
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Container(
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: isMe 
+                ? LinearGradient(
+                    colors: [AppColors.primary, AppColors.primary.withBlue(180)],
+                    begin: Alignment.topLeft, end: Alignment.bottomRight
+                  )
+                : null,
+              color: isMe ? null : (msg.isAi ? Colors.white : Colors.white),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(22),
+                topRight: const Radius.circular(22),
+                bottomLeft: Radius.circular(isMe ? 22 : 4),
+                bottomRight: Radius.circular(isMe ? 4 : 22),
               ),
-            Text(
-              msg.message,
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                )
+              ],
+              border: isMe ? null : Border.all(color: Colors.grey.shade100),
             ),
-          ],
-        ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (msg.isAi)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.auto_awesome, size: 14, color: Colors.amber),
+                        const SizedBox(width: 6),
+                        Text('AI WORKMATE', 
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.amber.shade700, letterSpacing: 1)
+                        ),
+                      ],
+                    ),
+                  ),
+                Text(
+                  msg.message,
+                  style: TextStyle(
+                    color: isMe ? Colors.white : Colors.black87,
+                    fontSize: 15,
+                    fontWeight: isMe ? FontWeight.w600 : FontWeight.w500,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
+            child: Text(
+              isMe ? 'Bạn • 19:48' : (msg.isAi ? 'AI • Vừa xong' : 'Admin • 19:49'), // Tạm thời hardcode time
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+            ),
+          )
+        ],
       ),
     );
   }
 
   Widget _buildLoadingBubble() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.only(bottom: 20),
       alignment: Alignment.centerLeft,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         decoration: BoxDecoration(
-          color: Colors.amber.shade50,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]
         ),
-        child: const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.amber),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 14, height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.amber.shade600),
+            ),
+            const SizedBox(width: 12),
+            Text('AI đang suy nghĩ...', style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+          ],
         ),
       ),
     );
@@ -261,16 +342,17 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
       padding: EdgeInsets.only(
         left: 20, 
         right: 20, 
-        top: 15, 
-        bottom: MediaQuery.of(context).padding.bottom + 15
+        top: 20, 
+        bottom: MediaQuery.of(context).padding.bottom + 20
       ),
       decoration: BoxDecoration(
         color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+            blurRadius: 25,
+            offset: const Offset(0, -10),
           )
         ],
       ),
@@ -280,32 +362,39 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(30),
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.grey.shade200),
               ),
               child: TextField(
                 controller: _textController,
-                decoration: const InputDecoration(
-                  hintText: 'Nhập câu hỏi tại đây...',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  hintText: _tabController.index == 0 ? 'Hỏi AI bất cứ điều gì...' : 'Nhắn cho Admin...',
                   border: InputBorder.none,
-                  hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                  hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                 ),
                 onSubmitted: (_) => _handleSend(),
               ),
             ),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 12),
           GestureDetector(
             onTap: _handleSend,
             child: Container(
-              width: 50,
-              height: 50,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.primary.withBlue(200)],
+                  begin: Alignment.topLeft, end: Alignment.bottomRight
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6))
+                ]
               ),
-              child: const Icon(Icons.send_rounded, color: Colors.white),
+              child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
             ),
           ),
         ],
