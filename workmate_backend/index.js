@@ -872,6 +872,54 @@ app.get('/api/attendance/today/:employee_id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.put('/api/attendance/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { check_in, check_out, date } = req.body; // check_in/out format HH:mm:ss
+
+    // 1. Lấy dữ liệu cũ để so sánh
+    const oldRes = await pool.query(`
+      SELECT a.*, to_char(check_in_time, 'HH24:MI:SS') as old_in, 
+             to_char(check_out_time, 'HH24:MI:SS') as old_out
+      FROM attendance a WHERE id = $1
+    `, [id]);
+    
+    if (oldRes.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy bản ghi' });
+    const old = oldRes.rows[0];
+
+    // 2. Cập nhật vào DB
+    // Lưu ý: check_in_time và check_out_time là TIMESTAMP, cần kết hợp với date
+    const newIn = `${date} ${check_in}`;
+    const newOut = check_out ? `${date} ${check_out}` : null;
+
+    await pool.query(
+      'UPDATE attendance SET check_in_time = $1, check_out_time = $2 WHERE id = $3',
+      [newIn, newOut, id]
+    );
+
+    // 3. Gửi Push Notification thông báo thay đổi
+    let changeLog = [];
+    if (old.old_in !== check_in) changeLog.push(`Giờ vào: ${old.old_in} ➔ ${check_in}`);
+    if ((old.old_out || '--:--:--') !== (check_out || '--:--:--')) {
+      changeLog.push(`Giờ ra: ${old.old_out || '--:--:--'} ➔ ${check_out || '--:--:--'}`);
+    }
+
+    if (changeLog.length > 0) {
+      await sendPushNotification(
+        old.employee_id,
+        '⚡ Chỉnh sửa giờ công',
+        `Admin đã sửa giờ công ngày ${date}:\n${changeLog.join('\n')}`,
+        { type: 'attendance_update', date }
+      );
+    }
+
+    res.json({ success: true });
+  } catch (err) { 
+    console.error('❌ Lỗi sửa attendance:', err.message);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
 // --- 6. API PHÊ DUYỆT (APPROVALS) ---
 app.post('/api/approvals', async (req, res) => {
   try {

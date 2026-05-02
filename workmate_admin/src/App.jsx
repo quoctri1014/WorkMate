@@ -205,7 +205,7 @@ const App = () => {
              {activeTab === 'departments' && <DepartmentsView depts={depts} onRefresh={fetchData} />}
              {activeTab === 'meetings' && <MeetingsView meetings={meetings} notifications={notifications} depts={depts} onRefresh={fetchData} />}
              {activeTab === 'approvals' && <ApprovalsView approvals={approvals} />}
-             {activeTab === 'attendance' && <AttendanceView attendance={attendance} />}
+             {activeTab === 'attendance' && <AttendanceView attendance={attendance} onRefresh={fetchData} />}
              {activeTab === 'settings' && <SettingsView config={config} onRefresh={fetchData} />}
           </motion.div>
         </AnimatePresence>
