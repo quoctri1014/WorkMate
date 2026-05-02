@@ -11,6 +11,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const nodemailer = require('nodemailer');
 const admin = require('firebase-admin');
+const ExcelJS = require('exceljs');
 
 // --- CẤU HÌNH FIREBASE ---
 const serviceAccount = require("./firebase-service-account.json");
@@ -847,7 +848,8 @@ async function sendPushNotification(employeeId, title, body, data = {}) {
 
 app.get('/api/attendance', async (req, res) => {
   try {
-    const r = await pool.query(`
+    const { date } = req.query;
+    let query = `
       SELECT a.*, e.name as employee_name, e.employee_code,
              a.check_in_method as method,
              to_char(a.check_in_time, 'YYYY-MM-DD') as date,
@@ -855,9 +857,68 @@ app.get('/api/attendance', async (req, res) => {
              to_char(a.check_out_time, 'HH24:MI:SS') as check_out
       FROM attendance a
       JOIN employees e ON a.employee_id = e.id
-      ORDER BY a.check_in_time DESC
-    `);
+    `;
+    let params = [];
+    
+    if (date) {
+      query += ` WHERE to_char(a.check_in_time, 'YYYY-MM-DD') = $1`;
+      params.push(date);
+    }
+    
+    query += ` ORDER BY a.check_in_time DESC`;
+    
+    const r = await pool.query(query, params);
     res.json(r.rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// API Xuất Excel
+app.get('/api/attendance/export', async (req, res) => {
+  try {
+    const { month } = req.query; // YYYY-MM
+    const r = await pool.query(`
+      SELECT a.*, e.name as employee_name, e.employee_code,
+             to_char(a.check_in_time, 'YYYY-MM-DD') as date,
+             to_char(a.check_in_time, 'HH24:MI:SS') as check_in,
+             to_char(a.check_out_time, 'HH24:MI:SS') as check_out
+      FROM attendance a
+      JOIN employees e ON a.employee_id = e.id
+      WHERE to_char(a.check_in_time, 'YYYY-MM') = $1
+      ORDER BY e.name, a.check_in_time
+    `, [month]);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Báo cáo Chấm công');
+
+    worksheet.columns = [
+      { header: 'Mã NV', key: 'code', width: 15 },
+      { header: 'Họ tên', key: 'name', width: 25 },
+      { header: 'Ngày', key: 'date', width: 15 },
+      { header: 'Giờ vào', key: 'in', width: 12 },
+      { header: 'Giờ ra', key: 'out', width: 12 },
+      { header: 'Số giờ công', key: 'hours', width: 15 }
+    ];
+
+    r.rows.forEach(row => {
+      let hours = 0;
+      if (row.check_out_time) {
+        hours = (new Date(row.check_out_time) - new Date(row.check_in_time)) / (1000 * 60 * 60);
+      }
+      worksheet.addRow({
+        code: row.employee_code,
+        name: row.employee_name,
+        date: row.date,
+        in: row.check_in,
+        out: row.check_out || '--:--:--',
+        hours: hours.toFixed(2)
+      });
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=Bao_cao_cham_cong_${month}.xlsx`);
+
+    await workbook.xlsx.write(res);
+    res.end();
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

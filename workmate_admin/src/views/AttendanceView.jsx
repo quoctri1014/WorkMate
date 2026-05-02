@@ -1,10 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Icon, API_URL } from '../components/Common';
 
 const AttendanceView = ({ attendance = [], onRefresh }) => {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportMonth, setExportMonth] = useState(new Date().toISOString().split('T')[0].substring(0, 7));
+
+  // Tạo danh sách các ngày để hiển thị thanh chọn ngày (giống ảnh 2)
+  const getDates = () => {
+    const dates = [];
+    const today = new Date();
+    // Lấy 7 ngày gần nhất
+    for (let i = -3; i <= 3; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() + i);
+      dates.push({
+        full: d.toISOString().split('T')[0],
+        day: d.getDate().toString().padLeft(2, '0'),
+        month: (d.getMonth() + 1).toString().padLeft(2, '0'),
+        isToday: d.toDateString() === today.toDateString()
+      });
+    }
+    return dates;
+  };
+
+  useEffect(() => {
+    onRefresh({ date: selectedDate });
+  }, [selectedDate]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -16,7 +41,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
         date: editing.date
       });
       setEditing(null);
-      onRefresh();
+      onRefresh({ date: selectedDate });
     } catch (e) {
       alert('Lỗi khi lưu: ' + e.message);
     } finally {
@@ -24,9 +49,58 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
     }
   };
 
+  const handleExport = () => {
+    window.open(`${API_URL}/attendance/export?month=${exportMonth}`, '_blank');
+    setShowExportModal(false);
+  };
+
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-extrabold tracking-tight">Nhật ký Chấm công</h2>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <h2 className="text-3xl font-extrabold tracking-tight">Nhật ký Chấm công</h2>
+        <button 
+          onClick={() => setShowExportModal(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+        >
+          <Icon name="download" className="!text-[20px]" />
+          XUẤT BÁO CÁO EXCEL
+        </button>
+      </div>
+
+      {/* Date Selection Bar */}
+      <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-2">
+          {getDates().map(d => (
+            <button
+              key={d.full}
+              onClick={() => setSelectedDate(d.full)}
+              className={`flex flex-col items-center justify-center min-w-[70px] py-3 rounded-2xl transition-all ${
+                selectedDate === d.full
+                ? 'bg-primary text-white shadow-lg shadow-primary/25 font-black scale-105'
+                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 font-bold'
+              }`}
+            >
+              <span className="text-[10px] uppercase tracking-wider mb-1">
+                {d.isToday ? 'Hôm nay' : `${d.day}-${d.month}`}
+              </span>
+              <span className="text-lg">{d.day}</span>
+            </button>
+          ))}
+        </div>
+        <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
+        <div className="relative group px-4">
+          <input 
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+          />
+          <button className="p-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
+            <Icon name="calendar_month" />
+          </button>
+        </div>
+      </div>
+
       <div className="bg-surface-container-lowest rounded-[2rem] p-8 shadow-sm border border-white dark:border-slate-800 overflow-hidden transition-colors">
         <table className="w-full text-left">
           <thead>
@@ -40,7 +114,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-container-low/40">
-            {attendance.map(a => (
+            {attendance.length > 0 ? attendance.map(a => (
               <tr key={a.id} className="hover:bg-surface-container-low/20 transition-colors">
                 <td className="py-5 pl-4 font-bold text-slate-800 dark:text-slate-100">{a.employee_name}</td>
                 <td className="py-5 text-center font-mono font-bold text-primary">{a.check_in}</td>
@@ -60,7 +134,11 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
                   </button>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan="6" className="py-20 text-center text-slate-400 font-medium italic">Không có dữ liệu chấm công cho ngày này</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -111,6 +189,40 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl border border-white/20">
+            <h3 className="text-2xl font-black mb-6 tracking-tight">Xuất báo cáo tháng</h3>
+            <p className="text-sm text-slate-500 mb-8 font-medium">Chọn tháng bạn muốn kết xuất dữ liệu Excel</p>
+            
+            <div className="space-y-6">
+              <input 
+                type="month" 
+                value={exportMonth}
+                onChange={(e) => setExportMonth(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl px-6 py-4 font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
+              />
+
+              <div className="flex gap-4 pt-4">
+                <button 
+                  onClick={() => setShowExportModal(false)}
+                  className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all"
+                >
+                  Hủy
+                </button>
+                <button 
+                  onClick={handleExport}
+                  className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-sm shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  TẢI FILE EXCEL
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

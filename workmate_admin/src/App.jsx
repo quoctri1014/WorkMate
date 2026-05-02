@@ -66,22 +66,20 @@ const App = () => {
     if (saved) setUser(JSON.parse(saved));
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (params = {}) => {
     if (loading) return;
     setLoading(true);
     try {
-      // Dùng individual await để nếu 1 cái lỗi cái khác vẫn chạy
-      const fetch = async (url, setter) => {
+      const fetch = async (url, setter, p = {}) => {
         try {
-          const res = await axios.get(`${API_URL}${url}`);
-          if (url === '/attendance') console.log('📅 Attendance Data:', res.data);
+          const res = await axios.get(`${API_URL}${url}`, { params: p });
           setter(res.data);
         } catch (e) { console.error(`Lỗi tải ${url}:`, e); }
       };
 
       await Promise.all([
         fetch('/employees', setEmployees),
-        fetch('/attendance', setAttendance),
+        fetch('/attendance', setAttendance, { date: params.date }),
         fetch('/departments', setDepts),
         fetch('/approvals', setApprovals),
         fetch('/meetings', setMeetings),
