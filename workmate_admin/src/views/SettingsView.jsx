@@ -119,10 +119,27 @@ const SettingsView = ({ config, onRefresh }) => {
                     <h4 className="text-blue-500 font-black uppercase tracking-widest text-xs flex items-center gap-2">
                       <Icon name="wifi" className="!text-lg" /> 3. Mạng WiFi & BSSID
                     </h4>
-                    <ul className="list-disc pl-5 space-y-2">
-                      <li><b className="text-slate-900 dark:text-white">SSID:</b> Tên mạng WiFi của công ty.</li>
-                      <li><b className="text-slate-900 dark:text-white">BSSID (Quan trọng):</b> Mã MAC vật lý của Router. Đây là biện pháp bảo mật cao nhất, ngăn chặn việc giả mạo tên WiFi tại nhà.</li>
-                    </ul>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl space-y-4 border border-slate-100 dark:border-slate-800">
+                      <p><b className="text-slate-900 dark:text-white">BSSID (Mã MAC Router):</b> Là địa chỉ vật lý duy nhất của thiết bị phát WiFi. Đây là chốt chặn bảo mật quan trọng nhất.</p>
+                      
+                      <div className="space-y-3 pt-2">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">Cách lấy mã BSSID:</p>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div className="flex gap-3 items-start">
+                            <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[10px]">WIN</div>
+                            <p className="text-xs">Mở <code className="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">CMD</code>, gõ: <code className="text-primary font-bold">netsh wlan show interfaces</code> và tìm dòng "BSSID".</p>
+                          </div>
+                          <div className="flex gap-3 items-start">
+                            <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[10px]">MAC</div>
+                            <p className="text-xs">Giữ phím <code className="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">Option</code> và click vào biểu tượng WiFi trên thanh menu.</p>
+                          </div>
+                          <div className="flex gap-3 items-start">
+                            <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[10px]">MOB</div>
+                            <p className="text-xs">Dùng ứng dụng <b className="text-slate-900 dark:text-white">WiFi Analyzer</b> (Android) hoặc xem trong cài đặt chi tiết mạng (iOS).</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </section>
                 </div>
 
