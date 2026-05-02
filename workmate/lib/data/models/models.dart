@@ -435,3 +435,36 @@ class CompanyConfigModel {
     );
   }
 }
+
+// Chat Message Model
+class ChatMessage {
+  final int id;
+  final int senderId;
+  final int? receiverId;
+  final String message;
+  final bool isAi;
+  final bool isRead;
+  final DateTime createdAt;
+
+  ChatMessage({
+    required this.id,
+    required this.senderId,
+    this.receiverId,
+    required this.message,
+    this.isAi = false,
+    this.isRead = false,
+    required this.createdAt,
+  });
+
+  factory ChatMessage.fromMap(Map<String, dynamic> map) {
+    return ChatMessage(
+      id: map['id'] ?? 0,
+      senderId: map['sender_id'] ?? 0,
+      receiverId: map['receiver_id'],
+      message: map['message'] ?? '',
+      isAi: map['is_ai'] ?? false,
+      isRead: map['is_read'] ?? false,
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
+    );
+  }
+}

@@ -10,6 +10,7 @@ import MeetingsView from './views/MeetingsView';
 import ApprovalsView from './views/ApprovalsView';
 import AttendanceView from './views/AttendanceView';
 import SettingsView from './views/SettingsView';
+import ChatView from './views/ChatView';
 import Login from './views/LoginView';
 import { Icon, API_URL } from './components/Common';
 
@@ -170,6 +171,7 @@ const App = () => {
                  onDateChange={handleAttendanceDateChange}
                />
              )}
+             {activeTab === 'chat' && <ChatView adminUser={user} />}
              {activeTab === 'settings' && <SettingsView config={config} onRefresh={fetchData} />}
           </motion.div>
         </AnimatePresence>

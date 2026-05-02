@@ -45,6 +45,27 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('send_message', async (data) => {
+    try {
+      const { sender_id, receiver_id, message, is_ai } = data;
+      const r = await pool.query(
+        'INSERT INTO chat_messages (sender_id, receiver_id, message, is_ai) VALUES ($1, $2, $3, $4) RETURNING *',
+        [sender_id, receiver_id, message, is_ai || false]
+      );
+      const newMessage = r.rows[0];
+      
+      if (receiver_id) {
+        io.emit(`receive_message_${receiver_id}`, newMessage);
+      } else {
+        // Gửi cho tất cả Admin
+        io.emit('receive_message_admin', newMessage);
+      }
+      io.emit(`receive_message_${sender_id}`, newMessage);
+    } catch (err) {
+      console.error('❌ Socket Error:', err.message);
+    }
+  });
+
   socket.on('disconnect', () => {
     if (onlineUsers.has(socket.id)) {
       const userId = onlineUsers.get(socket.id);
@@ -497,6 +518,8 @@ app.post('/api/face/checkin', async (req, res) => {
 
     // 4. Kiểm tra khuôn mặt
     const r = await pool.query('SELECT embedding FROM face_embeddings WHERE employee_id = $1', [employee_id]);
+    
+
     if (r.rows.length === 0) return res.status(400).json({ message: "Chưa đăng ký khuôn mặt" });
     
     let maxSimilarity = -1;
@@ -1261,6 +1284,76 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+
+// --- 6. API CHAT & AI BOT ---
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+app.get('/api/chat/history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const r = await pool.query(`
+      SELECT m.*, e.name as sender_name 
+      FROM chat_messages m
+      LEFT JOIN employees e ON m.sender_id = e.id
+      WHERE sender_id = $1 OR receiver_id = $1 
+      ORDER BY created_at ASC
+    `, [userId]);
+    res.json(r.rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/chat/admin/conversations', async (req, res) => {
+  try {
+    const r = await pool.query(`
+      SELECT DISTINCT ON (u.id) 
+             u.id, u.name, u.employee_code,
+             m.message as last_message, m.created_at as last_time
+      FROM employees u
+      JOIN chat_messages m ON (m.sender_id = u.id OR m.receiver_id = u.id)
+      WHERE u.role != 'admin'
+      ORDER BY u.id, m.created_at DESC
+    `);
+    res.json(r.rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/chat/ai', async (req, res) => {
+  try {
+    const { userId, message } = req.body;
+    if (!process.env.GEMINI_API_KEY) {
+      return res.json({ reply: "Hệ thống AI chưa được cấu hình khóa API. Vui lòng liên hệ Admin.", suggestAdmin: true });
+    }
+
+    // 1. Lấy context dữ liệu
+    const emp = await pool.query('SELECT * FROM employees WHERE id = $1', [userId]);
+    const attendance = await pool.query('SELECT * FROM attendance WHERE employee_id = $1 ORDER BY check_in_time DESC LIMIT 10', [userId]);
+    const leaves = await pool.query("SELECT * FROM approvals WHERE employee_id = $1 AND type = 'Nghỉ phép' ORDER BY created_at DESC", [userId]);
+    
+    const context = `
+      Bạn là trợ lý ảo WorkMate của công ty. Trả lời ngắn gọn, thân thiện.
+      Thông tin nhân viên: ${JSON.stringify(emp.rows[0])}
+      Lịch sử chấm công gần đây: ${JSON.stringify(attendance.rows)}
+      Đơn nghỉ phép: ${JSON.stringify(leaves.rows)}
+      Câu hỏi: ${message}
+      
+      Nếu câu hỏi liên quan đến khiếu nại, yêu cầu thay đổi dữ liệu hoặc bạn không chắc chắn, hãy khuyên người dùng nhấn nút "Chat với Admin".
+    `;
+
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(context);
+    const reply = result.response.text();
+
+    // Lưu tin nhắn vào DB
+    await pool.query(
+      'INSERT INTO chat_messages (sender_id, message, is_ai) VALUES ($1, $2, true)',
+      [userId, reply]
+    );
+
+    res.json({ reply, suggestAdmin: reply.toLowerCase().includes("admin") });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // --- KHỞI CHẠY SERVER ---

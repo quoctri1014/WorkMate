@@ -6,6 +6,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     { id: 'dashboard', label: 'Bảng tổng quan', icon: 'grid_view' },
     { id: 'employees', label: 'Đội ngũ nhân sự', icon: 'group' },
     { id: 'departments', label: 'Cơ cấu tổ chức', icon: 'account_tree' },
+    { id: 'chat', label: 'Hỗ trợ trực tuyến', icon: 'chat' },
   ];
 
   const businessMenu = [
