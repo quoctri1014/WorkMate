@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { Icon, API_URL } from '../components/Common';
 
-const AttendanceView = ({ attendance = [], onRefresh }) => {
+const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange }) => {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportMonth, setExportMonth] = useState(new Date().toISOString().split('T')[0].substring(0, 7));
 
-  // Tạo danh sách các ngày để hiển thị thanh chọn ngày (giống ảnh 2)
+  // Tạo danh sách các ngày để hiển thị thanh chọn ngày
   const getDates = () => {
     const dates = [];
     const today = new Date();
-    // Lấy 7 ngày xung quanh ngày hiện tại
     for (let i = -3; i <= 3; i++) {
       const d = new Date();
       d.setDate(today.getDate() + i);
@@ -27,30 +25,37 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
     return dates;
   };
 
-  useEffect(() => {
-    if (onRefresh) onRefresh({ date: selectedDate });
-  }, [selectedDate]);
-
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!editing || !editing.id) {
+      alert("Lỗi: Không xác định được ID bản ghi!");
+      return;
+    }
+    
     setSaving(true);
     try {
-      await axios.put(`${API_URL}/attendance/${editing.id}`, {
+      console.log(`🚀 Đang cập nhật attendance ID: ${editing.id}`, editing);
+      const res = await axios.put(`${API_URL}/attendance/${editing.id}`, {
         check_in: editing.check_in,
         check_out: editing.check_out === '--:--:--' ? null : editing.check_out,
         date: editing.date
       });
-      setEditing(null);
-      if (onRefresh) onRefresh({ date: selectedDate });
-    } catch (e) {
-      alert('Lỗi khi lưu: ' + e.message);
+      
+      if (res.data.success) {
+        setEditing(null);
+        if (onRefresh) onRefresh({ date: selectedDate });
+      } else {
+        alert('Lỗi: ' + (res.data.error || 'Không rõ nguyên nhân'));
+      }
+    } catch (err) {
+      console.error('❌ Lỗi handleSave:', err);
+      alert('Lỗi khi lưu: ' + (err.response?.data?.error || err.message));
     } finally {
       setSaving(false);
     }
   };
 
   const handleExport = () => {
-    // Sử dụng window.location.href hoặc a tag để tải file an toàn hơn
     const exportUrl = `${API_URL}/attendance/export?month=${exportMonth}`;
     window.open(exportUrl, '_blank');
     setShowExportModal(false);
@@ -70,12 +75,12 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
       </div>
 
       {/* Date Selection Bar */}
-      <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800 overflow-hidden">
+      <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800 overflow-hidden transition-colors">
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-2 flex-1">
           {getDates().map(d => (
             <button
               key={d.full}
-              onClick={() => setSelectedDate(d.full)}
+              onClick={() => onDateChange(d.full)}
               className={`flex flex-col items-center justify-center min-w-[70px] py-3 rounded-2xl transition-all ${
                 selectedDate === d.full
                 ? 'bg-primary text-white shadow-lg shadow-primary/25 font-black scale-105'
@@ -94,7 +99,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
           <input 
             type="date" 
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => onDateChange(e.target.value)}
             className="absolute inset-0 opacity-0 cursor-pointer z-10"
           />
           <button className="p-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
@@ -104,7 +109,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
       </div>
 
       <div className="bg-surface-container-lowest rounded-[2rem] p-8 shadow-sm border border-white dark:border-slate-800 overflow-hidden transition-colors">
-        <table className="w-full text-left">
+        <table className="w-full text-left border-collapse">
           <thead>
             <tr className="text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider border-b border-surface-container-low">
               <th className="pb-4 pl-4">Nhân viên</th>
@@ -118,14 +123,19 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
           </thead>
           <tbody className="divide-y divide-surface-container-low/40">
             {attendance.length > 0 ? attendance.map(a => (
-              <tr key={a.id} className="hover:bg-surface-container-low/20 transition-colors">
+              <tr key={a.id} className="hover:bg-surface-container-low/20 transition-colors group">
                 <td className="py-5 pl-4 font-bold text-slate-800 dark:text-slate-100">{a.employee_name}</td>
                 <td className="py-5 text-center text-xs font-black text-slate-500 uppercase tracking-tighter">
-                  {new Date(a.date).toLocaleDateString('vi-VN')}
+                  {a.date ? new Date(a.date).toLocaleDateString('vi-VN') : '---'}
                 </td>
                 <td className="py-5 text-center font-mono font-bold text-primary">{a.check_in}</td>
                 <td className="py-5 text-center font-mono font-bold text-amber-500">{a.check_out || '--:--:--'}</td>
-                <td className="py-5"><div className="flex items-center gap-2"><Icon name={a.method === 'WiFi' ? 'wifi' : 'location_on'} className="text-sky-500" /><span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{a.method}</span></div></td>
+                <td className="py-5">
+                  <div className="flex items-center gap-2">
+                    <Icon name={a.method === 'WiFi' ? 'wifi' : 'location_on'} className="text-sky-500 !text-[16px]" />
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{a.method}</span>
+                  </div>
+                </td>
                 <td className="py-5 text-right pr-4">
                   <span className={`px-3 py-1 ${a.check_out ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'} rounded-full text-[11px] font-bold`}>
                     {a.check_out ? 'Hoàn tất' : 'Đang làm'}
@@ -133,8 +143,11 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
                 </td>
                 <td className="py-5 text-center">
                   <button 
-                    onClick={() => setEditing({ ...a })}
-                    className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors"
+                    onClick={() => {
+                      console.log("✏️ Editing attendance:", a);
+                      setEditing({ ...a });
+                    }}
+                    className="p-2 hover:bg-primary/10 text-primary rounded-xl transition-all opacity-0 group-hover:opacity-100"
                   >
                     <Icon name="edit" className="!text-[18px]" />
                   </button>
@@ -153,8 +166,10 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl border border-white/20">
-            <h3 className="text-2xl font-black mb-6 tracking-tight">Chỉnh sửa giờ công</h3>
-            <p className="text-sm text-slate-500 mb-8 font-medium italic">Thay đổi giờ công cho {editing.employee_name} ngày {editing.date}</p>
+            <h3 className="text-2xl font-black mb-2 tracking-tight">Chỉnh sửa giờ công</h3>
+            <p className="text-sm text-slate-500 mb-8 font-medium italic">
+              ID: {editing.id} | {editing.employee_name} ngày {editing.date}
+            </p>
             
             <form onSubmit={handleSave} className="space-y-6">
               <div>
@@ -202,7 +217,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
       {/* Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl border border-white/20">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl border border-white/20 transition-colors">
             <h3 className="text-2xl font-black mb-6 tracking-tight">Xuất báo cáo tháng</h3>
             <p className="text-sm text-slate-500 mb-8 font-medium">Chọn tháng bạn muốn kết xuất dữ liệu Excel</p>
             

@@ -852,12 +852,12 @@ app.get('/api/attendance/export', async (req, res) => {
     const { month } = req.query; // YYYY-MM
     const r = await pool.query(`
       SELECT a.*, e.name as employee_name, e.employee_code,
-             to_char(a.check_in_time, 'YYYY-MM-DD') as date,
-             to_char(a.check_in_time, 'HH24:MI:SS') as check_in,
-             to_char(a.check_out_time, 'HH24:MI:SS') as check_out
+             to_char(a.check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD') as date,
+             to_char(a.check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:MI:SS') as check_in,
+             to_char(a.check_out_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:MI:SS') as check_out
       FROM attendance a
       JOIN employees e ON a.employee_id = e.id
-      WHERE to_char(a.check_in_time, 'YYYY-MM') = $1
+      WHERE to_char(a.check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM') = $1
       ORDER BY e.name, a.check_in_time
     `, [month]);
 
@@ -910,16 +910,16 @@ app.get('/api/attendance', async (req, res) => {
     let query = `
       SELECT a.*, e.name as employee_name, e.employee_code,
              a.check_in_method as method,
-             to_char(a.check_in_time, 'YYYY-MM-DD') as date,
-             to_char(a.check_in_time, 'HH24:MI:SS') as check_in,
-             to_char(a.check_out_time, 'HH24:MI:SS') as check_out
+             to_char(a.check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD') as date,
+             to_char(a.check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:MI:SS') as check_in,
+             to_char(a.check_out_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:MI:SS') as check_out
       FROM attendance a
       JOIN employees e ON a.employee_id = e.id
     `;
     let params = [];
     
     if (date) {
-      query += ` WHERE to_char(a.check_in_time, 'YYYY-MM-DD') = $1`;
+      query += ` WHERE to_char(a.check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD') = $1`;
       params.push(date);
     }
     
