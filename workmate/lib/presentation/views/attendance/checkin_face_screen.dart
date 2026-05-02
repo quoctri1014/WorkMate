@@ -360,6 +360,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
 
       if (result.isMatch) {
         _isDone = true;
+        _cameraController?.stopImageStream(); // Dừng ngay khi khớp
         _updateState(FaceScanState.success, 'Nhận diện thành công!');
         _resultController.forward();
         

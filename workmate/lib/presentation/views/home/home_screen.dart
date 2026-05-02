@@ -237,18 +237,83 @@ class _HomeScreenState extends State<HomeScreen> {
                                         if (!isCheckIn) {
                                           final confirm = await showDialog<bool>(
                                             context: context,
-                                            builder: (ctx) => AlertDialog(
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                              title: Text('Xác nhận $action'),
-                                              content: Text('Bạn có chắc chắn muốn thực hiện $action ngay bây giờ không?'),
-                                              actions: [
-                                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('HỦY')),
-                                                ElevatedButton(
-                                                  onPressed: () => Navigator.pop(ctx, true),
-                                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                                                  child: const Text('XÁC NHẬN'),
+                                            barrierDismissible: true,
+                                            builder: (ctx) => Dialog(
+                                              backgroundColor: Colors.transparent,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius: BorderRadius.circular(28),
                                                 ),
-                                              ],
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Text(
+                                                      'Xác nhận CHECK OUT',
+                                                      style: TextStyle(
+                                                        fontSize: 20,
+                                                        fontWeight: FontWeight.w800,
+                                                        color: Color(0xFF333333),
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    Text(
+                                                      'Bạn có chắc chắn muốn thực hiện chấm công ra không? Hành động này sẽ ghi nhận giờ kết thúc ca làm của bạn.',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.grey.shade600,
+                                                        height: 1.5,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                    const SizedBox(height: 32),
+                                                    // Nút XÁC NHẬN (To, tròn)
+                                                    SizedBox(
+                                                      width: double.infinity,
+                                                      height: 54,
+                                                      child: ElevatedButton(
+                                                        onPressed: () => Navigator.pop(ctx, true),
+                                                        style: ElevatedButton.styleFrom(
+                                                          backgroundColor: const Color(0xFF1B5E83), // Màu xanh như hình
+                                                          foregroundColor: Colors.white,
+                                                          elevation: 4,
+                                                          shadowColor: const Color(0xFF1B5E83).withOpacity(0.3),
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(30),
+                                                          ),
+                                                        ),
+                                                        child: const Text(
+                                                          'XÁC NHẬN',
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight: FontWeight.w800,
+                                                            letterSpacing: 1.1,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    // Nút HỦY BỎ (Text only, ở dưới)
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(ctx, false),
+                                                      style: TextButton.styleFrom(
+                                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                                      ),
+                                                      child: Text(
+                                                        'HỦY BỎ',
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          color: Colors.grey.shade500,
+                                                          fontWeight: FontWeight.w600,
+                                                          letterSpacing: 1.0,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
                                             ),
                                           );
                                           if (confirm != true) return;
