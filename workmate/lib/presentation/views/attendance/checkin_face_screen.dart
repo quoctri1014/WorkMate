@@ -45,7 +45,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
   bool _isProcessingFrame = false;
   bool _isDone = false;
   int _stableFrameCount = 0;
-  static const int _requiredStableFrames = 5;
+  static const int _requiredStableFrames = 3;
   DetectedFaceInfo? _lastDetected;
   FaceMatchResult? _matchResult;
   String? _initError;
@@ -217,27 +217,9 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         return;
       }
 
-      if (faceInfo.isLowLight) {
+      if (faceInfo.isLowLight || faceInfo.isTooClose || faceInfo.isTooFar || !faceInfo.isCentered) {
         _stableFrameCount = 0;
-        _updateState(FaceScanState.detected, 'Môi trường quá tối, hãy bật thêm đèn');
-        return;
-      }
-
-      if (faceInfo.isTooClose) {
-        _stableFrameCount = 0;
-        _updateState(FaceScanState.detected, 'Lùi ra xa hơn một chút');
-        return;
-      }
-
-      if (faceInfo.isTooFar) {
-        _stableFrameCount = 0;
-        _updateState(FaceScanState.detected, 'Lại gần hơn một chút');
-        return;
-      }
-
-      if (!faceInfo.isCentered) {
-        _stableFrameCount = 0;
-        _updateState(FaceScanState.detected, 'Đưa mặt vào giữa khung hình');
+        _updateState(FaceScanState.searching, 'Đưa khuôn mặt vào khung');
         return;
       }
 
@@ -372,6 +354,9 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         );
 
         if (resultApi['success'] == true) {
+          // Cập nhật trạng thái Home
+          if (mounted) context.read<HomeViewModel>().fetchTodayAttendance();
+          
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) {
               Navigator.pushReplacement(
@@ -488,7 +473,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
           _buildTopBar(),
           _buildBottomInfo(),
           if (_matchResult != null) _buildResultBadge(),
-          _buildDiagnosticOverlay(),
         ],
       ),
     );

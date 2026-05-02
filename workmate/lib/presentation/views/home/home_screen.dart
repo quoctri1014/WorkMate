@@ -35,6 +35,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<HomeViewModel>().fetchTodayAttendance();
+    });
   }
 
   void _updateTime() {
@@ -138,10 +141,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 Text(
                                   '${user.employeeCode} • $_dateStr',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontFamily: 'Nunito',
-                                    fontSize: 11,
-                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
@@ -227,6 +231,28 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onPressed: homeVM.isCheckingIn
                                     ? null
                                     : () async {
+                                        final isCheckIn = !homeVM.isCheckedIn;
+                                        final action = isCheckIn ? 'CHECK IN' : 'CHECK OUT';
+                                        
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                            title: Text('Xác nhận $action'),
+                                            content: Text('Bạn có chắc chắn muốn thực hiện $action ngay bây giờ không?'),
+                                            actions: [
+                                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('HỦY')),
+                                              ElevatedButton(
+                                                onPressed: () => Navigator.pop(ctx, true),
+                                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                                                child: const Text('XÁC NHẬN'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+
+                                        if (confirm != true) return;
+
                                         final prefs = await SharedPreferences.getInstance();
                                         final isGranted = prefs.getBool('permissions_granted') ?? false;
                                         
@@ -234,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => CheckInFaceScreen(isCheckIn: !homeVM.isCheckedIn),
+                                              builder: (_) => CheckInFaceScreen(isCheckIn: isCheckIn),
                                             ),
                                           );
                                         } else {

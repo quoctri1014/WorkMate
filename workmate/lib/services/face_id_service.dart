@@ -49,8 +49,8 @@ class FaceIdService {
   Interpreter? _interpreter;
   bool _isInitialized = false;
   bool _isInitializing = false;
-  // Dùng Cosine Similarity, ngưỡng chuẩn là 0.75
-  static const double _matchThreshold = 0.75;
+  // Dùng Cosine Similarity, ngưỡng chuẩn là 0.68 (để đạt tỷ lệ thành công >90%)
+  static const double _matchThreshold = 0.68;
   static const int _modelInputSize = 112;
 
   Future<void> initialize() async {

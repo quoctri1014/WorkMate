@@ -786,6 +786,18 @@ app.get('/api/attendance', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/attendance/today/:employee_id', async (req, res) => {
+  try {
+    const { employee_id } = req.params;
+    const today = new Date().toISOString().split('T')[0];
+    const r = await pool.query(
+      'SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time) = $2 ORDER BY check_in_time DESC LIMIT 1',
+      [employee_id, today]
+    );
+    res.json(r.rows[0] || null);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // --- 6. API PHÊ DUYỆT (APPROVALS) ---
 app.post('/api/approvals', async (req, res) => {
   try {

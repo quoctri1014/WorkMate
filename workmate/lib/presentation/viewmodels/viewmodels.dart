@@ -296,25 +296,38 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchTodayAttendance() async {
+    if (user == null) return;
+    try {
+      final attendance = await ApiService().getTodayAttendance(user!.id);
+      if (attendance != null) {
+        _isCheckedIn = attendance['check_in_time'] != null;
+        if (attendance['check_in_time'] != null) {
+          _checkInTime = DateTime.parse(attendance['check_in_time']);
+        }
+        if (attendance['check_out_time'] != null) {
+          _checkOutTime = DateTime.parse(attendance['check_out_time']);
+          _isCheckedIn = false; // Nếu đã checkout thì coi như chưa checkin để nút thành CHECK IN tiếp
+        } else {
+           _isCheckedIn = true; // Đã checkin và chưa checkout
+        }
+      } else {
+        _isCheckedIn = false;
+        _checkInTime = null;
+        _checkOutTime = null;
+      }
+      notifyListeners();
+    } catch (e) {
+      print('❌ Lỗi fetchTodayAttendance: $e');
+    }
+  }
+
   Future<bool> performCheckIn() async {
-    _isCheckingIn = true;
-    notifyListeners();
-    await Future.delayed(const Duration(seconds: 3));
-    _isCheckedIn = true;
-    _checkInTime = DateTime.now();
-    _isCheckingIn = false;
-    notifyListeners();
+    // Không dùng mock nữa, CheckInFaceScreen gọi API rồi gọi fetchTodayAttendance
     return true;
   }
 
   Future<bool> performCheckOut() async {
-    _isCheckingIn = true;
-    notifyListeners();
-    await Future.delayed(const Duration(seconds: 2));
-    _isCheckedIn = false;
-    _checkOutTime = DateTime.now();
-    _isCheckingIn = false;
-    notifyListeners();
     return true;
   }
 }

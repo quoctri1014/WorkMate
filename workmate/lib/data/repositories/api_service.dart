@@ -32,16 +32,15 @@ class ApiService {
     }
   }
 
-  Future<List<AttendanceModel>> getAttendanceHistory(String employeeId) async {
+  Future<Map<String, dynamic>?> getTodayAttendance(int employeeId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/attendance?employeeId=$employeeId'));
+      final response = await http.get(Uri.parse('$baseUrl/attendance/today/$employeeId'));
       if (response.statusCode == 200) {
-        final List data = jsonDecode(response.body);
-        return data.map((e) => AttendanceModel.fromMap(e, e['id'].toString())).toList();
+        return jsonDecode(response.body);
       }
-      return [];
+      return null;
     } catch (e) {
-      return [];
+      return null;
     }
   }
 
