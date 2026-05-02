@@ -74,6 +74,7 @@ const App = () => {
       const fetch = async (url, setter) => {
         try {
           const res = await axios.get(`${API_URL}${url}`);
+          if (url === '/attendance') console.log('📅 Attendance Data:', res.data);
           setter(res.data);
         } catch (e) { console.error(`Lỗi tải ${url}:`, e); }
       };
