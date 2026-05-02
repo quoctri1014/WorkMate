@@ -789,10 +789,9 @@ app.get('/api/attendance', async (req, res) => {
 app.get('/api/attendance/today/:employee_id', async (req, res) => {
   try {
     const { employee_id } = req.params;
-    const today = new Date().toISOString().split('T')[0];
     const r = await pool.query(
-      'SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time) = $2 ORDER BY check_in_time DESC LIMIT 1',
-      [employee_id, today]
+      'SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time) = CURRENT_DATE ORDER BY check_in_time DESC LIMIT 1',
+      [employee_id]
     );
     res.json(r.rows[0] || null);
   } catch (err) { res.status(500).json({ error: err.message }); }

@@ -217,9 +217,27 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
         return;
       }
 
-      if (faceInfo.isLowLight || faceInfo.isTooClose || faceInfo.isTooFar || !faceInfo.isCentered) {
+      if (faceInfo.isLowLight) {
         _stableFrameCount = 0;
-        _updateState(FaceScanState.searching, 'Đưa khuôn mặt vào khung');
+        _updateState(FaceScanState.detected, 'Môi trường quá tối, hãy bật thêm đèn');
+        return;
+      }
+
+      if (faceInfo.isTooClose) {
+        _stableFrameCount = 0;
+        _updateState(FaceScanState.detected, 'Lùi ra xa hơn một chút');
+        return;
+      }
+
+      if (faceInfo.isTooFar) {
+        _stableFrameCount = 0;
+        _updateState(FaceScanState.detected, 'Lại gần hơn một chút');
+        return;
+      }
+
+      if (!faceInfo.isCentered) {
+        _stableFrameCount = 0;
+        _updateState(FaceScanState.detected, 'Đưa mặt vào giữa khung hình');
         return;
       }
 

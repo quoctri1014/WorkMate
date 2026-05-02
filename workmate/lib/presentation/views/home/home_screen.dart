@@ -234,24 +234,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                         final isCheckIn = !homeVM.isCheckedIn;
                                         final action = isCheckIn ? 'CHECK IN' : 'CHECK OUT';
                                         
-                                        final confirm = await showDialog<bool>(
-                                          context: context,
-                                          builder: (ctx) => AlertDialog(
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                            title: Text('Xác nhận $action'),
-                                            content: Text('Bạn có chắc chắn muốn thực hiện $action ngay bây giờ không?'),
-                                            actions: [
-                                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('HỦY')),
-                                              ElevatedButton(
-                                                onPressed: () => Navigator.pop(ctx, true),
-                                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                                                child: const Text('XÁC NHẬN'),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-
-                                        if (confirm != true) return;
+                                        if (!isCheckIn) {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                              title: Text('Xác nhận $action'),
+                                              content: Text('Bạn có chắc chắn muốn thực hiện $action ngay bây giờ không?'),
+                                              actions: [
+                                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('HỦY')),
+                                                ElevatedButton(
+                                                  onPressed: () => Navigator.pop(ctx, true),
+                                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                                                  child: const Text('XÁC NHẬN'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm != true) return;
+                                        }
 
                                         final prefs = await SharedPreferences.getInstance();
                                         final isGranted = prefs.getBool('permissions_granted') ?? false;

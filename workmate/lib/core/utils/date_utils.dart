@@ -17,7 +17,7 @@ class AppDateUtils {
 
   static String formatDayMonth(DateTime date, [String locale = 'vi']) {
     if (locale == 'vi') {
-      return DateFormat('dd Tháng MM, yyyy', 'vi').format(date.toLocal());
+      return DateFormat("dd 'Tháng' MM, yyyy", 'vi').format(date.toLocal());
     }
     return DateFormat('MMMM dd, yyyy', 'en').format(date.toLocal());
   }
