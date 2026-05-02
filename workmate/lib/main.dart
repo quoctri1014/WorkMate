@@ -24,6 +24,13 @@ import 'package:workmate/presentation/views/profile/profile_screen.dart';
 import 'package:workmate/presentation/views/profile/change_password_screen.dart';
 import 'package:workmate/presentation/views/profile/qr_screen.dart';
 import 'package:workmate/presentation/views/profile/bank_account_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("🌙 Handling a background message: ${message.messageId}");
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +38,7 @@ void main() async {
   // Khởi tạo Firebase ĐỒNG BỘ với try-catch để tránh crash nếu đã bỏ config Firebase
   try {
     await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     print('✅ Firebase initialized');
   } catch (e) {
     print('⚠️ Firebase init skipped (không còn dùng Firebase): $e');

@@ -67,6 +67,9 @@ class AuthViewModel extends ChangeNotifier {
         await prefs.setString('saved_employee_code', code);
         await prefs.setString('saved_password', password);
         
+        // Cập nhật FCM Token lên Server
+        await NotificationService().updateTokenOnServer(user.id);
+        
         _isLoading = false;
         notifyListeners();
         return true;

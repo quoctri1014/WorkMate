@@ -10,6 +10,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs-extra');
 const nodemailer = require('nodemailer');
+const admin = require('firebase-admin');
+
+// --- CẤU HÌNH FIREBASE ---
+const serviceAccount = require("./firebase-service-account.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 // --- CẤU HÌNH EMAIL ---
 const transporter = nodemailer.createTransport({
@@ -130,6 +137,7 @@ const initDB = async () => {
       ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
       ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_out_time TIMESTAMP;
       ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_in_method VARCHAR(50);
+      ALTER TABLE employees ADD COLUMN IF NOT EXISTS fcm_token TEXT;
       
       CREATE TABLE IF NOT EXISTS employee_banks (
         id SERIAL PRIMARY KEY,
@@ -805,6 +813,35 @@ app.delete('/api/employees/banks/:bankId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// --- API FIREBASE TOKEN ---
+app.post('/api/employees/fcm-token', async (req, res) => {
+  try {
+    const { employee_id, token } = req.body;
+    await pool.query('UPDATE employees SET fcm_token = $1 WHERE id = $2', [token, employee_id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Helper gửi thông báo
+async function sendPushNotification(employeeId, title, body, data = {}) {
+  try {
+    const r = await pool.query('SELECT fcm_token FROM employees WHERE id = $1', [employeeId]);
+    const token = r.rows[0]?.fcm_token;
+    if (!token) return;
+
+    const message = {
+      notification: { title, body },
+      data: { ...data, click_action: "FLUTTER_NOTIFICATION_CLICK" },
+      token: token
+    };
+
+    await admin.messaging().send(message);
+    console.log(`🚀 Đã gửi Push Notification tới ID ${employeeId}`);
+  } catch (err) {
+    console.error('❌ Lỗi gửi Push Notification:', err.message);
+  }
+}
+
 
 // --- 4. API QUẢN LÝ LỊCH HỌP (MEETINGS) ---
 
@@ -884,8 +921,20 @@ app.put('/api/approvals/:id', async (req, res) => {
   try {
     const { status } = req.body;
     const result = await pool.query('UPDATE approvals SET status = $1 WHERE id = $2 RETURNING *', [status, req.params.id]);
-    io.emit('approval_updated', result.rows[0]);
-    res.json(result.rows[0]);
+    const approval = result.rows[0];
+    
+    io.emit('approval_updated', approval);
+
+    // Gửi Push Notification
+    const statusText = status === 'approved' ? 'được PHÊ DUYỆT' : 'bị TỪ CHỐI';
+    await sendPushNotification(
+      approval.employee_id,
+      'Cập nhật yêu cầu',
+      `Yêu cầu "${approval.type}" của bạn đã ${statusText}.`,
+      { type: 'approval', id: approval.id.toString() }
+    );
+
+    res.json(approval);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

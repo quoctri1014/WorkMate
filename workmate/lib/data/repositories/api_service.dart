@@ -196,4 +196,21 @@ class ApiService {
       return false;
     }
   }
+
+  Future<bool> updateFcmToken(int employeeId, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/employees/fcm-token'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'employee_id': employeeId,
+          'token': token,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ Lỗi updateFcmToken: $e');
+      return false;
+    }
+  }
 }
