@@ -10,7 +10,7 @@ import MeetingsView from './views/MeetingsView';
 import ApprovalsView from './views/ApprovalsView';
 import AttendanceView from './views/AttendanceView';
 import SettingsView from './views/SettingsView';
-import Login from './components/Login';
+import Login from './views/LoginView';
 import { Icon, API_URL } from './components/Common';
 
 const socket = io("http://localhost:5000");
