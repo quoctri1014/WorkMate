@@ -896,21 +896,29 @@ app.get('/api/attendance/export', async (req, res) => {
       { header: 'Ngày', key: 'date', width: 15 },
       { header: 'Giờ vào', key: 'in', width: 12 },
       { header: 'Giờ ra', key: 'out', width: 12 },
-      { header: 'Số giờ công', key: 'hours', width: 15 }
+      { header: 'Tổng giờ', key: 'total', width: 12 },
+      { header: 'Giờ hành chính', key: 'normal', width: 15 },
+      { header: 'Giờ OT', key: 'ot', width: 12 }
     ];
 
     r.rows.forEach(row => {
-      let hours = 0;
+      let totalHours = 0;
       if (row.check_out_time) {
-        hours = (new Date(row.check_out_time) - new Date(row.check_in_time)) / (1000 * 60 * 60);
+        totalHours = (new Date(row.check_out_time) - new Date(row.check_in_time)) / (1000 * 60 * 60);
       }
+      
+      const normal = totalHours > 8 ? 8 : totalHours;
+      const ot = totalHours > 8 ? totalHours - 8 : 0;
+
       worksheet.addRow({
         code: row.employee_code,
         name: row.employee_name,
         date: row.date,
         in: row.check_in,
         out: row.check_out || '--:--:--',
-        hours: hours.toFixed(2)
+        total: totalHours.toFixed(2),
+        normal: normal.toFixed(2),
+        ot: ot.toFixed(2)
       });
     });
 
