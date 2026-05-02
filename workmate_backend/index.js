@@ -485,8 +485,12 @@ app.post('/api/face/checkin', async (req, res) => {
     }
 
     // 4. Kiểm tra khuôn mặt
+    console.log(`🔍 Đang kiểm tra khuôn mặt cho nhân viên ID: ${employee_id}`);
     const r = await pool.query('SELECT embedding FROM face_embeddings WHERE employee_id = $1', [employee_id]);
-    if (r.rows.length === 0) return res.status(400).json({ message: "Chưa đăng ký khuôn mặt" });
+    if (r.rows.length === 0) {
+      console.log('❌ Nhân viên chưa đăng ký khuôn mặt');
+      return res.status(400).json({ message: "Chưa đăng ký khuôn mặt" });
+    }
     
     let maxSimilarity = -1;
     for (let row of r.rows) {
@@ -495,23 +499,44 @@ app.post('/api/face/checkin', async (req, res) => {
       if (sim > maxSimilarity) maxSimilarity = sim;
     }
     
+    console.log(`📊 Độ tương đồng cao nhất: ${(maxSimilarity * 100).toFixed(2)}%`);
     const isMatch = maxSimilarity >= MATCH_THRESHOLD;
 
-    if (!isMatch) return res.status(403).json({ success: false, message: "Khuôn mặt không khớp" });
+    if (!isMatch) {
+      console.log('❌ Khuôn mặt không khớp');
+      return res.status(403).json({ success: false, message: "Khuôn mặt không khớp" });
+    }
 
-    const today = new Date().toISOString().split('T')[0];
-    const existing = await pool.query('SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time) = $2', [employee_id, today]);
+    console.log('✅ Khuôn mặt khớp. Đang kiểm tra trạng thái chấm công hôm nay (Vietnam Time)...');
+    const existing = await pool.query(
+      "SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE", 
+      [employee_id]
+    );
+    console.log(`📅 Đã tìm thấy ${existing.rows.length} bản ghi hôm nay`);
 
     if (existing.rows.length === 0) {
-      const result = await pool.query('INSERT INTO attendance (employee_id, check_in_time, check_in_method) VALUES ($1, NOW(), \'FACE_ID\') RETURNING *', [employee_id]);
+      console.log('📝 Đang tạo bản ghi Check-in mới...');
+      const result = await pool.query(
+        "INSERT INTO attendance (employee_id, check_in_time, check_in_method) VALUES ($1, NOW(), 'FACE_ID') RETURNING *", 
+        [employee_id]
+      );
+      console.log('✨ Check-in thành công:', result.rows[0]);
       io.emit('new_attendance', result.rows[0]);
     } else if (!existing.rows[0].check_out_time) {
-      const result = await pool.query('UPDATE attendance SET check_out_time = NOW() WHERE id = $1 RETURNING *', [existing.rows[0].id]);
+      console.log('📝 Đang cập nhật bản ghi Check-out...');
+      const result = await pool.query(
+        "UPDATE attendance SET check_out_time = NOW() WHERE id = $1 RETURNING *", 
+        [existing.rows[0].id]
+      );
+      console.log('✨ Check-out thành công:', result.rows[0]);
       io.emit('attendance_updated', result.rows[0]);
+    } else {
+      console.log('ℹ️ Nhân viên đã hoàn thành cả check-in và check-out hôm nay');
     }
 
     res.json({ success: true, message: "Chấm công thành công" });
   } catch (err) {
+    console.error('🔥 LỖI CHẤM CÔNG:', err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -781,7 +806,16 @@ app.delete('/api/employees/banks/:bankId', async (req, res) => {
 
 app.get('/api/attendance', async (req, res) => {
   try {
-    const r = await pool.query('SELECT * FROM attendance ORDER BY created_at DESC');
+    const r = await pool.query(`
+      SELECT a.*, e.name as employee_name, e.employee_code,
+             a.check_in_method as method,
+             to_char(a.check_in_time, 'YYYY-MM-DD') as date,
+             to_char(a.check_in_time, 'HH24:MI:SS') as check_in,
+             to_char(a.check_out_time, 'HH24:MI:SS') as check_out
+      FROM attendance a
+      JOIN employees e ON a.employee_id = e.id
+      ORDER BY a.check_in_time DESC
+    `);
     res.json(r.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -790,7 +824,7 @@ app.get('/api/attendance/today/:employee_id', async (req, res) => {
   try {
     const { employee_id } = req.params;
     const r = await pool.query(
-      'SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time) = CURRENT_DATE ORDER BY check_in_time DESC LIMIT 1',
+      "SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE ORDER BY check_in_time DESC LIMIT 1",
       [employee_id]
     );
     res.json(r.rows[0] || null);

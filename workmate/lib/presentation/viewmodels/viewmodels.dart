@@ -299,17 +299,21 @@ class HomeViewModel extends ChangeNotifier {
   Future<void> fetchTodayAttendance() async {
     if (user == null) return;
     try {
+      // Đợi 1 chút để DB kịp cập nhật nếu vừa chấm công xong
+      await Future.delayed(const Duration(milliseconds: 500));
+      
       final attendance = await ApiService().getTodayAttendance(user!.id);
+      print('📡 Attendance Data: $attendance');
+      
       if (attendance != null) {
-        _isCheckedIn = attendance['check_in_time'] != null;
         if (attendance['check_in_time'] != null) {
           _checkInTime = DateTime.parse(attendance['check_in_time']);
         }
         if (attendance['check_out_time'] != null) {
           _checkOutTime = DateTime.parse(attendance['check_out_time']);
-          _isCheckedIn = false; // Nếu đã checkout thì coi như chưa checkin để nút thành CHECK IN tiếp
+          _isCheckedIn = false;
         } else {
-           _isCheckedIn = true; // Đã checkin và chưa checkout
+           _isCheckedIn = attendance['check_in_time'] != null;
         }
       } else {
         _isCheckedIn = false;
