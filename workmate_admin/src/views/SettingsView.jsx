@@ -126,15 +126,15 @@ const SettingsView = ({ config, onRefresh }) => {
                         <p className="text-[10px] font-black uppercase tracking-widest text-primary">Cách lấy mã BSSID:</p>
                         <div className="grid grid-cols-1 gap-3">
                           <div className="flex gap-3 items-start">
-                            <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[10px]">WIN</div>
+                            <div className="w-20 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[9px] uppercase tracking-wider">Windows</div>
                             <p className="text-xs">Mở <code className="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">CMD</code>, gõ: <code className="text-primary font-bold">netsh wlan show interfaces</code> và tìm dòng "BSSID".</p>
                           </div>
                           <div className="flex gap-3 items-start">
-                            <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[10px]">MAC</div>
+                            <div className="w-20 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[9px] uppercase tracking-wider">MacOS</div>
                             <p className="text-xs">Giữ phím <code className="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">Option</code> và click vào biểu tượng WiFi trên thanh menu.</p>
                           </div>
                           <div className="flex gap-3 items-start">
-                            <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[10px]">MOB</div>
+                            <div className="w-20 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 font-bold text-[9px] uppercase tracking-wider">Mobile</div>
                             <p className="text-xs">Dùng ứng dụng <b className="text-slate-900 dark:text-white">WiFi Analyzer</b> (Android) hoặc xem trong cài đặt chi tiết mạng (iOS).</p>
                           </div>
                         </div>
