@@ -27,9 +27,21 @@ const App = () => {
   const [config, setConfig] = useState({});
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('theme') === 'dark');
 
   // State quản lý ngày lọc chấm công toàn cục
   const [attendanceFilterDate, setAttendanceFilterDate] = useState(new Date().toISOString().split('T')[0]);
+
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme', newMode ? 'dark' : 'light');
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   const fetch = async (url, setter, p = {}) => {
     try {
@@ -45,7 +57,6 @@ const App = () => {
     if (!user) return;
     setLoading(true);
     
-    // Ưu tiên date truyền vào, nếu không dùng attendanceFilterDate hiện tại
     const dateToFilter = params.date || attendanceFilterDate;
 
     try {
@@ -62,13 +73,16 @@ const App = () => {
     }
   };
 
-  // Cập nhật filter date từ các component con
   const handleAttendanceDateChange = (newDate) => {
     setAttendanceFilterDate(newDate);
     fetchData({ date: newDate });
   };
 
   useEffect(() => {
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+    
     if (!user) return;
     fetchData();
     socket.on('new_attendance', () => fetchData({ date: attendanceFilterDate }));
@@ -87,6 +101,7 @@ const App = () => {
   }, [user, attendanceFilterDate]);
 
   if (!user) return <Login onLogin={setUser} />;
+  
   if (loading && employees.length === 0) return (
     <div className="h-screen flex items-center justify-center bg-surface transition-colors">
       <div className="flex flex-col items-center gap-4">
@@ -97,28 +112,36 @@ const App = () => {
   );
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface transition-colors">
+    <div className={`min-h-screen transition-colors ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       
       {/* Top Header */}
-      <header className="ml-72 h-20 bg-surface/80 backdrop-blur-md border-b border-surface-container-low flex items-center justify-between px-8 sticky top-0 z-40 transition-colors">
-        <div className="flex items-center gap-4 bg-surface-container-low px-4 py-2 rounded-2xl w-96 border border-white/5 shadow-sm transition-colors">
-          <Icon name="search" className="text-on-surface-variant !text-[20px]" />
-          <input type="text" placeholder="Tìm kiếm nhân sự, báo cáo..." className="bg-transparent border-none outline-none text-sm w-full font-medium" />
-        </div>
+      <header className="ml-72 h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-end px-8 sticky top-0 z-40 transition-colors">
         
-        <div className="flex items-center gap-6">
-           <button className="relative p-2 hover:bg-surface-container-low rounded-xl transition-colors">
-             <Icon name="notifications" className="text-on-surface-variant" />
-             <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface" />
+        <div className="flex items-center gap-4">
+           {/* Dark Mode Toggle */}
+           <button 
+             onClick={toggleDarkMode}
+             className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400 group"
+           >
+             <Icon name={isDarkMode ? "light_mode" : "dark_mode"} className="group-active:rotate-90 transition-transform duration-500" />
            </button>
-           <div className="h-8 w-px bg-surface-container-low" />
+
+           <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
+
+           <button className="relative p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400">
+             <Icon name="notifications" />
+             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900" />
+           </button>
+
+           <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
+
            <div className="flex items-center gap-3 pl-2">
             <div className="text-right hidden md:block">
               <p className="text-sm font-black tracking-tight">{user.name}</p>
-              <p className="text-[10px] text-on-surface-variant">Quản trị viên</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest opacity-70">Quản trị viên</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold border-2 border-surface shadow-sm transition-colors">{user.name?.[0]}</div>
+            <div className="w-10 h-10 rounded-2xl brand-gradient text-white flex items-center justify-center font-black border-2 border-white dark:border-slate-800 shadow-lg shadow-primary/20 transition-all">{user.name?.[0]}</div>
           </div>
         </div>
       </header>
