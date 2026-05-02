@@ -13,7 +13,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
   const getDates = () => {
     const dates = [];
     const today = new Date();
-    // Lấy 7 ngày gần nhất
+    // Lấy 7 ngày xung quanh ngày hiện tại
     for (let i = -3; i <= 3; i++) {
       const d = new Date();
       d.setDate(today.getDate() + i);
@@ -28,7 +28,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
   };
 
   useEffect(() => {
-    onRefresh({ date: selectedDate });
+    if (onRefresh) onRefresh({ date: selectedDate });
   }, [selectedDate]);
 
   const handleSave = async (e) => {
@@ -41,7 +41,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
         date: editing.date
       });
       setEditing(null);
-      onRefresh({ date: selectedDate });
+      if (onRefresh) onRefresh({ date: selectedDate });
     } catch (e) {
       alert('Lỗi khi lưu: ' + e.message);
     } finally {
@@ -50,7 +50,9 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
   };
 
   const handleExport = () => {
-    window.open(`${API_URL}/attendance/export?month=${exportMonth}`, '_blank');
+    // Sử dụng window.location.href hoặc a tag để tải file an toàn hơn
+    const exportUrl = `${API_URL}/attendance/export?month=${exportMonth}`;
+    window.open(exportUrl, '_blank');
     setShowExportModal(false);
   };
 
@@ -68,8 +70,8 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
       </div>
 
       {/* Date Selection Bar */}
-      <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-2">
+      <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800 overflow-hidden">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-2 flex-1">
           {getDates().map(d => (
             <button
               key={d.full}
@@ -81,19 +83,19 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
               }`}
             >
               <span className="text-[10px] uppercase tracking-wider mb-1">
-                {d.isToday ? 'Hôm nay' : `${d.day}-${d.month}`}
+                {d.full === new Date().toISOString().split('T')[0] ? 'Hôm nay' : `${d.day}-${d.month}`}
               </span>
               <span className="text-lg">{d.day}</span>
             </button>
           ))}
         </div>
-        <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
+        <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden md:block" />
         <div className="relative group px-4">
           <input 
             type="date" 
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="absolute inset-0 opacity-0 cursor-pointer"
+            className="absolute inset-0 opacity-0 cursor-pointer z-10"
           />
           <button className="p-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
             <Icon name="calendar_month" />
@@ -106,6 +108,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
           <thead>
             <tr className="text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider border-b border-surface-container-low">
               <th className="pb-4 pl-4">Nhân viên</th>
+              <th className="pb-4 text-center">Ngày</th>
               <th className="pb-4 text-center">Giờ vào</th>
               <th className="pb-4 text-center">Giờ ra</th>
               <th className="pb-4">Phương thức</th>
@@ -117,6 +120,9 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
             {attendance.length > 0 ? attendance.map(a => (
               <tr key={a.id} className="hover:bg-surface-container-low/20 transition-colors">
                 <td className="py-5 pl-4 font-bold text-slate-800 dark:text-slate-100">{a.employee_name}</td>
+                <td className="py-5 text-center text-xs font-black text-slate-500 uppercase tracking-tighter">
+                  {new Date(a.date).toLocaleDateString('vi-VN')}
+                </td>
                 <td className="py-5 text-center font-mono font-bold text-primary">{a.check_in}</td>
                 <td className="py-5 text-center font-mono font-bold text-amber-500">{a.check_out || '--:--:--'}</td>
                 <td className="py-5"><div className="flex items-center gap-2"><Icon name={a.method === 'WiFi' ? 'wifi' : 'location_on'} className="text-sky-500" /><span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{a.method}</span></div></td>
@@ -136,7 +142,7 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
               </tr>
             )) : (
               <tr>
-                <td colSpan="6" className="py-20 text-center text-slate-400 font-medium italic">Không có dữ liệu chấm công cho ngày này</td>
+                <td colSpan="7" className="py-20 text-center text-slate-400 font-medium italic">Không có dữ liệu chấm công cho ngày này</td>
               </tr>
             )}
           </tbody>

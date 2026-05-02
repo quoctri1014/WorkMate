@@ -846,32 +846,6 @@ async function sendPushNotification(employeeId, title, body, data = {}) {
 
 // --- 4. API QUẢN LÝ LỊCH HỌP (MEETINGS) ---
 
-app.get('/api/attendance', async (req, res) => {
-  try {
-    const { date } = req.query;
-    let query = `
-      SELECT a.*, e.name as employee_name, e.employee_code,
-             a.check_in_method as method,
-             to_char(a.check_in_time, 'YYYY-MM-DD') as date,
-             to_char(a.check_in_time, 'HH24:MI:SS') as check_in,
-             to_char(a.check_out_time, 'HH24:MI:SS') as check_out
-      FROM attendance a
-      JOIN employees e ON a.employee_id = e.id
-    `;
-    let params = [];
-    
-    if (date) {
-      query += ` WHERE to_char(a.check_in_time, 'YYYY-MM-DD') = $1`;
-      params.push(date);
-    }
-    
-    query += ` ORDER BY a.check_in_time DESC`;
-    
-    const r = await pool.query(query, params);
-    res.json(r.rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
 // API Xuất Excel
 app.get('/api/attendance/export', async (req, res) => {
   try {
@@ -927,6 +901,32 @@ app.get('/api/attendance/export', async (req, res) => {
 
     await workbook.xlsx.write(res);
     res.end();
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/attendance', async (req, res) => {
+  try {
+    const { date } = req.query;
+    let query = `
+      SELECT a.*, e.name as employee_name, e.employee_code,
+             a.check_in_method as method,
+             to_char(a.check_in_time, 'YYYY-MM-DD') as date,
+             to_char(a.check_in_time, 'HH24:MI:SS') as check_in,
+             to_char(a.check_out_time, 'HH24:MI:SS') as check_out
+      FROM attendance a
+      JOIN employees e ON a.employee_id = e.id
+    `;
+    let params = [];
+    
+    if (date) {
+      query += ` WHERE to_char(a.check_in_time, 'YYYY-MM-DD') = $1`;
+      params.push(date);
+    }
+    
+    query += ` ORDER BY a.check_in_time DESC`;
+    
+    const r = await pool.query(query, params);
+    res.json(r.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
