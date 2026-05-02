@@ -94,8 +94,8 @@ const App = () => {
   useEffect(() => {
     if (!user) return;
     fetchData();
-    socket.on('new_attendance', fetchData);
-    socket.on('new_approval', fetchData);
+    socket.on('new_attendance', () => fetchData());
+    socket.on('new_approval', () => fetchData());
     socket.on('approval_updated', fetchData);
     socket.on('online_users', (users) => {
       setOnlineUsers(users.map(Number));
@@ -202,7 +202,7 @@ const App = () => {
              {activeTab === 'employees' && <EmployeesView employees={employees} depts={depts} onRefresh={fetchData} onlineUsers={onlineUsers} />}
              {activeTab === 'departments' && <DepartmentsView depts={depts} onRefresh={fetchData} />}
              {activeTab === 'meetings' && <MeetingsView meetings={meetings} notifications={notifications} depts={depts} onRefresh={fetchData} />}
-             {activeTab === 'approvals' && <ApprovalsView approvals={approvals} />}
+             {activeTab === 'approvals' && <ApprovalsView approvals={approvals} onRefresh={fetchData} />}
              {activeTab === 'attendance' && <AttendanceView attendance={attendance} onRefresh={fetchData} />}
              {activeTab === 'settings' && <SettingsView config={config} onRefresh={fetchData} />}
           </motion.div>

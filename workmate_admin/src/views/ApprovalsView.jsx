@@ -2,10 +2,11 @@ import React from 'react';
 import axios from 'axios';
 import { Icon, API_URL } from '../components/Common';
 
-const ApprovalsView = ({ approvals = [] }) => {
+const ApprovalsView = ({ approvals = [], onRefresh }) => {
   const handleAction = async (id, status) => {
     try {
       await axios.put(`${API_URL}/approvals/${id}`, { status });
+      if (onRefresh) onRefresh();
     } catch (err) {
       alert("Lỗi khi thực hiện thao tác!");
     }

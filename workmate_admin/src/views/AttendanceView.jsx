@@ -19,8 +19,8 @@ const AttendanceView = ({ attendance = [], onRefresh }) => {
       d.setDate(today.getDate() + i);
       dates.push({
         full: d.toISOString().split('T')[0],
-        day: d.getDate().toString().padLeft(2, '0'),
-        month: (d.getMonth() + 1).toString().padLeft(2, '0'),
+        day: d.getDate().toString().padStart(2, '0'),
+        month: (d.getMonth() + 1).toString().padStart(2, '0'),
         isToday: d.toDateString() === today.toDateString()
       });
     }
