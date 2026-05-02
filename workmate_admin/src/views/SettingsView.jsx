@@ -9,7 +9,11 @@ const SettingsView = ({ config, onRefresh }) => {
     safe_lng: 106.7218,
     safe_wifi_ssid: 'WorkMate_Office_5G',
     safe_wifi_bssid: 'e8:94:f6:7d:a2:c1',
-    radius_meters: 100
+    radius_meters: 100,
+    work_start_time: '08:00',
+    work_end_time: '17:00',
+    break_start_time: '12:00',
+    break_end_time: '13:00'
   });
 
   useEffect(() => {
@@ -65,6 +69,32 @@ const SettingsView = ({ config, onRefresh }) => {
                  <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-4">Tên tổ chức / Công ty</label>
                  <input className="w-full bg-surface-container-low border-2 border-transparent focus:border-primary/20 rounded-[1.5rem] py-6 px-8 outline-none font-black text-xl text-on-surface transition-all" value={data.company_name} onChange={e => setData({...data, company_name: e.target.value})} />
                </div>
+            </div>
+
+            {/* Quy định giờ làm việc */}
+            <div className="col-span-2">
+               <h3 className="text-[11px] font-black text-amber-500 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center"><Icon name="schedule" className="!text-[18px]" /></div> Quy định giờ làm việc & Nghỉ trưa
+               </h3>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.1em] ml-4">Giờ vào làm</label>
+                    <input type="time" className="w-full bg-surface-container-low border-2 border-transparent focus:border-amber-500/20 rounded-[1.2rem] py-4 px-6 outline-none font-black text-on-surface transition-all" value={data.work_start_time} onChange={e => setData({...data, work_start_time: e.target.value})} />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.1em] ml-4">Giờ tan sở</label>
+                    <input type="time" className="w-full bg-surface-container-low border-2 border-transparent focus:border-amber-500/20 rounded-[1.2rem] py-4 px-6 outline-none font-black text-on-surface transition-all" value={data.work_end_time} onChange={e => setData({...data, work_end_time: e.target.value})} />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.1em] ml-4">Bắt đầu nghỉ</label>
+                    <input type="time" className="w-full bg-surface-container-low border-2 border-transparent focus:border-amber-500/20 rounded-[1.2rem] py-4 px-6 outline-none font-black text-on-surface transition-all" value={data.break_start_time} onChange={e => setData({...data, break_start_time: e.target.value})} />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.1em] ml-4">Kết thúc nghỉ</label>
+                    <input type="time" className="w-full bg-surface-container-low border-2 border-transparent focus:border-amber-500/20 rounded-[1.2rem] py-4 px-6 outline-none font-black text-on-surface transition-all" value={data.break_end_time} onChange={e => setData({...data, break_end_time: e.target.value})} />
+                  </div>
+               </div>
+               <p className="text-[10px] text-on-surface-variant/50 italic mt-4 ml-4 font-medium">* Hệ thống sẽ tự động trừ giờ nghỉ trưa và giới hạn giờ công theo đơn OT đã duyệt.</p>
             </div>
 
             {/* Vị trí GPS */}

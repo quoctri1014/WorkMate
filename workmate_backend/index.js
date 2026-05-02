@@ -823,6 +823,55 @@ app.post('/api/employees/fcm-token', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Helper tính toán giờ công theo quy định
+function calculateWorkingHours(checkIn, checkOut, config, approvedOT = 0) {
+  if (!checkIn || !checkOut) return { total: 0, normal: 0, ot: 0 };
+
+  const start = new Date(checkIn);
+  const end = new Date(checkOut);
+  const dateStr = start.toISOString().split('T')[0];
+
+  // Chuyển đổi cấu hình giờ sang Date object cho ngày hiện tại
+  const workStart = new Date(`${dateStr}T${config.work_start_time || '08:00'}:00`);
+  const workEnd = new Date(`${dateStr}T${config.work_end_time || '17:00'}:00`);
+  const breakStart = new Date(`${dateStr}T${config.break_start_time || '12:00'}:00`);
+  const breakEnd = new Date(`${dateStr}T${config.break_end_time || '13:00'}:00`);
+
+  // 1. Tính giờ hành chính (chỉ nằm trong khoảng workStart -> workEnd)
+  const effectiveStart = start > workStart ? start : workStart;
+  const effectiveEnd = end < workEnd ? end : workEnd;
+  
+  let normalMs = 0;
+  if (effectiveEnd > effectiveStart) {
+    normalMs = effectiveEnd - effectiveStart;
+    
+    // Trừ giờ nghỉ trưa nếu có giao thoa
+    const overlapBreakStart = effectiveStart > breakStart ? effectiveStart : breakStart;
+    const overlapBreakEnd = effectiveEnd < breakEnd ? effectiveEnd : breakEnd;
+    if (overlapBreakEnd > overlapBreakStart) {
+      normalMs -= (overlapBreakEnd - overlapBreakStart);
+    }
+  }
+
+  // 2. Tính giờ OT (nếu có check out sau workEnd và có approvedOT)
+  let otMs = 0;
+  if (end > workEnd && approvedOT > 0) {
+    const actualOTMs = end - workEnd;
+    const allowedOTMs = approvedOT * 60 * 60 * 1000;
+    otMs = actualOTMs > allowedOTMs ? allowedOTMs : actualOTMs;
+  }
+
+  const normal = normalMs / (1000 * 60 * 60);
+  const ot = otMs / (1000 * 60 * 60);
+
+  return {
+    total: parseFloat((normal + ot).toFixed(2)),
+    normal: parseFloat(normal.toFixed(2)),
+    ot: parseFloat(ot.toFixed(2))
+  };
+}
+
+
 // Helper gửi thông báo
 async function sendPushNotification(employeeId, title, body, data = {}) {
   try {
@@ -861,6 +910,20 @@ app.get('/api/attendance/export', async (req, res) => {
       ORDER BY e.name, a.check_in_time
     `, [month]);
 
+    const configRes = await pool.query('SELECT * FROM company_config LIMIT 1');
+    const config = configRes.rows[0];
+
+    const otRes = await pool.query(`
+      SELECT employee_id, to_char(from_date, 'YYYY-MM-DD') as date, SUM(total_hours) as hours
+      FROM approvals 
+      WHERE status = 'approved' AND type = 'Làm thêm giờ'
+      GROUP BY employee_id, to_char(from_date, 'YYYY-MM-DD')
+    `);
+    const otMap = {};
+    otRes.rows.forEach(row => {
+      otMap[`${row.employee_id}_${row.date}`] = parseFloat(row.hours);
+    });
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Báo cáo Chấm công');
 
@@ -876,23 +939,18 @@ app.get('/api/attendance/export', async (req, res) => {
     ];
 
     r.rows.forEach(row => {
-      let totalHours = 0;
-      if (row.check_out_time) {
-        totalHours = (new Date(row.check_out_time) - new Date(row.check_in_time)) / (1000 * 60 * 60);
-      }
+      const approvedOT = otMap[`${row.employee_id}_${row.date}`] || 0;
+      const hours = calculateWorkingHours(row.check_in_time, row.check_out_time, config, approvedOT);
       
-      const normal = totalHours > 8 ? 8 : totalHours;
-      const ot = totalHours > 8 ? totalHours - 8 : 0;
-
       worksheet.addRow({
         code: row.employee_code,
         name: row.employee_name,
         date: row.date,
         in: row.check_in,
         out: row.check_out || '--:--:--',
-        total: totalHours.toFixed(2),
-        normal: normal.toFixed(2),
-        ot: ot.toFixed(2)
+        total: hours.total,
+        normal: hours.normal,
+        ot: hours.ot
       });
     });
 
@@ -1096,38 +1154,43 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
       params
     );
 
-    // 2. Tính toán các chỉ số
+    // 2. Lấy cấu hình và OT để tính toán
+    const configRes = await pool.query('SELECT * FROM company_config LIMIT 1');
+    const config = configRes.rows[0];
+
+    const otRes = await pool.query(`
+      SELECT to_char(from_date, 'YYYY-MM-DD') as date, SUM(total_hours) as hours
+      FROM approvals 
+      WHERE employee_id = $1 AND status = 'approved' AND type = 'Làm thêm giờ'
+      GROUP BY to_char(from_date, 'YYYY-MM-DD')
+    `, [employeeId]);
+    const otMap = {};
+    otRes.rows.forEach(row => { otMap[row.date] = parseFloat(row.hours); });
+
     let totalNormalHours = 0;
     let totalOTHours = 0;
     let lateDays = 0;
     
-    // Giả sử làm việc từ thứ 2 đến chủ nhật (7 ngày gần nhất cho biểu đồ tuần)
     const weeklyData = Array(7).fill(0).map(() => ({ normal: 0, ot: 0, deficiency: 0 }));
-    const now = new Date();
     
     attendance.rows.forEach(row => {
-      if (row.check_out_time) {
-        const duration = (new Date(row.check_out_time) - new Date(row.check_in_time)) / (1000 * 60 * 60);
-        let normal = duration > 8 ? 8 : duration;
-        let ot = duration > 8 ? duration - 8 : 0;
-        
-        totalNormalHours += normal;
-        totalOTHours += ot;
-
-        // Phân bổ vào biểu đồ tuần (0: Thứ 2, ..., 6: Chủ nhật)
-        const dayIdx = (new Date(row.check_in_time).getDay() + 6) % 7;
-        if (duration >= 8) {
-          weeklyData[dayIdx].normal = 8;
-          weeklyData[dayIdx].ot = ot;
-        } else {
-          weeklyData[dayIdx].deficiency = duration;
-        }
-      }
+      const dateStr = new Date(row.check_in_time).toISOString().split('T')[0];
+      const approvedOT = otMap[dateStr] || 0;
+      const hours = calculateWorkingHours(row.check_in_time, row.check_out_time, config, approvedOT);
       
-      // Kiểm tra đi muộn (Giả sử quy định là 8:30)
+      totalNormalHours += hours.normal;
+      totalOTHours += hours.ot;
+
+      const dayIdx = (new Date(row.check_in_time).getDay() + 6) % 7;
+      weeklyData[dayIdx].normal = hours.normal;
+      weeklyData[dayIdx].ot = hours.ot;
+      
+      // Kiểm tra đi muộn (So với work_start_time trong config)
       const checkInHour = new Date(row.check_in_time).getHours();
       const checkInMin = new Date(row.check_in_time).getMinutes();
-      if (checkInHour > 8 || (checkInHour === 8 && checkInMin > 30)) {
+      const [limitHour, limitMin] = (config.work_start_time || '08:30').split(':').map(Number);
+      
+      if (checkInHour > limitHour || (checkInHour === limitHour && checkInMin > limitMin)) {
         lateDays++;
       }
     });
