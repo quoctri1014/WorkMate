@@ -409,13 +409,17 @@ class NotificationModel {
   }
 }
 
-// Company Config Model
 class CompanyConfigModel {
   final int id;
   final String companyName;
   final double? safeLat;
   final double? safeLng;
   final String? safeWifiSsid;
+  final String? work_start_time;
+  final String? work_end_time;
+  final String? break_start_time;
+  final String? break_end_time;
+  final String? work_days;
 
   CompanyConfigModel({
     required this.id,
@@ -423,6 +427,11 @@ class CompanyConfigModel {
     this.safeLat,
     this.safeLng,
     this.safeWifiSsid,
+    this.work_start_time,
+    this.work_end_time,
+    this.break_start_time,
+    this.break_end_time,
+    this.work_days,
   });
 
   factory CompanyConfigModel.fromMap(Map<String, dynamic> map) {
@@ -432,6 +441,11 @@ class CompanyConfigModel {
       safeLat: double.tryParse(map['safe_lat']?.toString() ?? ''),
       safeLng: double.tryParse(map['safe_lng']?.toString() ?? ''),
       safeWifiSsid: map['safe_wifi_ssid'],
+      work_start_time: map['work_start_time'],
+      work_end_time: map['work_end_time'],
+      break_start_time: map['break_start_time'],
+      break_end_time: map['break_end_time'],
+      work_days: map['work_days'],
     );
   }
 }

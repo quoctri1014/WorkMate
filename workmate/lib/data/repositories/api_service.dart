@@ -213,4 +213,36 @@ class ApiService {
       return false;
     }
   }
+
+  Future<bool> submitApproval(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/approvals'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ Lỗi submitApproval: $e');
+      return false;
+    }
+  }
+
+  Future<int> checkForgotLimit(int employeeId, String month) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/approvals/check-forgot-limit'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'employee_id': employeeId, 'month': month}),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['count'] ?? 0;
+      }
+      return 0;
+    } catch (e) {
+      print('❌ Lỗi checkForgotLimit: $e');
+      return 0;
+    }
+  }
 }

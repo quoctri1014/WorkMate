@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:intl/intl.dart';
+import 'qr_scanner_screen.dart';
 
 class QRScreen extends StatelessWidget {
   const QRScreen({super.key});
@@ -68,6 +69,20 @@ NGÀY VÀO LÀM: ${AppDateUtils.formatDate(user.joinDate)}
                 icon: const Icon(Icons.copy_rounded, color: Colors.white),
                 label: const Text('Sao chép thông tin', style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(width: double.infinity, height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const QRScannerScreen()));
+                },
+                icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.primary),
+                label: const Text('Quét mã QR đồng nghiệp', style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
               ),
             ),
           ]),

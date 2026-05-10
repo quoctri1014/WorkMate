@@ -86,8 +86,11 @@ const App = () => {
     }
     
     if (!user) return;
+    socket.emit('register', user.id);
+    socket.emit('get_online_users');
     fetchData();
     socket.on('new_attendance', () => fetchData({ date: attendanceFilterDate }));
+    socket.on('attendance_updated', () => fetchData({ date: attendanceFilterDate }));
     socket.on('new_approval', () => fetchData());
     socket.on('approval_updated', fetchData);
     socket.on('new_notification', () => fetchData());
@@ -97,6 +100,7 @@ const App = () => {
 
     return () => {
       socket.off('new_attendance');
+      socket.off('attendance_updated');
       socket.off('new_approval');
       socket.off('approval_updated');
       socket.off('new_notification');
@@ -171,7 +175,7 @@ const App = () => {
                  onDateChange={handleAttendanceDateChange}
                />
              )}
-             {activeTab === 'chat' && <ChatView adminUser={user} />}
+             {activeTab === 'chat' && <ChatView adminUser={user} onlineUsers={onlineUsers} />}
              {activeTab === 'settings' && <SettingsView config={config} onRefresh={fetchData} />}
           </motion.div>
         </AnimatePresence>

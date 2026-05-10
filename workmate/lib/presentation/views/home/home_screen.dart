@@ -17,6 +17,7 @@ import 'package:workmate/presentation/views/overtime/ot_history_screen.dart';
 import 'package:workmate/presentation/views/meeting/meeting_screen.dart';
 import 'package:workmate/presentation/views/profile/personal_info_screen.dart';
 import 'package:workmate/presentation/views/profile/seniority_screen.dart';
+import 'package:workmate/presentation/views/attendance/supplement_request_screen.dart';
 import 'package:workmate/core/i18n/app_translations.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -238,146 +239,152 @@ class _HomeScreenState extends State<HomeScreen> {
                             SizedBox(
                               width: double.infinity,
                               height: 52,
-                              child: ElevatedButton(
-                                onPressed: homeVM.isCheckingIn
-                                    ? null
-                                    : () async {
-                                        final isCheckIn = !homeVM.isCheckedIn;
-                                        final action = isCheckIn ? 'CHECK IN' : 'CHECK OUT';
-                                        
-                                        if (!isCheckIn) {
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            barrierDismissible: true,
-                                            builder: (ctx) => Dialog(
-                                              backgroundColor: Colors.transparent,
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius: BorderRadius.circular(28),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    const Text(
-                                                      'Xác nhận CHECK OUT',
-                                                      style: TextStyle(
-                                                        fontSize: 20,
-                                                        fontWeight: FontWeight.w800,
-                                                        color: Color(0xFF333333),
-                                                      ),
-                                                      textAlign: TextAlign.center,
-                                                    ),
-                                                    const SizedBox(height: 16),
-                                                    Text(
-                                                      'Bạn có chắc chắn muốn thực hiện chấm công ra không? Hành động này sẽ ghi nhận giờ kết thúc ca làm của bạn.',
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        color: Colors.grey.shade600,
-                                                        height: 1.5,
-                                                      ),
-                                                      textAlign: TextAlign.center,
-                                                    ),
-                                                    const SizedBox(height: 32),
-                                                    // Nút XÁC NHẬN (To, tròn)
-                                                    SizedBox(
-                                                      width: double.infinity,
-                                                      height: 54,
-                                                      child: ElevatedButton(
-                                                        onPressed: () => Navigator.pop(ctx, true),
-                                                        style: ElevatedButton.styleFrom(
-                                                          backgroundColor: const Color(0xFF1B5E83), // Màu xanh như hình
-                                                          foregroundColor: Colors.white,
-                                                          elevation: 4,
-                                                          shadowColor: const Color(0xFF1B5E83).withOpacity(0.3),
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius: BorderRadius.circular(30),
-                                                          ),
+                              child: (() {
+                                final isCompleted = homeVM.checkInTime != null && homeVM.checkOutTime != null;
+                                final isSupplemented = homeVM.checkInMethod?.contains('bổ sung') == true;
+
+                                return ElevatedButton(
+                                  onPressed: (homeVM.isCheckingIn || isCompleted)
+                                      ? null
+                                      : () async {
+                                          final isCheckIn = !homeVM.isCheckedIn;
+                                          final action = isCheckIn ? 'CHECK IN' : 'CHECK OUT';
+                                          
+                                          if (!isCheckIn) {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              barrierDismissible: true,
+                                              builder: (ctx) => Dialog(
+                                                backgroundColor: Colors.transparent,
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    borderRadius: BorderRadius.circular(28),
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      const Text(
+                                                        'Xác nhận CHECK OUT',
+                                                        style: TextStyle(
+                                                          fontSize: 20,
+                                                          fontWeight: FontWeight.w800,
+                                                          color: Color(0xFF333333),
                                                         ),
-                                                        child: const Text(
-                                                          'XÁC NHẬN',
-                                                          style: TextStyle(
-                                                            fontSize: 16,
-                                                            fontWeight: FontWeight.w800,
-                                                            letterSpacing: 1.1,
-                                                          ),
-                                                        ),
+                                                        textAlign: TextAlign.center,
                                                       ),
-                                                    ),
-                                                    const SizedBox(height: 12),
-                                                    // Nút HỦY BỎ (Text only, ở dưới)
-                                                    TextButton(
-                                                      onPressed: () => Navigator.pop(ctx, false),
-                                                      style: TextButton.styleFrom(
-                                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                                      ),
-                                                      child: Text(
-                                                        'HỦY BỎ',
+                                                      const SizedBox(height: 16),
+                                                      Text(
+                                                        'Bạn có chắc chắn muốn thực hiện chấm công ra không? Hành động này sẽ ghi nhận giờ kết thúc ca làm của bạn.',
                                                         style: TextStyle(
                                                           fontSize: 14,
-                                                          color: Colors.grey.shade500,
-                                                          fontWeight: FontWeight.w600,
-                                                          letterSpacing: 1.0,
+                                                          color: Colors.grey.shade600,
+                                                          height: 1.5,
+                                                        ),
+                                                        textAlign: TextAlign.center,
+                                                      ),
+                                                      const SizedBox(height: 32),
+                                                      // Nút XÁC NHẬN (To, tròn)
+                                                      SizedBox(
+                                                        width: double.infinity,
+                                                        height: 54,
+                                                        child: ElevatedButton(
+                                                          onPressed: () => Navigator.pop(ctx, true),
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor: const Color(0xFF1B5E83), // Màu xanh như hình
+                                                            foregroundColor: Colors.white,
+                                                            elevation: 4,
+                                                            shadowColor: const Color(0xFF1B5E83).withOpacity(0.3),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(30),
+                                                            ),
+                                                          ),
+                                                          child: const Text(
+                                                            'XÁC NHẬN',
+                                                            style: TextStyle(
+                                                              fontSize: 16,
+                                                              fontWeight: FontWeight.w800,
+                                                              letterSpacing: 1.1,
+                                                            ),
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  ],
+                                                      const SizedBox(height: 12),
+                                                      // Nút HỦY BỎ (Text only, ở dưới)
+                                                      TextButton(
+                                                        onPressed: () => Navigator.pop(ctx, false),
+                                                        style: TextButton.styleFrom(
+                                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                                        ),
+                                                        child: Text(
+                                                          'HỦY BỎ',
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            color: Colors.grey.shade500,
+                                                            fontWeight: FontWeight.w600,
+                                                            letterSpacing: 1.0,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          );
-                                          if (confirm != true) return;
-                                        }
+                                            );
+                                            if (confirm != true) return;
+                                          }
 
-                                        final prefs = await SharedPreferences.getInstance();
-                                        final isGranted = prefs.getBool('permissions_granted') ?? false;
-                                        
-                                        if (isGranted) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => CheckInFaceScreen(isCheckIn: isCheckIn),
-                                            ),
-                                          );
-                                        } else {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => const CheckInPermissionScreen(),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: homeVM.isCheckedIn
-                                      ? const Color(0xFF2C7BAE)
-                                      : Colors.white,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
+                                          final prefs = await SharedPreferences.getInstance();
+                                          final isGranted = prefs.getBool('permissions_granted') ?? false;
+                                          
+                                          if (isGranted) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => CheckInFaceScreen(isCheckIn: isCheckIn),
+                                              ),
+                                            );
+                                          } else {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => const CheckInPermissionScreen(),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isCompleted
+                                        ? Colors.white.withOpacity(0.5)
+                                        : (homeVM.isCheckedIn ? const Color(0xFF2C7BAE) : Colors.white),
+                                    disabledBackgroundColor: Colors.white.withOpacity(0.5),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
                                   ),
-                                ),
-                                child: homeVM.isCheckingIn
-                                    ? const CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: AppColors.primary,
-                                      )
-                                    : Text(
-                                        homeVM.isCheckedIn
-                                            ? 'CHECK OUT'
-                                            : 'CHECK IN',
-                                        style: TextStyle(
-                                          fontFamily: 'Nunito',
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
-                                          color: homeVM.isCheckedIn
-                                              ? Colors.white
-                                              : AppColors.primary,
-                                          letterSpacing: 1,
+                                  child: homeVM.isCheckingIn
+                                      ? const CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.primary,
+                                        )
+                                      : Text(
+                                          isCompleted
+                                              ? (isSupplemented ? 'ĐÃ BỔ SUNG CÔNG' : 'ĐÃ HOÀN TẤT CHẤM CÔNG')
+                                              : (homeVM.isCheckedIn ? 'CHECK OUT' : 'CHECK IN'),
+                                          style: TextStyle(
+                                            fontFamily: 'Nunito',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w800,
+                                            color: (homeVM.isCheckedIn || isCompleted)
+                                                ? Colors.white
+                                                : AppColors.primary,
+                                            letterSpacing: 1,
+                                          ),
                                         ),
-                                      ),
-                              ),
+                                );
+                              }()),
                             ),
                             const SizedBox(height: 8),
                             Row(
@@ -512,6 +519,14 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: t('account_management'),
         onTap: () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const PersonalInfoScreen())),
+      ),
+      _WorkspaceCard(
+        icon: Icons.edit_calendar_rounded,
+        color: Colors.teal,
+        title: t('forgot_attendance'),
+        subtitle: t('request_supplement'),
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const SupplementRequestScreen())),
       ),
     ];
     return items;

@@ -95,16 +95,21 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
           ))}
         </div>
         <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden md:block" />
-        <div className="relative group px-4">
+        <div className="relative group">
           <input 
+            id="attendance-date"
             type="date" 
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+            className="absolute inset-0 opacity-0 cursor-pointer z-20 w-full h-full"
+            style={{ colorScheme: 'dark' }}
           />
-          <button className="p-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
+          <label 
+            htmlFor="attendance-date"
+            className="flex p-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all cursor-pointer relative z-10"
+          >
             <Icon name="calendar_month" />
-          </button>
+          </label>
         </div>
       </div>
 

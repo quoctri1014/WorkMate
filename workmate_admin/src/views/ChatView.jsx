@@ -6,7 +6,7 @@ import { io } from "socket.io-client";
 
 const socket = io("http://localhost:5000");
 
-const ChatView = ({ adminUser }) => {
+const ChatView = ({ adminUser, onlineUsers = [] }) => {
   const [conversations, setConversations] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -35,7 +35,18 @@ const ChatView = ({ adminUser }) => {
         setMessages(prev => [...prev, msg]);
       }
     });
-    return () => socket.off(`receive_message_admin`);
+    // Lắng nghe tin nhắn admin tự gửi (để hiển thị real-time)
+    if (adminUser?.id) {
+      socket.on(`receive_message_${adminUser.id}`, (msg) => {
+        if (activeChat && msg.receiver_id === activeChat.id && msg.sender_id === adminUser.id) {
+          setMessages(prev => [...prev, msg]);
+        }
+      });
+    }
+    return () => {
+      socket.off(`receive_message_admin`);
+      if (adminUser?.id) socket.off(`receive_message_${adminUser.id}`);
+    };
   }, [activeChat]);
 
   useEffect(() => {
@@ -74,8 +85,11 @@ const ChatView = ({ adminUser }) => {
               onClick={() => handleSelectChat(c)}
               className={`w-full p-4 rounded-2xl flex items-center gap-4 transition-all ${activeChat?.id === c.id ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
             >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg ${activeChat?.id === c.id ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800'}`}>
-                {c.name?.[0]}
+              <div className="relative">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg ${activeChat?.id === c.id ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                  {c.name?.[0]}
+                </div>
+                <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 ${onlineUsers.includes(c.id) ? 'bg-emerald-400' : 'bg-slate-300'}`} />
               </div>
               <div className="text-left flex-1 min-w-0">
                 <p className={`font-black text-sm truncate ${activeChat?.id === c.id ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{c.name}</p>
@@ -103,7 +117,7 @@ const ChatView = ({ adminUser }) => {
                 </div>
                 <div>
                   <h4 className="text-lg font-black text-slate-900 dark:text-white leading-none">{activeChat.name}</h4>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Đang hoạt động</p>
+                  <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${onlineUsers.includes(activeChat.id) ? 'text-emerald-400' : 'text-slate-400'}`}>{onlineUsers.includes(activeChat.id) ? 'Đang hoạt động' : 'Ngoại tuyến'}</p>
                 </div>
               </div>
             </div>

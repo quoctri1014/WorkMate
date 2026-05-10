@@ -188,6 +188,8 @@ class HomeViewModel extends ChangeNotifier {
   bool _isCheckedIn = false;
   DateTime? _checkInTime;
   DateTime? _checkOutTime;
+  String? _checkInMethod;
+  String? _checkOutMethod;
   String _currentTime = '';
   CompanyConfigModel? companyConfig;
   
@@ -288,6 +290,8 @@ class HomeViewModel extends ChangeNotifier {
   bool get isCheckedIn => _isCheckedIn;
   DateTime? get checkInTime => _checkInTime;
   DateTime? get checkOutTime => _checkOutTime;
+  String? get checkInMethod => _checkInMethod;
+  String? get checkOutMethod => _checkOutMethod;
   String get currentTime => _currentTime;
 
   void updateTime() {
@@ -311,9 +315,11 @@ class HomeViewModel extends ChangeNotifier {
       if (attendance != null) {
         if (attendance['check_in_time'] != null) {
           _checkInTime = DateTime.parse(attendance['check_in_time']);
+          _checkInMethod = attendance['check_in_method'];
         }
         if (attendance['check_out_time'] != null) {
           _checkOutTime = DateTime.parse(attendance['check_out_time']);
+          _checkOutMethod = attendance['check_out_method'];
           _isCheckedIn = false;
         } else {
            _isCheckedIn = attendance['check_in_time'] != null;
@@ -322,6 +328,8 @@ class HomeViewModel extends ChangeNotifier {
         _isCheckedIn = false;
         _checkInTime = null;
         _checkOutTime = null;
+        _checkInMethod = null;
+        _checkOutMethod = null;
       }
       notifyListeners();
     } catch (e) {

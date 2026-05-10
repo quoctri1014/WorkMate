@@ -15,14 +15,40 @@ const SettingsView = ({ config, onRefresh }) => {
     work_start_time: '08:00',
     work_end_time: '17:00',
     break_start_time: '12:00',
-    break_end_time: '13:00'
+    break_end_time: '13:00',
+    work_days: '[1,2,3,4,5,6]'
   });
 
   useEffect(() => {
     if (config && Object.keys(config).length > 0) {
-      setData(prev => ({ ...prev, ...config }));
+      setData(config);
     }
   }, [config]);
+
+  const toggleDay = (day) => {
+    let days = [];
+    try {
+      days = JSON.parse(data.work_days || '[]');
+    } catch (e) {
+      days = [];
+    }
+    
+    if (days.includes(day)) {
+      days = days.filter(d => d !== day);
+    } else {
+      days = [...days, day].sort();
+    }
+    setData({ ...data, work_days: JSON.stringify(days) });
+  };
+
+  const isWorkDay = (day) => {
+    try {
+      const days = JSON.parse(data.work_days || '[]');
+      return days.includes(day);
+    } catch (e) {
+      return false;
+    }
+  };
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ định vị!");
@@ -36,10 +62,11 @@ const SettingsView = ({ config, onRefresh }) => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    console.log('📤 Đang gửi cấu hình:', data);
     try {
       await axios.post(`${API_URL}/company/config`, data);
       alert("✅ Đã cập nhật cấu hình hệ thống thành công! Dữ liệu đã được đồng bộ tới tất cả thiết bị.");
-      onRefresh();
+      if (onRefresh) await onRefresh();
     } catch (err) { 
       console.error(err);
       alert("❌ Lỗi khi lưu cấu hình! Vui lòng kiểm tra kết nối Server."); 
@@ -170,6 +197,38 @@ const SettingsView = ({ config, onRefresh }) => {
                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Tên tổ chức / Công ty</label>
                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-primary/20 rounded-[1.5rem] py-6 px-8 outline-none font-black text-xl text-slate-900 dark:text-white transition-all" value={data.company_name} onChange={e => setData({...data, company_name: e.target.value})} />
                </div>
+            </div>
+
+            {/* Ngày làm việc trong tuần */}
+            <div className="col-span-2">
+               <h3 className="text-[11px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+                 <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center"><Icon name="calendar_today" className="!text-[18px]" /></div> Các ngày làm việc trong tuần
+               </h3>
+               <div className="flex flex-wrap gap-4">
+                  {[
+                    { id: 1, label: 'Thứ 2' },
+                    { id: 2, label: 'Thứ 3' },
+                    { id: 3, label: 'Thứ 4' },
+                    { id: 4, label: 'Thứ 5' },
+                    { id: 5, label: 'Thứ 6' },
+                    { id: 6, label: 'Thứ 7' },
+                    { id: 7, label: 'Chủ Nhật' }
+                  ].map(day => (
+                    <button
+                      key={day.id}
+                      type="button"
+                      onClick={() => toggleDay(day.id)}
+                      className={`px-8 py-4 rounded-2xl font-black text-sm transition-all border-2 ${
+                        isWorkDay(day.id)
+                          ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/20 scale-105'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-400 border-transparent hover:border-indigo-500/30'
+                      }`}
+                    >
+                      {day.label}
+                    </button>
+                  ))}
+               </div>
+               <p className="text-[10px] text-slate-400 italic mt-4 ml-2 font-medium">* Những ngày không được chọn sẽ được hiển thị là ngày nghỉ trên ứng dụng của nhân viên.</p>
             </div>
 
             {/* Quy định giờ làm việc */}

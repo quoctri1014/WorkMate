@@ -140,6 +140,8 @@ class AppTranslations {
       'history': 'Lịch sử',
       'error_work_content': 'Vui lòng nhập nội dung công việc',
       'company_location': 'Quận 12',
+      'forgot_attendance': 'Bổ sung công',
+      'request_supplement': 'YÊU CẦU BỔ SUNG',
     },
     'en': {
       'home': 'Home',

@@ -41,22 +41,29 @@ io.on('connection', (socket) => {
     if (userId) {
       const id = Number(userId);
       onlineUsers.set(socket.id, id);
+      console.log(`👤 User registered as online: ${id}`);
       io.emit('online_users', Array.from(new Set(onlineUsers.values())));
     }
   });
 
+  socket.on('get_online_users', () => {
+    socket.emit('online_users', Array.from(new Set(onlineUsers.values())));
+  });
+
   socket.on('send_message', async (data) => {
     try {
-      const { sender_id, receiver_id, message, is_ai } = data;
+      const { sender_id, receiver_id, message, is_ai, chat_type, conversation_id, message_type, file_url } = data;
       const r = await pool.query(
-        'INSERT INTO chat_messages (sender_id, receiver_id, message, is_ai) VALUES ($1, $2, $3, $4) RETURNING *',
-        [sender_id, receiver_id, message, is_ai || false]
+        "INSERT INTO chat_messages (sender_id, receiver_id, message, is_ai, chat_type, conversation_id, message_type, file_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        [sender_id, receiver_id, message, is_ai || false, chat_type || 'admin', conversation_id || null, message_type || 'text', file_url || null]
       );
       const newMessage = r.rows[0];
       
-      if (receiver_id) {
+      if (conversation_id) {
+        io.emit(`receive_message_conv_${conversation_id}`, newMessage);
+      } else if (receiver_id) {
         io.emit(`receive_message_${receiver_id}`, newMessage);
-      } else {
+      } else if (chat_type === 'admin') {
         // Gửi cho tất cả Admin
         io.emit('receive_message_admin', newMessage);
       }
@@ -79,6 +86,7 @@ io.on('connection', (socket) => {
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.get('/test', (req, res) => res.send('OK'));
 
 // Cấu hình Multer
@@ -93,6 +101,12 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage: storage });
+
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
+});
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -607,19 +621,47 @@ const getConfig = async (req, res) => {
 };
 
 const postConfig = async (req, res) => {
-  const { company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters } = req.body;
+  const { 
+    company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters,
+    work_start_time, work_end_time, break_start_time, break_end_time, work_days
+  } = req.body;
+  console.log('📥 Nhận yêu cầu cập nhật cấu hình:', { company_name, work_days });
   try {
     const existing = await pool.query('SELECT id FROM company_config LIMIT 1');
     if (existing.rows.length > 0) {
       const r = await pool.query(
-        'UPDATE company_config SET company_name = $1, safe_lat = $2, safe_lng = $3, safe_wifi_ssid = $4, safe_wifi_bssid = $5, radius_meters = $6 WHERE id = $7 RETURNING *',
-        [company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters, existing.rows[0].id]
+        `UPDATE company_config SET 
+          company_name = $1, safe_lat = $2, safe_lng = $3, 
+          safe_wifi_ssid = $4, safe_wifi_bssid = $5, radius_meters = $6,
+          work_start_time = $7, work_end_time = $8, 
+          break_start_time = $9, break_end_time = $10, 
+          work_days = $11
+         WHERE id = $12 RETURNING *`,
+        [
+          company_name, safe_lat, safe_lng, 
+          safe_wifi_ssid, safe_wifi_bssid, radius_meters,
+          work_start_time, work_end_time, 
+          break_start_time, break_end_time, 
+          typeof work_days === 'string' ? work_days : JSON.stringify(work_days),
+          existing.rows[0].id
+        ]
       );
       res.json(r.rows[0]);
     } else {
       const r = await pool.query(
-        'INSERT INTO company_config (company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters]
+        `INSERT INTO company_config (
+          company_name, safe_lat, safe_lng, 
+          safe_wifi_ssid, safe_wifi_bssid, radius_meters,
+          work_start_time, work_end_time, 
+          break_start_time, break_end_time, work_days
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+        [
+          company_name, safe_lat, safe_lng, 
+          safe_wifi_ssid, safe_wifi_bssid, radius_meters,
+          work_start_time, work_end_time, 
+          break_start_time, break_end_time,
+          typeof work_days === 'string' ? work_days : JSON.stringify(work_days)
+        ]
       );
       res.json(r.rows[0]);
     }
@@ -645,14 +687,36 @@ app.get('/api/departments', async (req, res) => {
 });
 
 app.post('/api/departments', async (req, res) => {
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
     const { name, code, positions } = req.body;
-    const r = await pool.query(
+    const r = await client.query(
       'INSERT INTO departments (name, code, positions) VALUES ($1, $2, $3) RETURNING *',
       [name, code, positions]
     );
-    res.json(r.rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+    const newDept = r.rows[0];
+
+    // Tạo group chat
+    const groupName = `Phòng ${name}`;
+    const chatRes = await client.query(
+      `INSERT INTO conversations (type, name, created_by) VALUES ('group', $1, 1) RETURNING id`,
+      [groupName]
+    );
+    const chatId = chatRes.rows[0].id;
+
+    // Cập nhật group_chat_id
+    await client.query('UPDATE departments SET group_chat_id = $1 WHERE id = $2', [chatId, newDept.id]);
+    newDept.group_chat_id = chatId;
+
+    await client.query('COMMIT');
+    res.json(newDept);
+  } catch (err) { 
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message }); 
+  } finally {
+    client.release();
+  }
 });
 
 app.put('/api/departments/:id', async (req, res) => {
@@ -714,6 +778,14 @@ app.post('/api/employees', async (req, res) => {
       'INSERT INTO employees (employee_code, name, email, password_hash, phone, department_id, department_name, position, join_date, birthday) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
       [employee_code, name, email, password_hash, phone, department_id, dept.name, position, join_date, birthday]
     );
+
+    const newEmp = result.rows[0];
+
+    // Thêm vào group chat phòng ban
+    const deptInfoRes = await pool.query('SELECT group_chat_id FROM departments WHERE id = $1', [department_id]);
+    if (deptInfoRes.rows.length > 0 && deptInfoRes.rows[0].group_chat_id) {
+      await pool.query('INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1, $2)', [deptInfoRes.rows[0].group_chat_id, newEmp.id]);
+    }
 
     console.log(`✨ Đã tạo nhân viên mới: ${employee_code}`);
 
@@ -1108,6 +1180,56 @@ app.post('/api/approvals', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/approvals/admin-assign', async (req, res) => {
+  console.log('📝 Admin gán lịch OT/Nghỉ:', req.body);
+  try {
+    const { type, reason, from_date, to_date, total_hours, is_half_day, department_id, employee_ids } = req.body;
+    
+    let targetEmployees = [];
+    
+    if (department_id === 'all') {
+      const r = await pool.query('SELECT id, name FROM employees');
+      targetEmployees = r.rows;
+    } else if (department_id) {
+      const r = await pool.query('SELECT id, name FROM employees WHERE department_id = $1', [department_id]);
+      targetEmployees = r.rows;
+    } else if (employee_ids && employee_ids.length > 0) {
+      const r = await pool.query('SELECT id, name FROM employees WHERE id = ANY($1)', [employee_ids]);
+      targetEmployees = r.rows;
+    } else {
+      return res.status(400).json({ error: "Vui lòng chọn đối tượng gán" });
+    }
+
+    if (targetEmployees.length === 0) {
+      return res.status(404).json({ error: "Không tìm thấy nhân viên phù hợp" });
+    }
+
+    for (const emp of targetEmployees) {
+      const result = await pool.query(
+        'INSERT INTO approvals (employee_id, employee_name, type, reason, from_date, to_date, total_hours, is_half_day, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, \'approved\') RETURNING *',
+        [emp.id, emp.name, type, reason, from_date, to_date, total_hours, is_half_day]
+      );
+      const approval = result.rows[0];
+      
+      // Notify
+      io.emit(`receive_approval_${emp.id}`, approval);
+      io.emit('new_approval', approval);
+      
+      await sendPushNotification(
+        emp.id,
+        `Lịch ${type} mới`,
+        `Quản trị viên đã xếp lịch ${type} cho bạn: ${reason}`,
+        { type: 'approval_assigned', id: approval.id.toString() }
+      );
+    }
+
+    res.json({ success: true, message: `Đã gán lịch cho ${targetEmployees.length} nhân viên` });
+  } catch (err) {
+    console.error('❌ Lỗi admin-assign:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/approvals', async (req, res) => {
   console.log('🔍 Truy vấn danh sách phê duyệt:', req.query);
   try {
@@ -1143,10 +1265,35 @@ app.get('/api/approvals', async (req, res) => {
 app.put('/api/approvals/:id', async (req, res) => {
   try {
     const { status } = req.body;
+    // 1. Cập nhật trạng thái phê duyệt
     const result = await pool.query('UPDATE approvals SET status = $1 WHERE id = $2 RETURNING *', [status, req.params.id]);
     const approval = result.rows[0];
     
+    // 2. Nếu là Quên chấm công và được duyệt -> Thêm vào bảng attendance NGAY LẬP TỨC
+    if (status === 'approved' && approval.type === 'Quên chấm công') {
+      console.log('📝 Bổ sung chấm công từ đơn quên chấm công cho:', approval.employee_name);
+      try {
+        const checkIn = new Date(approval.from_date);
+        const checkOut = new Date(approval.to_date);
+        
+        // Định dạng HH:mm:ss cho các cột varchar nếu cần
+        const cinStr = `${checkIn.getHours().toString().padStart(2, '0')}:${checkIn.getMinutes().toString().padStart(2, '0')}:${checkIn.getSeconds().toString().padStart(2, '0')}`;
+        const coutStr = `${checkOut.getHours().toString().padStart(2, '0')}:${checkOut.getMinutes().toString().padStart(2, '0')}:${checkOut.getSeconds().toString().padStart(2, '0')}`;
+
+        await pool.query(
+          'INSERT INTO attendance (employee_id, employee_name, check_in_time, check_out_time, check_in, check_out, check_in_method) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+          [approval.employee_id, approval.employee_name, approval.from_date, approval.to_date, cinStr, coutStr, 'Quản trị viên bổ sung']
+        );
+        console.log('✅ Đã chèn bản ghi chấm công mới thành công.');
+      } catch (insertErr) {
+        console.error('❌ Lỗi khi chèn bản ghi chấm công bổ sung:', insertErr.message);
+      }
+    }
+
+    // 3. Thông báo Real-time sau khi đã chuẩn bị xong dữ liệu
     io.emit('approval_updated', approval);
+    io.emit('attendance_updated'); // Thông báo cho Web Admin cập nhật danh sách chấm công
+
 
     // Gửi Push Notification
     const statusText = status === 'approved' ? 'được PHÊ DUYỆT' : 'bị TỪ CHỐI';
@@ -1158,6 +1305,17 @@ app.put('/api/approvals/:id', async (req, res) => {
     );
 
     res.json(approval);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/approvals/check-forgot-limit', async (req, res) => {
+  const { employee_id, month } = req.body; // month: YYYY-MM
+  try {
+    const r = await pool.query(
+      "SELECT COUNT(*) FROM approvals WHERE employee_id = $1 AND type = 'Quên chấm công' AND status != 'rejected' AND to_char(created_at, 'YYYY-MM') = $2",
+      [employee_id, month]
+    );
+    res.json({ count: parseInt(r.rows[0].count) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -1288,9 +1446,40 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
 
 
 // --- 6. API CHAT & AI BOT ---
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const HybridChatbot = require('./hybrid_chatbot');
 
+// Lịch sử AI riêng
+app.get('/api/chat/ai-history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const r = await pool.query(`
+      SELECT m.*, e.name as sender_name 
+      FROM chat_messages m
+      LEFT JOIN employees e ON m.sender_id = e.id
+      WHERE m.sender_id = $1 AND m.chat_type = 'ai'
+      ORDER BY created_at ASC
+    `, [userId]);
+    res.json(r.rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Lịch sử Admin riêng (cho Flutter app)
+app.get('/api/chat/admin-history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const r = await pool.query(`
+      SELECT m.*, e.name as sender_name 
+      FROM chat_messages m
+      LEFT JOIN employees e ON m.sender_id = e.id
+      WHERE m.chat_type = 'admin' 
+        AND (m.sender_id = $1 OR m.receiver_id = $1)
+      ORDER BY created_at ASC
+    `, [userId]);
+    res.json(r.rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Lịch sử chat theo userId (cho Web Admin dùng)
 app.get('/api/chat/history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1298,7 +1487,8 @@ app.get('/api/chat/history/:userId', async (req, res) => {
       SELECT m.*, e.name as sender_name 
       FROM chat_messages m
       LEFT JOIN employees e ON m.sender_id = e.id
-      WHERE sender_id = $1 OR receiver_id = $1 
+      WHERE m.chat_type = 'admin'
+        AND (m.sender_id = $1 OR m.receiver_id = $1)
       ORDER BY created_at ASC
     `, [userId]);
     res.json(r.rows);
@@ -1309,11 +1499,11 @@ app.get('/api/chat/admin/conversations', async (req, res) => {
   try {
     const r = await pool.query(`
       SELECT DISTINCT ON (u.id) 
-             u.id, u.name, u.employee_code,
-             m.message as last_message, m.created_at as last_time
+        u.id, u.name, u.email, u.position, u.department_name,
+        m.message as last_message, m.created_at as last_message_time
       FROM employees u
-      JOIN chat_messages m ON (m.sender_id = u.id OR m.receiver_id = u.id)
-      WHERE u.role != 'admin'
+      JOIN chat_messages m ON m.sender_id = u.id
+      WHERE u.role != 'admin' AND m.chat_type = 'admin'
       ORDER BY u.id, m.created_at DESC
     `);
     res.json(r.rows);
@@ -1323,37 +1513,133 @@ app.get('/api/chat/admin/conversations', async (req, res) => {
 app.post('/api/chat/ai', async (req, res) => {
   try {
     const { userId, message } = req.body;
-    if (!process.env.GEMINI_API_KEY) {
-      return res.json({ reply: "Hệ thống AI chưa được cấu hình khóa API. Vui lòng liên hệ Admin.", suggestAdmin: true });
-    }
-
-    // 1. Lấy context dữ liệu
-    const emp = await pool.query('SELECT * FROM employees WHERE id = $1', [userId]);
-    const attendance = await pool.query('SELECT * FROM attendance WHERE employee_id = $1 ORDER BY check_in_time DESC LIMIT 10', [userId]);
-    const leaves = await pool.query("SELECT * FROM approvals WHERE employee_id = $1 AND type = 'Nghỉ phép' ORDER BY created_at DESC", [userId]);
     
-    const context = `
-      Bạn là trợ lý ảo WorkMate của công ty. Trả lời ngắn gọn, thân thiện.
-      Thông tin nhân viên: ${JSON.stringify(emp.rows[0])}
-      Lịch sử chấm công gần đây: ${JSON.stringify(attendance.rows)}
-      Đơn nghỉ phép: ${JSON.stringify(leaves.rows)}
-      Câu hỏi: ${message}
-      
-      Nếu câu hỏi liên quan đến khiếu nại, yêu cầu thay đổi dữ liệu hoặc bạn không chắc chắn, hãy khuyên người dùng nhấn nút "Chat với Admin".
-    `;
-
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(context);
-    const reply = result.response.text();
-
-    // Lưu tin nhắn vào DB
+    // Lưu câu hỏi của user (chat_type='ai')
     await pool.query(
-      'INSERT INTO chat_messages (sender_id, message, is_ai) VALUES ($1, $2, true)',
+      "INSERT INTO chat_messages (sender_id, message, is_ai, chat_type) VALUES ($1, $2, false, 'ai')",
+      [userId, message]
+    );
+
+    const bot = new HybridChatbot(pool);
+    const result = await bot.processMessage(userId, message);
+    const reply = result.text;
+
+    // Lưu câu trả lời AI (chat_type='ai', is_ai=true)
+    await pool.query(
+      "INSERT INTO chat_messages (sender_id, message, is_ai, chat_type) VALUES ($1, $2, true, 'ai')",
       [userId, reply]
     );
 
-    res.json({ reply, suggestAdmin: reply.toLowerCase().includes("admin") });
+    res.json({ 
+      reply, 
+      suggestAdmin: result.action === 'open_admin_chat',
+      suggestions: result.suggestions || [],
+      source: result.source || 'rule'
+    });
+  } catch (err) { 
+    console.error('❌ Lỗi AI Chat:', err.message);
+    res.status(500).json({ error: err.message, reply: "Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại hoặc chat với Admin.", suggestAdmin: true, suggestions: ['Thử lại'], source: 'system' }); 
+  }
+});
+
+// Lấy danh sách hội thoại của user
+app.get('/api/conversations', async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    const result = await pool.query(`
+      SELECT 
+        c.id, c.type, c.name,
+        CASE WHEN c.type='direct' THEN 
+          (SELECT name FROM employees WHERE id != $1
+           AND id IN (SELECT user_id FROM conversation_members WHERE conversation_id=c.id) LIMIT 1)
+        ELSE c.name END AS display_name,
+        (SELECT message FROM chat_messages WHERE conversation_id=c.id ORDER BY created_at DESC LIMIT 1) AS last_message,
+        (SELECT created_at FROM chat_messages WHERE conversation_id=c.id ORDER BY created_at DESC LIMIT 1) AS last_message_time,
+        (SELECT name FROM employees WHERE id=(
+          SELECT sender_id FROM chat_messages WHERE conversation_id=c.id ORDER BY created_at DESC LIMIT 1
+        )) AS sender_name,
+        (SELECT COUNT(*) FROM chat_messages m 
+         WHERE m.conversation_id=c.id 
+         AND m.created_at > COALESCE(
+           (SELECT last_read_at FROM conversation_members WHERE conversation_id=c.id AND user_id=$1), 
+           '1970-01-01'
+         )) AS unread_count
+      FROM conversations c
+      JOIN conversation_members cm ON cm.conversation_id=c.id
+      WHERE cm.user_id=$1
+      ORDER BY last_message_time DESC NULLS LAST
+    `, [userId]);
+
+    res.json(result.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/conversations/:id/messages', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const r = await pool.query(`
+      SELECT m.*, e.name as sender_name 
+      FROM chat_messages m
+      LEFT JOIN employees e ON m.sender_id = e.id
+      WHERE m.conversation_id = $1
+      ORDER BY created_at ASC
+    `, [id]);
+    res.json(r.rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Tạo nhóm mới
+app.post('/api/conversations/group', async (req, res) => {
+  const { name, createdBy, memberIds } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const conv = await client.query(
+      `INSERT INTO conversations (type, name, created_by) VALUES ('group', $1, $2) RETURNING id`,
+      [name, createdBy]
+    );
+    const convId = conv.rows[0].id;
+    const allMembers = [...new Set([...memberIds, parseInt(createdBy)])];
+    for (const uid of allMembers) {
+      await client.query(
+        `INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1, $2)`,
+        [convId, uid]
+      );
+    }
+    await client.query('COMMIT');
+    res.json({ id: convId });
+  } catch (e) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
+  }
+});
+
+// Lấy đồng nghiệp (trừ admin)
+app.get('/api/users/colleagues', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const r = await pool.query("SELECT id, name as full_name, department_name as department FROM employees WHERE id != $1 AND role != 'admin'", [userId]);
+    res.json(r.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Lấy những người đã từng chat 1-1 (để gợi ý tạo nhóm mới)
+app.get('/api/users/chatted-colleagues', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const r = await pool.query(`
+      SELECT DISTINCT e.id, e.name as full_name, e.department_name as department 
+      FROM employees e
+      JOIN conversation_members cm1 ON e.id = cm1.user_id
+      JOIN conversation_members cm2 ON cm1.conversation_id = cm2.conversation_id
+      JOIN conversations c ON c.id = cm1.conversation_id
+      WHERE cm2.user_id = $1 AND e.id != $1 AND c.type = 'direct'
+    `, [userId]);
+    res.json(r.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // --- KHỞI CHẠY SERVER ---
