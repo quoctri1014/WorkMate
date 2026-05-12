@@ -84,4 +84,4 @@
 *   Cơ chế Parameterized Queries chống tấn công SQL Injection.
 
 ---
-© 2026 WorkMate Ecosystem. Đồ án tốt nghiệp chuyên ngành CNTT.
+© 2026 WorkMate Ecosystem. Đồ án tốt nghiệp chuyên ngành CNTT by qtri .
