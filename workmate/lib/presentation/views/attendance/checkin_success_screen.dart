@@ -39,7 +39,7 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen>
   Widget build(BuildContext context) {
     final now = DateTime.now();
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -52,9 +52,9 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen>
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)]),
                     shape: BoxShape.circle,
-                    boxShadow: AppColors.buttonShadow,
+                    boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.buttonShadow,
                   ),
                   child: const Icon(Icons.check_rounded,
                       color: Colors.white, size: 56),
@@ -65,22 +65,22 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen>
                 opacity: _fadeAnim,
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'Chấm công thành công!',
                       style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       AppDateUtils.formatDateTime(now),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -89,7 +89,7 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen>
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
@@ -100,21 +100,21 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen>
                             icon: Icons.verified_rounded,
                             iconColor: AppColors.success,
                           ),
-                          const Divider(height: 20, color: AppColors.border),
+                          Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.1))),
                           _InfoRow(
                             label: 'Ca làm việc',
                             value: 'Ca Hành Chính (08:00 - 17:00)',
                             icon: Icons.schedule_rounded,
                             iconColor: AppColors.primary,
                           ),
-                          const Divider(height: 20, color: AppColors.border),
+                          Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.1))),
                           _InfoRow(
                             label: 'Vị trí',
                             value: 'Toà nhà WorkMate, Quận 1',
                             icon: Icons.location_on_rounded,
                             iconColor: AppColors.warning,
                           ),
-                          const Divider(height: 20, color: AppColors.border),
+                          Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.1))),
                           _InfoRow(
                             label: 'Trạng thái',
                             value: 'Đúng giờ ✓',
@@ -186,19 +186,19 @@ class _InfoRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 11,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
                 ),
               ),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],

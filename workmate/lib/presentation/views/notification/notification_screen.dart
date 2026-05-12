@@ -20,6 +20,7 @@ class NotificationScreen extends StatelessWidget {
       case 'update': return Icons.system_update_rounded;
       case 'meeting_canceled': return Icons.cancel_presentation_rounded;
       case 'announcement': return Icons.campaign_rounded;
+      case 'attendance_update': return Icons.edit_calendar_rounded;
       default: return Icons.notifications_rounded;
     }
   }
@@ -33,6 +34,7 @@ class NotificationScreen extends StatelessWidget {
       case 'update': return AppColors.primary;
       case 'meeting_canceled': return AppColors.error;
       case 'announcement': return Colors.amber[600]!;
+      case 'attendance_update': return AppColors.primary;
       default: return AppColors.textSecondary;
     }
   }
@@ -67,6 +69,9 @@ class NotificationScreen extends StatelessWidget {
             ),
           );
           break;
+        case 'attendance_update':
+          print('📌 [Notification] Type attendance_update - just closing sheet');
+          break;
         case 'approval':
           print('📌 [Notification] Fallback check for type: approval');
           if (notif.title.contains('nghỉ phép')) {
@@ -91,9 +96,9 @@ class NotificationScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Container(
         height: MediaQuery.of(sheetContext).size.height * 0.45,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        decoration: BoxDecoration(
+          color: Theme.of(sheetContext).cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         padding: const EdgeInsets.all(28),
         child: Column(
@@ -102,7 +107,7 @@ class NotificationScreen extends StatelessWidget {
             Center(
               child: Container(
                 width: 40, height: 4,
-                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: Theme.of(context).dividerColor.withOpacity(0.1), borderRadius: BorderRadius.circular(2)),
               ),
             ),
             const SizedBox(height: 24),
@@ -131,17 +136,17 @@ class NotificationScreen extends StatelessWidget {
                           fontFamily: 'Nunito', 
                           fontSize: 18, 
                           fontWeight: FontWeight.w900, 
-                          color: isMeetingCanceled ? AppColors.error : AppColors.textPrimary
+                          color: isMeetingCanceled ? AppColors.error : Theme.of(context).colorScheme.onSurface
                         )
                       ),
-                      Text(AppDateUtils.formatRelativeTime(notif.createdAt), style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, color: AppColors.textHint)),
+                      Text(AppDateUtils.formatRelativeTime(notif.createdAt), style: TextStyle(fontFamily: 'Nunito', fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6))),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            const Divider(color: Color(0xFFF1F5F9)),
+            Divider(color: Theme.of(context).dividerColor.withOpacity(0.1)),
             const SizedBox(height: 24),
             Expanded(
               child: SingleChildScrollView(
@@ -172,7 +177,7 @@ class NotificationScreen extends StatelessWidget {
                     ] else ...[
                       Text(
                         notif.body,
-                        style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, height: 1.6, color: AppColors.textPrimary),
+                        style: TextStyle(fontFamily: 'Nunito', fontSize: 15, height: 1.6, color: Theme.of(context).colorScheme.onSurface),
                       ),
                     ],
                   ],
@@ -210,10 +215,9 @@ class NotificationScreen extends StatelessWidget {
     String t(String key) => AppTranslations.getText(lang, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0, automaticallyImplyLeading: false,
-        title: Text(t('notifications'), style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 20)),
+        elevation: 0, automaticallyImplyLeading: false,
+        title: Text(t('notifications'), style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, fontSize: 20)),
         actions: [
           TextButton(onPressed: vm.markAllAsRead, child: Text(t('mark_all_read'), style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.primary))),
         ],
@@ -223,9 +227,14 @@ class NotificationScreen extends StatelessWidget {
         Container(
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(gradient: AppColors.primaryGradient, borderRadius: BorderRadius.circular(16)),
+          decoration: BoxDecoration(
+            gradient: Theme.of(context).brightness == Brightness.dark 
+              ? LinearGradient(colors: [Colors.blueGrey[900]!, Colors.blueGrey[800]!])
+              : LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)]),
+            borderRadius: BorderRadius.circular(16)
+          ),
           child: Row(children: [
-            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
               child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 24)),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -271,15 +280,21 @@ class NotificationScreen extends StatelessWidget {
               // Promo banner
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: AppColors.cardShadow),
+                decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16), boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow, border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05))),
                 child: Column(children: [
-                  Container(height: 80, decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primaryLight, AppColors.primary]), borderRadius: BorderRadius.circular(12)),
+                  Container(height: 80, 
+                    decoration: BoxDecoration(
+                      gradient: Theme.of(context).brightness == Brightness.dark
+                        ? LinearGradient(colors: [Colors.blueGrey[800]!, Colors.blueGrey[700]!])
+                        : LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)]), 
+                      borderRadius: BorderRadius.circular(12)
+                    ),
                     child: const Center(child: Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 36))),
                   const SizedBox(height: 12),
-                  Text(t('welcome_version'), style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  Text(t('welcome_version'), style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
                   const SizedBox(height: 4),
                   Text(t('welcome_desc'), textAlign: TextAlign.center,
-                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.textSecondary, height: 1.4)),
+                    style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.4)),
                   const SizedBox(height: 12),
                   SizedBox(width: double.infinity, height: 40,
                     child: ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -301,7 +316,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Text(text, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1)),
+    child: Text(text, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant, letterSpacing: 1)),
   );
 }
 
@@ -319,10 +334,14 @@ class _NotifCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: notif.isRead ? Colors.white : AppColors.primarySurface,
+        color: notif.isRead 
+            ? Theme.of(context).cardColor 
+            : (Theme.of(context).brightness == Brightness.dark ? AppColors.primary.withOpacity(0.15) : AppColors.primarySurface),
         borderRadius: BorderRadius.circular(12),
-        border: notif.isRead ? Border.all(color: AppColors.border) : Border.all(color: AppColors.primary.withOpacity(0.2)),
-        boxShadow: notif.isRead ? [] : AppColors.cardShadow,
+        border: notif.isRead 
+            ? Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)) 
+            : Border.all(color: AppColors.primary.withOpacity(0.2)),
+        boxShadow: (notif.isRead || Theme.of(context).brightness == Brightness.dark) ? [] : AppColors.cardShadow,
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
@@ -333,13 +352,13 @@ class _NotifCard extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Expanded(child: Text(notif.title, style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: notif.isRead ? FontWeight.w600 : FontWeight.w700, color: AppColors.textPrimary))),
+            Expanded(child: Text(notif.title, style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: notif.isRead ? FontWeight.w600 : FontWeight.w700, color: Theme.of(context).colorScheme.onSurface))),
             if (!notif.isRead) Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
           ]),
           const SizedBox(height: 4),
-          Text(notif.body, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.textSecondary, height: 1.4), maxLines: 2, overflow: TextOverflow.ellipsis),
+          Text(notif.body, style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.4), maxLines: 2, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
-          Text(AppDateUtils.formatRelativeTime(notif.createdAt), style: const TextStyle(fontFamily: 'Nunito', fontSize: 10, color: AppColors.textHint)),
+          Text(AppDateUtils.formatRelativeTime(notif.createdAt), style: TextStyle(fontFamily: 'Nunito', fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))),
         ])),
       ]),
     ),

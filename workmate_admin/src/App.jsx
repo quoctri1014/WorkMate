@@ -29,9 +29,16 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('theme') === 'dark');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
-  // State quản lý ngày lọc chấm công toàn cục
-  const [attendanceFilterDate, setAttendanceFilterDate] = useState(new Date().toISOString().split('T')[0]);
+  // State quản lý ngày lọc chấm công toàn cục (Khởi tạo theo ngày địa phương để tránh lệch múi giờ)
+  const [attendanceFilterDate, setAttendanceFilterDate] = useState(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
@@ -89,6 +96,12 @@ const App = () => {
     socket.emit('register', user.id);
     socket.emit('get_online_users');
     fetchData();
+    const handleResize = () => {
+      if (window.innerWidth < 1024) setIsSidebarOpen(false);
+      else setIsSidebarOpen(true);
+    };
+    window.addEventListener('resize', handleResize);
+    
     socket.on('new_attendance', () => fetchData({ date: attendanceFilterDate }));
     socket.on('attendance_updated', () => fetchData({ date: attendanceFilterDate }));
     socket.on('new_approval', () => fetchData());
@@ -105,6 +118,7 @@ const App = () => {
       socket.off('approval_updated');
       socket.off('new_notification');
       socket.off('online_users');
+      window.removeEventListener('resize', handleResize);
     };
   }, [user, attendanceFilterDate]);
 
@@ -120,11 +134,19 @@ const App = () => {
   );
 
   return (
-    <div className={`min-h-screen transition-colors ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+    <div className={`min-h-screen transition-all ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
       {/* Top Header */}
-      <header className="ml-72 h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-end px-8 sticky top-0 z-40 transition-colors">
+      <header className={`h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-40 transition-all ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400"
+          >
+            <Icon name={isSidebarOpen ? "menu_open" : "menu"} className="!text-2xl" />
+          </button>
+        </div>
         
         <div className="flex items-center gap-4">
            {/* Dark Mode Toggle */}
@@ -137,7 +159,10 @@ const App = () => {
 
            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
 
-           <button className="relative p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400 group">
+           <button 
+             onClick={() => setActiveTab('approvals')}
+             className="relative p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400 group"
+           >
              <Icon name="notifications" className="group-hover:scale-110 transition-transform" />
              {approvals.filter(a => a.status === 'pending').length > 0 && (
                <span className="absolute top-1.5 right-1.5 bg-rose-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-slate-900 shadow-sm animate-bounce">
@@ -159,7 +184,7 @@ const App = () => {
       </header>
 
       {/* Main Content */}
-      <main className="ml-72 p-8 min-h-screen">
+      <main className={`p-8 min-h-screen transition-all ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
              {activeTab === 'dashboard' && <DashboardView employees={employees} attendance={attendance} approvals={approvals} meetings={meetings} onNavigate={setActiveTab} />}

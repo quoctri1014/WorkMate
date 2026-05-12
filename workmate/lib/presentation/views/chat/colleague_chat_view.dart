@@ -18,7 +18,7 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
   List<Map<String, dynamic>> _groupConvs   = [];
   bool _loading = true;
 
-  static const Color primaryColor = Color(0xFF854F0B);
+  static const Color primaryColor = Color(0xFF4F46E5);
 
   @override
   void initState() {
@@ -55,7 +55,7 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
     return Column(
       children: [
         Container(
-          color: const Color(0xFF1a1a2e),
+          color: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : const Color(0xFF1a1a2e),
           child: TabBar(
             controller: _tabController,
             indicatorColor: primaryColor,
@@ -66,28 +66,31 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
           ),
         ),
         Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : Stack(
-                  children: [
-                    TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildConvList(_directConvs, 'direct'),
-                        _buildConvList(_groupConvs, 'group'),
-                      ],
-                    ),
-                    Positioned(
-                      bottom: 16,
-                      right: 16,
-                      child: FloatingActionButton(
-                        backgroundColor: primaryColor,
-                        child: const Icon(Icons.edit_rounded, color: Colors.white),
-                        onPressed: _showCreateGroup,
+          child: Container(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : Stack(
+                    children: [
+                      TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildConvList(_directConvs, 'direct'),
+                          _buildConvList(_groupConvs, 'group'),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+                      Positioned(
+                        bottom: 16,
+                        right: 16,
+                        child: FloatingActionButton(
+                          backgroundColor: primaryColor,
+                          child: const Icon(Icons.edit_rounded, color: Colors.white),
+                          onPressed: _showCreateGroup,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ],
     );
@@ -98,10 +101,10 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
       return Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(type == 'direct' ? Icons.chat_bubble_outline : Icons.group_outlined,
-              size: 50, color: Colors.grey.shade400),
+              size: 50, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3)),
           const SizedBox(height: 12),
           Text(type == 'direct' ? 'Chưa có tin nhắn nào' : 'Chưa có nhóm nào',
-              style: TextStyle(color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontWeight: FontWeight.w500)),
         ]),
       );
     }
@@ -111,7 +114,7 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
       child: ListView.separated(
         itemCount: convs.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 0.5, indent: 70, color: Color(0xFFE5E7EB)),
+            Divider(height: 0.5, indent: 70, color: Theme.of(context).dividerColor.withOpacity(0.1)),
         itemBuilder: (_, i) => _buildConvItem(convs[i], type),
       ),
     );
@@ -134,10 +137,10 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
             ? Container(
                 width: 48, height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1a1a2e),
+                  color: primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.people_rounded, color: Colors.white, size: 22),
+                child: Icon(Icons.group_rounded, color: primaryColor, size: 24),
               )
             : CircleAvatar(
                 radius: 24,
@@ -155,7 +158,7 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
               decoration: BoxDecoration(
                 color: const Color(0xFF22C55E),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: Theme.of(context).cardColor, width: 2),
               ),
             ),
           ),
@@ -164,7 +167,7 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
           style: TextStyle(
             fontWeight: unread > 0 ? FontWeight.w700 : FontWeight.w600,
             fontSize: 15,
-            color: Colors.white // Đổi thành màu trắng cho dễ nhìn trên nền tối
+            color: Theme.of(context).colorScheme.onSurface
           )),
       subtitle: Text(
         isGroup && conv['sender_name'] != null ? '${conv['sender_name']}: $lastMsg' : lastMsg,
@@ -172,7 +175,7 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 13,
-          color: unread > 0 ? Colors.white : Colors.grey.shade400, // Đổi màu subtitle
+          color: unread > 0 ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant,
           fontWeight: unread > 0 ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
@@ -180,7 +183,7 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(lastTime, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+          Text(lastTime, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))),
           const SizedBox(height: 6),
           if (unread > 0)
             Container(
@@ -227,26 +230,31 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
           padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
           child: Container(
             padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Theme.of(ctx).cardColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                const Text('Tạo nhóm chat mới',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                Text('Tạo nhóm chat mới',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Theme.of(ctx).colorScheme.onSurface)),
+                IconButton(icon: Icon(Icons.close, color: Theme.of(ctx).colorScheme.onSurface), onPressed: () => Navigator.pop(ctx)),
               ]),
               const SizedBox(height: 10),
               TextField(
                 controller: nameCtrl,
+                style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface),
                 decoration: InputDecoration(
                   hintText: 'Nhập tên nhóm...',
-                  hintStyle: TextStyle(color: Colors.grey.shade400),
-                  filled: true, fillColor: const Color(0xFFF1F5F9),
+                  hintStyle: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                  filled: true, fillColor: Theme.of(ctx).brightness == Brightness.dark ? Colors.grey[800] : const Color(0xFFF1F5F9),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)
                 ),
               ),
               const SizedBox(height: 16),
-              const Align(alignment: Alignment.centerLeft,
-                  child: Text('Chọn thành viên:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1a1a1a)))),
+              Align(alignment: Alignment.centerLeft,
+                  child: Text('Chọn thành viên:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface))),
               const SizedBox(height: 8),
               // Danh sách nhân viên để chọn
               SizedBox(
@@ -268,8 +276,8 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
                                 style: TextStyle(color: _getAvatarFgColor(user['full_name']),
                                     fontSize: 13, fontWeight: FontWeight.bold)),
                           ),
-                          title: Text(user['full_name'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                          subtitle: Text(user['department'] ?? '', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          title: Text(user['full_name'], style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface)),
+                          subtitle: Text(user['department'] ?? '', style: TextStyle(fontSize: 12, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
                           trailing: AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
                             width: 24, height: 24,

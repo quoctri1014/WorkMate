@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { Icon, API_URL } from '../components/Common';
 
@@ -6,7 +6,19 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [exportMonth, setExportMonth] = useState(new Date().toISOString().split('T')[0].substring(0, 7));
+  const [exportMonth, setExportMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const dateInputRef = useRef(null);
+
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr) return '---';
+    try {
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}/${y}`;
+    } catch (e) { return dateStr; }
+  };
 
   // Tạo danh sách các ngày để hiển thị thanh chọn ngày
   const getDates = () => {
@@ -15,10 +27,16 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
     for (let i = -3; i <= 3; i++) {
       const d = new Date();
       d.setDate(today.getDate() + i);
+      
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const full = `${year}-${month}-${day}`;
+
       dates.push({
-        full: d.toISOString().split('T')[0],
-        day: d.getDate().toString().padStart(2, '0'),
-        month: (d.getMonth() + 1).toString().padStart(2, '0'),
+        full: full,
+        day: day,
+        month: month,
         isToday: d.toDateString() === today.toDateString()
       });
     }
@@ -75,41 +93,52 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
       </div>
 
       {/* Date Selection Bar */}
-      <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800 overflow-hidden transition-colors">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-2 flex-1">
-          {getDates().map(d => (
-            <button
-              key={d.full}
-              onClick={() => onDateChange(d.full)}
-              className={`flex flex-col items-center justify-center min-w-[70px] py-3 rounded-2xl transition-all ${
-                selectedDate === d.full
-                ? 'bg-primary text-white shadow-lg shadow-primary/25 font-black scale-105'
-                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 font-bold'
-              }`}
-            >
-              <span className="text-[10px] uppercase tracking-wider mb-1">
-                {d.full === new Date().toISOString().split('T')[0] ? 'Hôm nay' : `${d.day}-${d.month}`}
-              </span>
-              <span className="text-lg">{d.day}</span>
-            </button>
-          ))}
-        </div>
-        <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden md:block" />
-        <div className="relative group">
-          <input 
-            id="attendance-date"
-            type="date" 
-            value={selectedDate}
-            onChange={(e) => onDateChange(e.target.value)}
-            className="absolute inset-0 opacity-0 cursor-pointer z-20 w-full h-full"
-            style={{ colorScheme: 'dark' }}
-          />
-          <label 
-            htmlFor="attendance-date"
-            className="flex p-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all cursor-pointer relative z-10"
+      <div className="relative group">
+        <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800 transition-all hover:border-primary/30">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-2 flex-1 relative z-10">
+            {getDates().map(d => (
+              <button
+                key={d.full}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDateChange(d.full);
+                }}
+                className={`flex flex-col items-center justify-center min-w-[70px] py-3 rounded-2xl transition-all relative z-30 ${
+                  selectedDate === d.full
+                  ? 'bg-primary text-white shadow-lg shadow-primary/25 font-black scale-105'
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 font-bold'
+                }`}
+              >
+                <span className="text-[9px] uppercase tracking-wider mb-1">
+                  {d.isToday ? 'Hôm nay' : `${d.day}-${d.month}`}
+                </span>
+                <span className="text-lg leading-none">{d.day}</span>
+              </button>
+            ))}
+          </div>
+          
+          <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden md:block" />
+          
+          <div 
+            onClick={() => dateInputRef.current?.showPicker()}
+            className="flex items-center gap-3 px-6 py-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-all relative z-10 shrink-0"
           >
-            <Icon name="calendar_month" />
-          </label>
+            <Icon name="calendar_today" className="text-primary !text-[20px]" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ngày đang xem</span>
+              <span className="font-black text-sm text-slate-700 dark:text-slate-200">
+                {formatDateDisplay(selectedDate)}
+              </span>
+            </div>
+            
+            <input 
+              ref={dateInputRef}
+              type="date" 
+              value={selectedDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              className="absolute opacity-0 pointer-events-none w-0 h-0"
+            />
+          </div>
         </div>
       </div>
 
@@ -131,7 +160,7 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
               <tr key={a.id} className="hover:bg-surface-container-low/20 transition-colors group">
                 <td className="py-5 pl-4 font-bold text-slate-800 dark:text-slate-100">{a.employee_name}</td>
                 <td className="py-5 text-center text-xs font-black text-slate-500 uppercase tracking-tighter">
-                  {a.date ? new Date(a.date).toLocaleDateString('vi-VN') : '---'}
+                  {a.date ? formatDateDisplay(a.date.split('T')[0]) : '---'}
                 </td>
                 <td className="py-5 text-center font-mono font-bold text-primary">{a.check_in}</td>
                 <td className="py-5 text-center font-mono font-bold text-amber-500">{a.check_out || '--:--:--'}</td>

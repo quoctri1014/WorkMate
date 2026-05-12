@@ -13,6 +13,7 @@ import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/data/repositories/api_service.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -34,8 +35,8 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   final List<Color> tabColors = [
     const Color(0xFF4F46E5),
-    const Color(0xFF0F6E56),
-    const Color(0xFF854F0B),
+    const Color(0xFF4F46E5),
+    const Color(0xFF4F46E5),
   ];
 
   final ImagePicker _picker = ImagePicker();
@@ -66,23 +67,29 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         _aiMessages = aiHistory.map((e) {
           final isUser = e['sender_id'] == userId && e['is_ai'] == false;
           return {
+            'id': e['id'],
             'role': isUser ? 'user' : 'bot',
             'text': e['message'],
             'message_type': e['message_type'] ?? 'text',
             'file_url': e['file_url'],
             'source': 'rule',
             'time': _formatTimeStr(e['created_at']),
+            'is_recalled': e['is_recalled'] ?? false,
+            'created_at': e['created_at'],
           };
         }).toList();
 
         _adminMessages = adminHistory.map((e) {
           final isUser = e['sender_id'] == userId;
           return {
+            'id': e['id'],
             'role': isUser ? 'user' : 'admin',
             'text': e['message'],
             'message_type': e['message_type'] ?? 'text',
             'file_url': e['file_url'],
             'time': _formatTimeStr(e['created_at']),
+            'is_recalled': e['is_recalled'] ?? false,
+            'created_at': e['created_at'],
           };
         }).toList();
 
@@ -105,19 +112,60 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   void _initWebSocket(UserModel user) {
     _chatService.initSocket(user.id, (data) {
       if (mounted) {
-        if (data['sender_id'] == user.id) return;
+        if (data['sender_id'] == user.id) {
+          // Update the last message with real ID from DB
+          setState(() {
+            if (data['chat_type'] == 'admin') {
+               final idx = _adminMessages.indexWhere((m) => m['id'] == null && m['text'] == data['message']);
+               if (idx != -1) _adminMessages[idx]['id'] = data['id'];
+            }
+          });
+          return;
+        }
         setState(() {
           _adminMessages.add({
+            'id': data['id'],
             'role': 'admin',
             'text': data['message'],
             'message_type': data['message_type'] ?? 'text',
             'file_url': data['file_url'],
             'time': _formatTime(DateTime.now()),
+            'is_recalled': data['is_recalled'] ?? false,
+            'created_at': data['created_at'],
           });
         });
         if (_currentTab == 1) _scrollToBottom();
       }
     });
+
+    _chatService.socket.on('message_recalled_${user.id}', (data) {
+      if (mounted) {
+        setState(() {
+          _updateMessageRecalled(_aiMessages, data);
+          _updateMessageRecalled(_adminMessages, data);
+        });
+      }
+    });
+
+    _chatService.socket.on('message_recalled_admin', (data) {
+      if (mounted) {
+        setState(() {
+          _updateMessageRecalled(_adminMessages, data);
+        });
+      }
+    });
+
+    _chatService.socket.on('error_message', (data) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? 'Lỗi không xác định')));
+    });
+  }
+
+  void _updateMessageRecalled(List<Map<String, dynamic>> list, dynamic data) {
+    final idx = list.indexWhere((m) => m['id'] == data['id']);
+    if (idx != -1) {
+      list[idx]['is_recalled'] = true;
+      list[idx]['text'] = 'Tin nhắn đã được thu hồi';
+    }
   }
 
   String _formatTime(DateTime dt) => '${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
@@ -154,7 +202,9 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
       _chatService.sendMessage(user.id, null, msg, chatType: 'admin', messageType: type, fileUrl: fileUrl);
       setState(() {
         _adminMessages.add({
-          'role': 'user', 'text': msg, 'message_type': type, 'file_url': fileUrl, 'time': _formatTime(DateTime.now())
+          'id': null, // Temporary
+          'role': 'user', 'text': msg, 'message_type': type, 'file_url': fileUrl, 'time': _formatTime(DateTime.now()),
+          'created_at': DateTime.now().toIso8601String()
         });
       });
       if (text == null) _inputController.clear();
@@ -175,8 +225,10 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
       setState(() {
         _isTyping = false;
         _aiMessages.add({
+          'id': response['id'],
           'role': 'bot', 'text': response['reply'], 'suggestions': List<String>.from(response['suggestions'] ?? []),
           'source': response['source'] ?? 'ai', 'time': _formatTime(DateTime.now()),
+          'created_at': DateTime.now().toIso8601String()
         });
       });
       _scrollToBottom();
@@ -196,7 +248,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -213,7 +265,10 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
           ),
           if (_currentTab == 0) _buildSuggestions(),
           if (_currentTab != 2 && _showEmoji) 
-            SizedBox(height: 250, child: EmojiPicker(onEmojiSelected: (_, emoji) => _inputController.text += emoji.emoji)),
+            SizedBox(height: 250, child: EmojiPicker(
+              onEmojiSelected: (_, emoji) => _inputController.text += emoji.emoji,
+              config: const Config(),
+            )),
           if (_currentTab != 2) _buildInputBar(),
         ],
       ),
@@ -237,7 +292,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
     return Container(
       height: 50,
-      color: const Color(0xFFF0F2F5),
+      color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor.withOpacity(0.5) : const Color(0xFFF0F2F5),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -246,7 +301,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ActionChip(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).cardColor,
               elevation: 0,
               pressElevation: 2,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -266,9 +321,9 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   PreferredSizeWidget _buildAppBar() {
     final titles = ['AI Assistant', 'Admin Support', 'Đồng nghiệp'];
     return AppBar(
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : const Color(0xFF1a1a2e),
       elevation: 0,
-      leading: IconButton(icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 18), onPressed: () => Navigator.pop(context)),
+      leading: IconButton(icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: 18), onPressed: () => Navigator.pop(context)),
       title: Text(titles[_currentTab], style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
     );
   }
@@ -276,7 +331,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   Widget _buildTabBar() {
     final labels = ['AI Bot', 'Admin', 'Đồng nghiệp'];
     return Container(
-      color: const Color(0xFF1a1a2e),
+      color: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : const Color(0xFF1a1a2e),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: List.generate(3, (i) => Expanded(
@@ -299,7 +354,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   Widget _buildChatView(List<Map<String, dynamic>> messages, int tabIndex) {
     return Container(
-      color: const Color(0xFFF0F2F5),
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(12),
@@ -317,33 +372,44 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     final type = msg['message_type'] ?? 'text';
     final url = msg['file_url'];
     final color = tabColors[tabIndex];
+    final isRecalled = msg['is_recalled'] == true;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (!isUser) ...[
-                CircleAvatar(radius: 14, backgroundColor: color.withOpacity(0.2), child: Icon(tabIndex == 0 ? Icons.auto_awesome : Icons.support_agent, size: 14, color: color)),
-                const SizedBox(width: 8),
-              ],
-              Flexible(
-                child: Container(
-                  padding: type == 'text' ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10) : EdgeInsets.zero,
-                  decoration: BoxDecoration(
-                    color: isUser ? color : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+          GestureDetector(
+            onLongPress: () {
+              if (isUser && !isRecalled && msg['id'] != null) {
+                _showRecallOption(msg);
+              }
+            },
+            child: Row(
+              mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (!isUser) ...[
+                  CircleAvatar(radius: 14, backgroundColor: color.withOpacity(0.2), child: Icon(tabIndex == 0 ? Icons.auto_awesome : Icons.support_agent, size: 14, color: color)),
+                  const SizedBox(width: 8),
+                ],
+                Flexible(
+                  child: Container(
+                    padding: (type == 'text' || isRecalled) ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10) : EdgeInsets.zero,
+                    decoration: BoxDecoration(
+                      color: isUser ? (isRecalled ? (Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[300]) : color) : (Theme.of(context).brightness == Brightness.dark ? Colors.grey[900] : Colors.white),
+                      borderRadius: BorderRadius.circular(16),
+                      border: isRecalled ? Border.all(color: Colors.grey[400]!) : null,
+                    ),
+                    child: isRecalled 
+                      ? Text('Tin nhắn đã được thu hồi', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic, fontSize: 13))
+                      : _buildRichContent(type, msg['text'], url, isUser),
                   ),
-                  child: _buildRichContent(type, msg['text'], url, isUser),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          if (tabIndex == 0 && !isUser && (msg['suggestions'] as List?)?.isNotEmpty == true)
+          if (tabIndex == 0 && !isUser && (msg['suggestions'] as List?)?.isNotEmpty == true && !isRecalled)
             Padding(
               padding: const EdgeInsets.only(left: 36, top: 8),
               child: Wrap(spacing: 8, children: (msg['suggestions'] as List).map((s) => ActionChip(label: Text(s, style: TextStyle(fontSize: 12, color: color)), onPressed: () => _sendMessage(text: s))).toList()),
@@ -353,17 +419,41 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     );
   }
 
+  void _showRecallOption(Map<String, dynamic> msg) {
+    final sentAt = DateTime.tryParse(msg['created_at'] ?? '') ?? DateTime.now();
+    final diff = DateTime.now().difference(sentAt).inHours;
+
+    if (diff >= 1) return;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.undo, color: Colors.red),
+            title: const Text('Thu hồi tin nhắn', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            onTap: () {
+              Navigator.pop(ctx);
+              _chatService.recallMessage(msg['id']);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRichContent(String type, String? text, String? url, bool isMe) {
     if (type == 'image' && url != null) return ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.network(url, width: 200));
     if (type == 'audio' && url != null) return IconButton(icon: const Icon(Icons.play_circle), color: isMe ? Colors.white : Colors.blue, onPressed: () => _audioPlayer.play(UrlSource(url)));
-    if (type == 'file' && url != null) return Padding(padding: const EdgeInsets.all(10), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.description), const SizedBox(width: 8), Text(text ?? 'File')]));
-    return Text(text ?? '', style: TextStyle(color: isMe ? Colors.white : Colors.black87));
+    if (type == 'file' && url != null) return Padding(padding: const EdgeInsets.all(10), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.description, color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface), const SizedBox(width: 8), Text(text ?? 'File', style: TextStyle(color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface))]));
+    return Text(text ?? '', style: TextStyle(color: isMe ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87)));
   }
 
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: SafeArea(
         child: Row(
           children: [
@@ -372,7 +462,15 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
             Expanded(
               child: TextField(
                 controller: _inputController,
-                decoration: InputDecoration(hintText: 'Nhập tin nhắn...', filled: true, fillColor: Colors.grey[200], border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none), contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                decoration: InputDecoration(
+                  hintText: 'Nhập tin nhắn...', 
+                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                  filled: true, 
+                  fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[200], 
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none), 
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16)
+                ),
               ),
             ),
             IconButton(

@@ -12,6 +12,8 @@ import 'package:workmate/presentation/views/home/main_nav_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:workmate/services/face_id_service.dart';
 import 'services/notification_service.dart';
+import 'package:workmate/presentation/viewmodels/theme_viewmodel.dart';
+import 'package:workmate/core/theme/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:workmate/presentation/views/leave/leave_request_screen.dart';
 import 'package:workmate/presentation/views/leave/leave_history_screen.dart';
@@ -72,12 +74,17 @@ class WorkMateApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NotificationViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
         ChangeNotifierProvider(create: (_) => MeetingViewModel()),
+        ChangeNotifierProvider(create: (_) => ThemeViewModel()),
       ],
-      child: MaterialApp(
-        title: 'WorkMate',
-        debugShowCheckedModeBanner: false,
-        theme: _buildTheme(),
-        initialRoute: AppRoutes.splash,
+      child: Consumer<ThemeViewModel>(
+        builder: (context, themeVM, child) {
+          return MaterialApp(
+            title: 'WorkMate',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeVM.themeMode,
+            initialRoute: AppRoutes.splash,
         routes: {
           AppRoutes.splash: (_) => const SplashScreen(),
           AppRoutes.onboarding: (_) => const OnboardingScreen(),
@@ -105,16 +112,9 @@ class WorkMateApp extends StatelessWidget {
           AppRoutes.bankAccount: (_) => BankAccountScreen(),
           AppRoutes.chat: (_) => const ChatScreen(),
         },
-      ),
-    );
-  }
-
-  ThemeData _buildTheme() {
-    return ThemeData(
-      useMaterial3: true,
-      fontFamily: 'Nunito',
-      colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-      scaffoldBackgroundColor: AppColors.background,
-    );
+      );
+    },
+  ),
+);
   }
 }

@@ -11,7 +11,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           // Elegant Header with Gradient and Title
@@ -24,7 +24,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.black.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
@@ -38,14 +38,16 @@ class AnnouncementDetailScreen extends StatelessWidget {
                 children: [
                   // Gradient Background
                   Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF1E6185), // Deep primary
-                          Color(0xFF3B82F6), // Vibrant blue
-                        ],
+                        colors: Theme.of(context).brightness == Brightness.dark
+                          ? [Colors.blueGrey[900]!, Colors.blueGrey[800]!]
+                          : [
+                              Theme.of(context).primaryColorDark,
+                              Theme.of(context).primaryColor,
+                            ],
                       ),
                     ),
                   ),
@@ -57,7 +59,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -71,7 +73,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.9),
+                            color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Row(
@@ -136,20 +138,20 @@ class AnnouncementDetailScreen extends StatelessWidget {
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Nội dung chi tiết',
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -158,12 +160,12 @@ class AnnouncementDetailScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.border.withOpacity(0.5)),
-                      boxShadow: [
+                      border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                      boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
+                          color: Theme.of(context).shadowColor.withOpacity(0.05),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -171,11 +173,11 @@ class AnnouncementDetailScreen extends StatelessWidget {
                     ),
                     child: Text(
                       notification.body,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                         height: 1.8,
                       ),
                     ),
@@ -186,14 +188,14 @@ class AnnouncementDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.03),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.verified_user_rounded, color: AppColors.primary, size: 20),
-                        SizedBox(width: 12),
+                        Icon(Icons.verified_user_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Thông báo này được gửi từ Ban quản trị hệ thống Core.',
@@ -202,7 +204,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
                               fontSize: 12,
                               fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),

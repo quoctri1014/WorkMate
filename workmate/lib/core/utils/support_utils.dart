@@ -9,7 +9,7 @@ class SupportUtils {
   static void showSupportOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -22,27 +22,27 @@ class SupportUtils {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Theme.of(context).dividerColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Liên hệ hỗ trợ',
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Chúng tôi luôn sẵn sàng hỗ trợ bạn',
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 32),
@@ -99,7 +99,7 @@ class _SupportOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -119,11 +119,11 @@ class _SupportOption extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   Text(
@@ -131,13 +131,13 @@ class _SupportOption extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 13,
-                      color: AppColors.textSecondary.withOpacity(0.8),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+            Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
           ],
         ),
       ),

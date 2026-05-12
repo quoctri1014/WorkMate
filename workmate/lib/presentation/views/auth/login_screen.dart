@@ -78,11 +78,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: AppColors.loginGradient,
+            colors: Theme.of(context).brightness == Brightness.dark 
+                ? [const Color(0xFF0F172A), const Color(0xFF1E293B)] 
+                : AppColors.loginGradient,
           ),
         ),
         child: SafeArea(
@@ -95,9 +97,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
+                    boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                       BoxShadow(
                         color: AppColors.primary.withOpacity(0.05),
                         blurRadius: 20,
@@ -105,10 +107,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.access_time_filled_rounded,
                     size: 50,
-                    color: Color(0xFF1C6185),
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1C6185),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -118,13 +120,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: AppTextStyles.h2.copyWith(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Chào mừng bạn đến với WorkMate',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -132,9 +135,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
+                    boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.03),
                         blurRadius: 40,
@@ -171,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             'Quên mật khẩu?',
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: AppColors.primary,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : AppColors.primary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -189,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'THAM GIA CÙNG 5,000+ ĐỒNG NGHIỆP TRÊN TOÀN CẦU',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary.withOpacity(0.4),
+                    color: Colors.white.withOpacity(0.4),
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -208,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Text(
         label,
         style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textSecondary,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.bold,
           letterSpacing: 1,
         ),
@@ -226,21 +229,21 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
         controller: controller,
         obscureText: isPassword,
-        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
-          prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 20),
+          hintStyle: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
+          prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
           suffixIcon: suffixIcon != null 
               ? GestureDetector(
                   onTap: onSuffixTap,
-                  child: Icon(suffixIcon, color: AppColors.textHint, size: 20),
+                  child: Icon(suffixIcon, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
                 ) 
               : null,
           border: InputBorder.none,

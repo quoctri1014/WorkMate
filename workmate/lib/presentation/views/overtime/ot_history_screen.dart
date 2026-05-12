@@ -15,6 +15,8 @@ class OTHistoryScreen extends StatefulWidget {
 }
 
 class _OTHistoryScreenState extends State<OTHistoryScreen> {
+  DateTime _selectedMonth = DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -26,6 +28,23 @@ class _OTHistoryScreenState extends State<OTHistoryScreen> {
     });
   }
 
+  void _selectMonth(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedMonth,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      initialDatePickerMode: DatePickerMode.year,
+      helpText: 'CHỌN THÁNG',
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedMonth = picked;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<OvertimeViewModel>();
@@ -33,37 +52,59 @@ class _OTHistoryScreenState extends State<OTHistoryScreen> {
     final lang = profileVM.selectedLanguage;
     String t(String key) => AppTranslations.getText(lang, key);
 
-    final approvedHours = vm.overtimes
+    final filteredOvertimes = vm.overtimes.where((o) => 
+      o.date.year == _selectedMonth.year && o.date.month == _selectedMonth.month
+    ).toList();
+
+    final approvedHours = filteredOvertimes
         .where((o) => o.status == 'approved')
         .fold(0.0, (sum, o) => sum + o.expectedHours);
     
-    final pendingCount = vm.overtimes.where((o) => o.status == 'pending').length;
+    final pendingCount = filteredOvertimes.where((o) => o.status == 'pending').length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1E293B), size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           t('ot_history'),
-          style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: Color(0xFF1E293B), fontSize: 17),
+          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, fontSize: 17),
         ),
+        actions: [
+          GestureDetector(
+            onTap: () => _selectMonth(context),
+            child: Container(
+              margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFE0F2FE), borderRadius: BorderRadius.circular(12)),
+              child: Row(children: [
+                Icon(Icons.calendar_month_rounded, size: 16, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF0369A1)),
+                const SizedBox(width: 8),
+                Text(
+                  '${_selectedMonth.month}/${_selectedMonth.year}',
+                  style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : const Color(0xFF0369A1), fontWeight: FontWeight.bold, fontSize: 11)
+                ),
+              ]),
+            ),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         children: [
-          const Text(
+          Text(
             'Lịch sử đăng ký OT',
-            style: TextStyle(fontFamily: 'Nunito', fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 26, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Theo dõi và quản lý các yêu cầu làm thêm giờ của bạn',
-            style: TextStyle(fontFamily: 'Nunito', fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 24),
 
@@ -74,8 +115,8 @@ class _OTHistoryScreenState extends State<OTHistoryScreen> {
                 child: _SummaryCard(
                   title: 'TỔNG GIỜ ĐÃ DUYỆT',
                   value: '${approvedHours.toStringAsFixed(1)} giờ',
-                  color: const Color(0xFFE0F2FE),
-                  textColor: const Color(0xFF0369A1),
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.withOpacity(0.15) : const Color(0xFFE0F2FE),
+                  textColor: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300]! : const Color(0xFF0369A1),
                   icon: Icons.insights_rounded,
                 ),
               ),
@@ -89,8 +130,8 @@ class _OTHistoryScreenState extends State<OTHistoryScreen> {
                   title: 'YÊU CẦU ĐANG CHỜ',
                   value: pendingCount.toString().padLeft(2, '0'),
                   subtitle: 'Đang đợi kiểm duyệt',
-                  color: const Color(0xFFFFF7ED),
-                  textColor: const Color(0xFF9A3412),
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.withOpacity(0.15) : const Color(0xFFFFF7ED),
+                  textColor: Theme.of(context).brightness == Brightness.dark ? Colors.orange[300]! : const Color(0xFF9A3412),
                   icon: Icons.assignment_late_rounded,
                   isSecondary: true,
                 ),
@@ -102,10 +143,10 @@ class _OTHistoryScreenState extends State<OTHistoryScreen> {
 
           if (vm.isLoading)
             const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
-          else if (vm.overtimes.isEmpty)
+          else if (filteredOvertimes.isEmpty)
              Center(child: Padding(padding: const EdgeInsets.all(40), child: Text(t('no_data'), style: const TextStyle(fontFamily: 'Nunito', color: Colors.grey))))
           else
-            ...vm.overtimes.map((ot) => _OTItemCard(
+            ...filteredOvertimes.map((ot) => _OTItemCard(
                   ot: ot,
                   t: t,
                   lang: lang,
@@ -179,7 +220,7 @@ class _SummaryCard extends StatelessWidget {
           ),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.6), borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.6), borderRadius: BorderRadius.circular(16)),
             child: Icon(icon, color: textColor, size: 28),
           ),
         ],
@@ -209,17 +250,17 @@ class _OTItemCard extends StatelessWidget {
     switch (ot.status) {
       case 'approved':
         statusColor = const Color(0xFF059669);
-        statusBg = const Color(0xFFECFDF5);
+        statusBg = Theme.of(context).brightness == Brightness.dark ? const Color(0xFF064E3B).withOpacity(0.5) : const Color(0xFFECFDF5);
         statusText = 'Đã duyệt';
         break;
       case 'rejected':
         statusColor = const Color(0xFFDC2626);
-        statusBg = const Color(0xFFFEF2F2);
+        statusBg = Theme.of(context).brightness == Brightness.dark ? const Color(0xFF7F1D1D).withOpacity(0.5) : const Color(0xFFFEF2F2);
         statusText = 'Từ chối';
         break;
       default:
         statusColor = const Color(0xFFD97706);
-        statusBg = const Color(0xFFFFFBEB);
+        statusBg = Theme.of(context).brightness == Brightness.dark ? const Color(0xFF78350F).withOpacity(0.5) : const Color(0xFFFFFBEB);
         statusText = 'Chờ duyệt';
     }
 
@@ -229,9 +270,9 @@ class _OTItemCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [
+          boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
             BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8)),
           ],
         ),
@@ -260,7 +301,7 @@ class _OTItemCard extends StatelessWidget {
                     children: [
                       Text(
                         ot.workContent.isEmpty ? 'Làm thêm giờ' : ot.workContent,
-                        style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
+                        style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -269,17 +310,17 @@ class _OTItemCard extends StatelessWidget {
                         children: [
                           const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF94A3B8)),
                           const SizedBox(width: 4),
-                          Text('${ot.expectedHours} hours', style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                          Text('${ot.expectedHours} hours', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFCBD5E1)),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.primary),
               ],
             ),
             const SizedBox(height: 12),
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.1)),
             const SizedBox(height: 12),
             Row(
               children: [

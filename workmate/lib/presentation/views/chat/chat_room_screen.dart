@@ -94,6 +94,22 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         _scrollToBottom();
       }
     });
+
+    _socket.on('message_recalled_conv_$convId', (data) {
+      if (mounted) {
+        setState(() {
+          final idx = _messages.indexWhere((m) => m['id'] == data['id']);
+          if (idx != -1) {
+            _messages[idx]['is_recalled'] = true;
+            _messages[idx]['message'] = 'Tin nhắn đã được thu hồi';
+          }
+        });
+      }
+    });
+
+    _socket.on('error_message', (data) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? 'Lỗi không xác định')));
+    });
   }
 
   @override
@@ -207,12 +223,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final title = widget.conversation['display_name'] ?? widget.conversation['name'] ?? 'Đồng nghiệp';
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Color(0xFF1a1a1a)),
-        title: Text(title, style: const TextStyle(color: Color(0xFF1a1a1a), fontSize: 17, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).cardColor,
+        iconTheme: IconThemeData(color: Theme.of(context).colorScheme.onSurface),
+        title: Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 17, fontWeight: FontWeight.bold)),
       ),
       body: Column(
         children: [
@@ -237,6 +253,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 onEmojiSelected: (category, emoji) {
                   _inputCtrl.text += emoji.emoji;
                 },
+                config: const Config(),
               ),
             ),
           _buildInputBar(),
@@ -249,6 +266,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final isGroup = widget.chatType == 'group';
     final type = m['message_type'] ?? 'text';
     final url = m['file_url'];
+    final isRecalled = m['is_recalled'] == true;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -259,38 +277,48 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             Text(m['sender_name'] ?? 'Đồng nghiệp', style: const TextStyle(fontSize: 11, color: Colors.grey)),
             const SizedBox(height: 2),
           ],
-          Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (!isMe && isGroup)
-                Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  width: 24, height: 24,
-                  decoration: BoxDecoration(color: const Color(0xFF854F0B).withOpacity(0.2), shape: BoxShape.circle),
-                  child: Center(child: Text((m['sender_name'] ?? '?')[0], style: const TextStyle(fontSize: 10, color: Color(0xFF854F0B), fontWeight: FontWeight.bold))),
-                ),
-              Flexible(
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                  padding: type == 'text' ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12) : EdgeInsets.zero,
-                  decoration: BoxDecoration(
-                    color: isMe ? const Color(0xFF854F0B) : Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(16),
-                      topRight: const Radius.circular(16),
-                      bottomLeft: Radius.circular(isMe ? 16 : 4),
-                      bottomRight: Radius.circular(isMe ? 4 : 16),
-                    ),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+          GestureDetector(
+            onLongPress: () {
+              if (isMe && !isRecalled && m['id'] != null) {
+                _showRecallOption(m);
+              }
+            },
+            child: Row(
+              mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (!isMe && isGroup)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    width: 24, height: 24,
+                    decoration: BoxDecoration(color: const Color(0xFF4F46E5).withOpacity(0.2), shape: BoxShape.circle),
+                    child: Center(child: Text((m['sender_name'] ?? '?')[0], style: const TextStyle(fontSize: 10, color: Color(0xFF4F46E5), fontWeight: FontWeight.bold))),
                   ),
-                  child: _buildRichContent(type, m['message'], url, isMe),
+                Flexible(
+                  child: Container(
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                    padding: (type == 'text' || isRecalled) ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12) : EdgeInsets.zero,
+                    decoration: BoxDecoration(
+                      color: isMe ? (isRecalled ? (Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[300]) : const Color(0xFF4F46E5)) : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white),
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(16),
+                        topRight: const Radius.circular(16),
+                        bottomLeft: Radius.circular(isMe ? 16 : 4),
+                        bottomRight: Radius.circular(isMe ? 4 : 16),
+                      ),
+                      boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+                      border: isRecalled ? Border.all(color: Colors.grey[400]!) : (Theme.of(context).brightness == Brightness.dark && !isMe ? Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)) : null),
+                    ),
+                    child: isRecalled
+                        ? Text('Tin nhắn đã được thu hồi', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic, fontSize: 13))
+                        : _buildRichContent(type, m['message'], url, isMe),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 4),
-          Text(_formatTime(m['created_at']), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+          Text(_formatTime(m['created_at']), style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))),
         ],
       ),
     );
@@ -305,7 +333,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     } else if (type == 'audio' && url != null) {
       return IconButton(
         icon: const Icon(Icons.play_circle_fill, size: 40),
-        color: isMe ? Colors.white : const Color(0xFF854F0B),
+        color: isMe ? Colors.white : const Color(0xFF4F46E5),
         onPressed: () => _audioPlayer.play(UrlSource(url)),
       );
     } else if (type == 'file' && url != null) {
@@ -316,9 +344,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.insert_drive_file, color: isMe ? Colors.white : const Color(0xFF854F0B)),
+              Icon(Icons.insert_drive_file, color: isMe ? Colors.white : const Color(0xFF4F46E5)),
               const SizedBox(width: 8),
-              Flexible(child: Text(text ?? 'File', style: TextStyle(color: isMe ? Colors.white : Colors.black87, decoration: TextDecoration.underline))),
+              Flexible(child: Text(text ?? 'File', style: TextStyle(color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface, decoration: TextDecoration.underline))),
             ],
           ),
         ),
@@ -326,7 +354,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
     return Text(
       text ?? '',
-      style: TextStyle(color: isMe ? Colors.white : const Color(0xFF1a1a1a), fontSize: 14),
+      style: TextStyle(color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface, fontSize: 14),
     );
   }
 
@@ -334,8 +362,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        color: Theme.of(context).cardColor,
+        boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
       ),
       child: SafeArea(
         child: Column(
@@ -354,15 +382,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: TextField(
                       controller: _inputCtrl,
-                      decoration: const InputDecoration(
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                      decoration: InputDecoration(
                         hintText: 'Nhập tin nhắn...',
+                        hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),
@@ -379,7 +409,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       ),
                     )
                   : IconButton(
-                      icon: const Icon(Icons.mic_none, color: Colors.grey),
+                      icon: Icon(Icons.mic_none, color: Theme.of(context).colorScheme.onSurfaceVariant),
                       onPressed: _toggleRecording,
                     ),
                 if (!_isRecording) ...[
@@ -389,7 +419,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: const BoxDecoration(
-                        color: Color(0xFF854F0B),
+                        color: Color(0xFF4F46E5),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
@@ -409,6 +439,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       context: context,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -426,8 +460,38 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(icon: Icon(icon, size: 30, color: const Color(0xFF854F0B)), onPressed: onTap),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface)),
       ],
     );
   }
+
+  void _showRecallOption(Map<String, dynamic> msg) {
+    final sentAt = DateTime.tryParse(msg['created_at'] ?? '') ?? DateTime.now();
+    final diff = DateTime.now().difference(sentAt).inHours;
+
+    if (diff >= 1) return;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+          ListTile(
+            leading: const Icon(Icons.undo, color: Colors.red),
+            title: const Text('Thu hồi tin nhắn', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            onTap: () {
+              Navigator.pop(ctx);
+              _socket.emit('recall_message', {'message_id': msg['id']});
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
 }

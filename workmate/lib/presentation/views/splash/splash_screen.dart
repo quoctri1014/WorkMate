@@ -57,14 +57,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFBAE2FE),
-              Color(0xFFF5F7F9),
-            ],
+            colors: Theme.of(context).brightness == Brightness.dark 
+              ? [const Color(0xFF0F172A), const Color(0xFF1E293B)]
+              : [const Color(0xFFBAE2FE), const Color(0xFFF5F7F9)],
           ),
         ),
         child: Stack(
@@ -81,9 +80,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.white,
                         borderRadius: BorderRadius.circular(32),
-                        boxShadow: [
+                        boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                           BoxShadow(
                             color: AppColors.primary.withOpacity(0.1),
                             blurRadius: 20,
@@ -91,10 +90,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.access_time_filled_rounded,
                         size: 80,
-                        color: Color(0xFF1C6185),
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF1C6185),
                       ),
                     ),
                   ),
@@ -106,6 +105,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   style: AppTextStyles.h1.copyWith(
                     fontSize: 42,
                     fontWeight: FontWeight.w900,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -113,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 Text(
                   'Nâng tầm hiệu suất công việc',
                   style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     letterSpacing: 0.5,
                   ),
                 ),

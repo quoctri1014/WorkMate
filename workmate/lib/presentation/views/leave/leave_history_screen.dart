@@ -41,14 +41,14 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text(t('leave_history'), style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, color: Color(0xFF1E293B), fontSize: 18)),
+        title: Text(t('leave_history'), style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface, fontSize: 18)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Color(0xFF1E293B), size: 20),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -70,7 +70,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
           Container(
             height: 45,
             margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-            decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
             child: Row(
               children: [
                 _TabItem(label: 'Tất cả', isActive: _activeTab == 'all', onTap: () => setState(() => _activeTab = 'all')),
@@ -123,9 +123,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
+        boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
           BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
@@ -135,16 +135,16 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             children: [
               Container(
                 width: 44, height: 44,
-                decoration: BoxDecoration(color: const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(14)),
-                child: const Icon(Icons.person_outline_rounded, color: Color(0xFF0369A1), size: 22),
+                decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(14)),
+                child: Icon(Icons.person_outline_rounded, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF0369A1), size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(leave.leaveType, style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF1E293B))),
-                    Text('${leave.totalDays} ngày nghỉ', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey[500])),
+                    Text(leave.leaveType, style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, fontSize: 15, color: Theme.of(context).colorScheme.onSurface)),
+                    Text('${leave.totalDays} ngày nghỉ', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6))),
                   ],
                 ),
               ),
@@ -155,9 +155,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
               ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.05)),
           ),
           Row(
             children: [
@@ -167,7 +167,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
               const SizedBox(width: 20),
               GestureDetector(
                 onTap: () => _showDetail(leave),
-                child: const Text('Chi tiết >', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF0369A1))),
+                child: Text('Chi tiết >', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, fontSize: 13, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF0369A1))),
               ),
             ],
           ),
@@ -180,8 +180,8 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w700)),
-        Text(date, style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF475569))),
+        Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontWeight: FontWeight.w700)),
+        Text(date, style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
       ],
     );
   }
@@ -205,7 +205,7 @@ class _StatCard extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFF1F5F9))),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1))),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -233,8 +233,8 @@ class _TabItem extends StatelessWidget {
         child: Container(
           alignment: Alignment.center,
           margin: const EdgeInsets.all(4),
-          decoration: BoxDecoration(color: isActive ? Colors.white : Colors.transparent, borderRadius: BorderRadius.circular(10), boxShadow: isActive ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))] : []),
-          child: Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: isActive ? const Color(0xFF1E293B) : const Color(0xFF64748B))),
+          decoration: BoxDecoration(color: isActive ? Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.1) : Colors.white : Colors.transparent, borderRadius: BorderRadius.circular(10), boxShadow: (isActive && Theme.of(context).brightness != Brightness.dark) ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))] : []),
+          child: Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: isActive ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant)),
         ),
       ),
     );

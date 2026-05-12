@@ -80,16 +80,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
           // Header
           SliverToBoxAdapter(
             child: Container(
-              decoration: const BoxDecoration(
-                gradient: AppColors.headerGradient,
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(28)),
+              decoration: BoxDecoration(
+                gradient: Theme.of(context).brightness == Brightness.dark 
+                  ? LinearGradient(
+                      colors: [Colors.blueGrey[900]!, Colors.blueGrey[800]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : AppColors.headerGradient,
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
               ),
               child: SafeArea(
                 bottom: false,
@@ -171,10 +175,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white.withOpacity(0.05) 
+                            : Colors.white.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: Colors.white.withOpacity(0.3), width: 1),
+                              color: Colors.white.withOpacity(0.2), width: 1),
                         ),
                         child: Column(
                           children: [
@@ -259,18 +265,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 child: Container(
                                                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                                                   decoration: BoxDecoration(
-                                                    color: Colors.white,
+                                                    color: Theme.of(context).cardColor,
                                                     borderRadius: BorderRadius.circular(28),
                                                   ),
                                                   child: Column(
                                                     mainAxisSize: MainAxisSize.min,
                                                     children: [
-                                                      const Text(
+                                                      Text(
                                                         'Xác nhận CHECK OUT',
                                                         style: TextStyle(
                                                           fontSize: 20,
                                                           fontWeight: FontWeight.w800,
-                                                          color: Color(0xFF333333),
+                                                          color: Theme.of(context).colorScheme.onSurface,
                                                         ),
                                                         textAlign: TextAlign.center,
                                                       ),
@@ -279,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         'Bạn có chắc chắn muốn thực hiện chấm công ra không? Hành động này sẽ ghi nhận giờ kết thúc ca làm của bạn.',
                                                         style: TextStyle(
                                                           fontSize: 14,
-                                                          color: Colors.grey.shade600,
+                                                          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
                                                           height: 1.5,
                                                         ),
                                                         textAlign: TextAlign.center,
@@ -321,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           'HỦY BỎ',
                                                           style: TextStyle(
                                                             fontSize: 14,
-                                                            color: Colors.grey.shade500,
+                                                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                                                             fontWeight: FontWeight.w600,
                                                             letterSpacing: 1.0,
                                                           ),
@@ -356,9 +362,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: isCompleted
-                                        ? Colors.white.withOpacity(0.5)
+                                        ? Colors.white.withOpacity(0.3)
                                         : (homeVM.isCheckedIn ? const Color(0xFF2C7BAE) : Colors.white),
-                                    disabledBackgroundColor: Colors.white.withOpacity(0.5),
+                                    disabledBackgroundColor: Colors.white.withOpacity(0.3),
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14),
@@ -422,11 +428,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     t('workspace'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
                       letterSpacing: 1.5,
                     ),
                   ),
@@ -598,9 +604,9 @@ class _WorkspaceCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: AppColors.cardShadow,
+          boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,22 +625,22 @@ class _WorkspaceCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     letterSpacing: 0.5,
                   ),
                 ),

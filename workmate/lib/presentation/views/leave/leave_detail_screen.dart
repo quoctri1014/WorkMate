@@ -20,14 +20,14 @@ class LeaveDetailScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text('Chi tiết nghỉ phép', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, color: Color(0xFF1E293B), fontSize: 18)),
+        title: Text('Chi tiết nghỉ phép', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface, fontSize: 18)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Color(0xFF1E293B), size: 20),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -41,9 +41,9 @@ class LeaveDetailScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(32),
-                boxShadow: [
+                boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                   BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 8)),
                 ],
               ),
@@ -63,35 +63,35 @@ class LeaveDetailScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     leave.leaveType,
-                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1E293B)),
+                    style: TextStyle(fontFamily: 'Nunito', fontSize: 24, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${leave.totalDays} ngày nghỉ',
-                    style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Colors.grey[500]),
+                    style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6)),
                   ),
                 ],
               ),
             ),
 
             const SizedBox(height: 24),
-            const Text('THÔNG TIN CHI TIẾT', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF64748B), letterSpacing: 1)),
+            Text('THÔNG TIN CHI TIẾT', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7), letterSpacing: 1)),
             const SizedBox(height: 12),
 
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
                 children: [
-                  _buildDetailRow(Icons.description_outlined, 'Lý do', leave.reason),
-                  const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1, color: Color(0xFFF1F5F9))),
-                  _buildDetailRow(Icons.calendar_today_outlined, 'Thời gian nghỉ', '${AppDateUtils.formatDate(leave.fromDate)} - ${AppDateUtils.formatDate(leave.toDate)}'),
+                  _buildDetailRow(context, Icons.description_outlined, 'Lý do', leave.reason),
+                  Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.05))),
+                  _buildDetailRow(context, Icons.calendar_today_outlined, 'Thời gian nghỉ', '${AppDateUtils.formatDate(leave.fromDate)} - ${AppDateUtils.formatDate(leave.toDate)}'),
                   if (leave.attachments.isNotEmpty) ...[
-                    const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1, color: Color(0xFFF1F5F9))),
-                    _buildAttachments(leave.attachments),
+                    Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.05))),
+                    _buildAttachments(context, leave.attachments),
                   ],
                 ],
               ),
@@ -135,23 +135,23 @@ class LeaveDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
+  Widget _buildDetailRow(BuildContext context, IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: const Color(0xFF0369A1), size: 20),
+          decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : const Color(0xFF0369A1), size: 20),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey[500])),
+              Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6))),
               const SizedBox(height: 4),
-              Text(value, style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
+              Text(value, style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
             ],
           ),
         ),
@@ -159,7 +159,7 @@ class LeaveDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachments(List<String> urls) {
+  Widget _buildAttachments(BuildContext context, List<String> urls) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -167,11 +167,11 @@ class LeaveDetailScreen extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.image_outlined, color: Color(0xFF0369A1), size: 20),
+              decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(12)),
+              child: Icon(Icons.image_outlined, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : const Color(0xFF0369A1), size: 20),
             ),
             const SizedBox(width: 16),
-            Text('Minh chứng', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey[500])),
+            Text('Minh chứng', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6))),
           ],
         ),
         const SizedBox(height: 12),

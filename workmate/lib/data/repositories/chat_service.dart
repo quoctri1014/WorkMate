@@ -102,6 +102,10 @@ class ChatService {
     });
   }
 
+  void recallMessage(int messageId) {
+    socket.emit('recall_message', {'message_id': messageId});
+  }
+
   void dispose() {
     socket.disconnect();
     socket.dispose();

@@ -13,11 +13,13 @@ class AdminDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.w800)),
+        backgroundColor: Theme.of(context).cardColor,
+        elevation: 0,
+        title: Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
         actions: [
-          IconButton(icon: const Icon(Icons.settings_outlined), onPressed: () {}),
+          IconButton(icon: Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.onSurface), onPressed: () {}),
         ],
       ),
       body: CustomScrollView(
@@ -42,9 +44,13 @@ class AdminDashboardScreen extends StatelessWidget {
               // Attendance Chart
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: AppColors.cardShadow),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor, 
+                  borderRadius: BorderRadius.circular(16), 
+                  boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow
+                ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Tỷ lệ chuyên cần tuần này', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text('Tỷ lệ chuyên cần tuần này', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Theme.of(context).colorScheme.onSurface)),
                   const SizedBox(height: 20),
                   SizedBox(
                     height: 150,
@@ -57,10 +63,10 @@ class AdminDashboardScreen extends StatelessWidget {
                           LineChartBarData(
                             spots: [const FlSpot(0, 3), const FlSpot(1, 4), const FlSpot(2, 3.5), const FlSpot(3, 5), const FlSpot(4, 4.5)],
                             isCurved: true,
-                            color: AppColors.primary,
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : AppColors.primary,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: AppColors.primary.withOpacity(0.1)),
+                            belowBarData: BarAreaData(show: true, color: (Theme.of(context).brightness == Brightness.dark ? Colors.blue[300]! : AppColors.primary).withOpacity(0.1)),
                           ),
                         ],
                       ),
@@ -71,7 +77,7 @@ class AdminDashboardScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Admin Menu
-              const Text('QUẢN TRỊ HỆ THỐNG', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary, letterSpacing: 1)),
+              Text('QUẢN TRỊ HỆ THỐNG', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7), letterSpacing: 1)),
               const SizedBox(height: 12),
               _AdminMenuTile(
                 icon: Icons.badge_rounded, color: AppColors.primary, title: 'Quản lý nhân sự', subtitle: 'Danh sách, hợp đồng, hồ sơ',
@@ -108,12 +114,16 @@ class _QuickStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), boxShadow: AppColors.cardShadow),
+    decoration: BoxDecoration(
+      color: Theme.of(context).cardColor, 
+      borderRadius: BorderRadius.circular(14), 
+      boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow
+    ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Icon(icon, color: color, size: 20),
       const SizedBox(height: 10),
-      Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-      Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+      Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+      Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7))),
     ]),
   );
 }
@@ -129,15 +139,19 @@ class _AdminMenuTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: Theme.of(context).cardColor,
+      borderRadius: BorderRadius.circular(14),
+      boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow,
+    ),
     child: ListTile(
       onTap: onTap,
-      tileColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
         child: Icon(icon, color: color, size: 20)),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
+      subtitle: Text(subtitle, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7))),
+      trailing: Icon(Icons.chevron_right_rounded, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
     ),
   );
 }

@@ -139,6 +139,7 @@ class AttendanceModel {
   final String status;
   final String? shiftName;
   final double workedHours;
+  final double otHours;
 
   AttendanceModel({
     required this.id,
@@ -151,6 +152,7 @@ class AttendanceModel {
     required this.status,
     this.shiftName,
     this.workedHours = 0,
+    this.otHours = 0,
   });
 
   String get statusLabel {
@@ -187,8 +189,47 @@ class AttendanceModel {
       method: map['method'] ?? map['check_in_method'] ?? 'WiFi',
       status: map['status'] ?? 'Hợp lệ',
       shiftName: map['shiftName'],
-      workedHours: double.tryParse(map['workedHours']?.toString() ?? '0') ?? 0,
+      workedHours: double.tryParse(
+        (map['worked_hours'] ?? map['workedHours'] ?? map['total_hours'] ?? map['hours'] ?? '0').toString()
+      ) ?? 0,
+      otHours: double.tryParse(
+        (map['ot_hours'] ?? map['otHours'] ?? map['overtime_hours'] ?? '0').toString()
+      ) ?? 0,
     );
+  }
+
+  double get displayNormalHours {
+    if (checkIn == null || checkOut == null) return 0;
+    
+    // Đảm bảo dùng giờ địa phương (Local Time) để so sánh với 8h-17h
+    final localCheckIn = checkIn!.toLocal();
+    final localCheckOut = checkOut!.toLocal();
+
+    double start = localCheckIn.hour + localCheckIn.minute / 60.0;
+    double end = localCheckOut.hour + localCheckOut.minute / 60.0;
+    
+    // Giới hạn trong khung giờ hành chính [8:00 - 17:00]
+    double normalStart = start < 8.0 ? 8.0 : start;
+    double normalEnd = end > 17.0 ? 17.0 : end;
+    
+    if (normalEnd <= normalStart) return 0;
+    
+    double hours = normalEnd - normalStart;
+    
+    // Trừ giờ nghỉ trưa (12:00 - 13:00) nếu khoảng thời gian làm việc bao phủ
+    if (normalStart <= 12.0 && normalEnd >= 13.0) {
+      hours -= 1.0;
+    } else if (normalStart < 12.0 && normalEnd > 12.0) {
+      hours -= (normalEnd - 12.0);
+    } else if (normalStart < 13.0 && normalEnd > 13.0) {
+      hours -= (13.0 - normalStart);
+    }
+    
+    return hours > 8.0 ? 8.0 : (hours < 0 ? 0 : hours);
+  }
+
+  double get displayTotalHours {
+    return displayNormalHours + otHours;
   }
 }
 
@@ -272,6 +313,7 @@ class OvertimeModel {
   final String? reviewedBy;
   final DateTime? reviewedAt;
   final String? rejectReason;
+  final String type;
 
   OvertimeModel({
     required this.id,
@@ -285,6 +327,7 @@ class OvertimeModel {
     this.reviewedBy,
     this.reviewedAt,
     this.rejectReason,
+    this.type = 'Làm thêm giờ',
   });
 
   String get statusLabel => status == 'pending' ? 'Chờ duyệt' : (status == 'approved' ? 'Đã duyệt' : 'Từ chối');
@@ -294,8 +337,8 @@ class OvertimeModel {
       id: (map['id'] ?? '').toString(),
       userId: (map['uid'] ?? map['user_id'] ?? '').toString(),
       userName: map['userName'] ?? map['user_name'] ?? '',
-      date: map['date'] != null 
-          ? (map['date'] is String ? DateTime.parse(map['date']) : (map['date'] as Timestamp).toDate()) 
+      date: map['from_date'] != null 
+          ? (map['from_date'] is String ? DateTime.parse(map['from_date']) : (map['from_date'] as Timestamp).toDate()) 
           : DateTime.now(),
       expectedHours: double.tryParse(map['expectedHours']?.toString() ?? map['expected_hours']?.toString() ?? map['total_hours']?.toString() ?? '0') ?? 0,
       workContent: map['workContent'] ?? map['work_content'] ?? map['reason'] ?? '',
@@ -307,6 +350,7 @@ class OvertimeModel {
       reviewedAt: map['reviewedAt'] != null 
           ? (map['reviewedAt'] is String ? DateTime.parse(map['reviewedAt']) : (map['reviewedAt'] as Timestamp).toDate()) 
           : null,
+      type: map['type'] ?? 'Làm thêm giờ',
       rejectReason: map['rejectReason'] ?? map['reject_reason'],
     );
   }

@@ -408,10 +408,11 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Chưa có dữ liệu'),
-        content: const Text('Bạn chưa đăng ký khuôn mặt để sử dụng tính năng này. Đăng ký ngay?'),
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text('Chưa có dữ liệu', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        content: Text('Bạn chưa đăng ký khuôn mặt để sử dụng tính năng này. Đăng ký ngay?', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('Hủy', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -479,7 +480,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Container(color: const Color(0xFF1A1A1A)),
+          Container(color: Colors.black),
           if (_isCameraReady && _cameraController != null)
             Center(
               child: Transform(
@@ -597,9 +598,9 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close, color: Colors.white),
               ),
-              const Expanded(
+               const Expanded(
                 child: Text('CHẤM CÔNG', textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 2)),
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 2, fontFamily: 'Nunito')),
               ),
               const SizedBox(width: 48),
             ],
@@ -619,7 +620,6 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_scanState == FaceScanState.processing)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 12),
                   child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF40C4FF))),
@@ -627,7 +627,7 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child: Text(_guideText, key: ValueKey(_guideText),
-                  style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                  style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w600, fontFamily: 'Nunito'), textAlign: TextAlign.center),
               ),
               const SizedBox(height: 8),
               Text('Hệ thống tự động nhận diện khi phát hiện khuôn mặt',
@@ -652,18 +652,21 @@ class _CheckInFaceScreenState extends State<CheckInFaceScreen>
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 40),
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
-                decoration: BoxDecoration(color: Colors.black.withOpacity(0.9), borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: isSuccess ? const Color(0xFF00E676) : const Color(0xFFFF5252), width: 1.5)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor.withOpacity(0.95), 
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: isSuccess ? const Color(0xFF00E676) : const Color(0xFFFF5252), width: 1.5)
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(isSuccess ? Icons.check_circle_rounded : Icons.cancel_rounded, size: 64, color: isSuccess ? const Color(0xFF00E676) : const Color(0xFFFF5252)),
                     const SizedBox(height: 16),
                     Text(isSuccess ? 'Chấm công thành công' : 'Không nhận ra',
-                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Nunito')),
                     const SizedBox(height: 8),
                     Text('Độ chính xác: ${_matchResult!.confidence.toStringAsFixed(1)}%',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14, fontFamily: 'Nunito')),
                   ],
                 ),
               ),

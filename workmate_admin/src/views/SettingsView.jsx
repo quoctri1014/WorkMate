@@ -168,6 +168,16 @@ const SettingsView = ({ config, onRefresh }) => {
                       </div>
                     </div>
                   </section>
+
+                  <section className="space-y-3">
+                    <h4 className="text-indigo-500 font-black uppercase tracking-widest text-xs flex items-center gap-2">
+                      <Icon name="calendar_today" className="!text-lg" /> 4. Ngày làm việc trong tuần
+                    </h4>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li><b className="text-slate-900 dark:text-white">Lịch làm việc:</b> Hệ thống mặc định chỉ cho phép chấm công vào các ngày được đánh dấu (hiển thị màu xanh).</li>
+                      <li><b className="text-slate-900 dark:text-white">Hiển thị App:</b> Những ngày không được chọn sẽ tự động hiển thị trạng thái "Ngày nghỉ" trên lịch và biểu đồ thống kê của nhân viên.</li>
+                    </ul>
+                  </section>
                 </div>
 
                 <div className="pt-6 border-t border-slate-100 dark:border-slate-800">

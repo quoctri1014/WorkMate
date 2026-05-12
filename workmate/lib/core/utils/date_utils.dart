@@ -45,7 +45,7 @@ class AppDateUtils {
 
   static String formatMonthYear(DateTime date, [String locale = 'vi']) {
     if (locale == 'vi') {
-      return DateFormat('Tháng MM, yyyy', 'vi').format(date.toLocal());
+      return DateFormat("'Tháng' MM, yyyy", 'vi').format(date.toLocal());
     }
     return DateFormat('MMMM yyyy', 'en').format(date.toLocal());
   }

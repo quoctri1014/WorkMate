@@ -595,7 +595,7 @@ class OvertimeViewModel extends ChangeNotifier {
         final List<dynamic> data = json.decode(response.body);
         _overtimes = data
             .map((json) => OvertimeModel.fromMap(json))
-            .where((o) => o.workContent != '' && o.expectedHours > 0) // Basic filter if needed
+            .where((o) => o.type == 'Làm thêm giờ')
             .toList();
       }
     } catch (e) {
@@ -764,6 +764,10 @@ class NotificationViewModel extends ChangeNotifier {
       _socket?.on('new_notification', (data) {
         _checkAndAddGeneralNotification(data);
       });
+
+      _socket?.on('attendance_edited', (data) {
+        _checkAndAddAttendanceNotification(data);
+      });
     } catch (e) {
       print('❌ Lỗi kết nối Socket: $e');
     }
@@ -790,6 +794,30 @@ class NotificationViewModel extends ChangeNotifier {
       }
     } catch (e) {
       print('❌ Lỗi xử lý thông báo chung: $e');
+    }
+  }
+
+  Future<void> _checkAndAddAttendanceNotification(dynamic data) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = prefs.getString('user_data');
+      if (userData != null) {
+        final user = json.decode(userData);
+        final myId = user['id']?.toString();
+        final targetId = data['employee_id']?.toString();
+        
+        if (myId == targetId) {
+          _addNewNotification(
+            title: data['title'] ?? 'Chỉnh sửa giờ công',
+            body: data['body'] ?? 'Admin đã sửa giờ công của bạn.',
+            type: 'attendance_update',
+            data: {'date': data['date']}
+          );
+          NotificationEvents.emitRefresh();
+        }
+      }
+    } catch (e) {
+      print('❌ Lỗi xử lý thông báo sửa giờ công: $e');
     }
   }
 

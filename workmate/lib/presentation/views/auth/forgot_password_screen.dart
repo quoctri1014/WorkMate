@@ -23,7 +23,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -32,12 +32,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Quên mật khẩu',
           style: TextStyle(
             fontFamily: 'Nunito',
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 17,
           ),
         ),
@@ -58,20 +58,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.primarySurface,
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.withOpacity(0.1) : AppColors.primarySurface,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: AppColors.primary),
-              SizedBox(width: 12),
+              const Icon(Icons.info_outline_rounded, color: AppColors.primary),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Nhập email đã đăng ký. Chúng tôi sẽ gửi link đặt lại mật khẩu.',
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 13,
-                    color: AppColors.primary,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[100] : AppColors.primary,
                   ),
                 ),
               ),
@@ -79,41 +79,41 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ),
         const SizedBox(height: 28),
-        const Text(
+        Text(
           'EMAIL ĐÃ ĐĂNG KÝ',
           style: TextStyle(
             fontFamily: 'Nunito',
             fontSize: 11,
             fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
           ),
           child: TextField(
             controller: _emailCtrl,
             keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(
+            style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 15,
-                color: AppColors.textPrimary),
-            decoration: const InputDecoration(
+                color: Theme.of(context).colorScheme.onSurface),
+            decoration: InputDecoration(
               hintText: 'example@company.com',
               hintStyle: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 14,
-                  color: AppColors.textHint),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
               prefixIcon: Icon(Icons.email_outlined,
-                  size: 20, color: AppColors.textSecondary),
+                  size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
               border: InputBorder.none,
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ),
@@ -164,30 +164,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.successLight,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.green.withOpacity(0.1) : AppColors.successLight,
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(Icons.mark_email_read_rounded,
                 color: AppColors.success, size: 44),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Đã gửi thành công!',
             style: TextStyle(
               fontFamily: 'Nunito',
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Kiểm tra email của bạn và làm theo\nhướng dẫn để đặt lại mật khẩu.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Nunito',
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               height: 1.6,
             ),
           ),

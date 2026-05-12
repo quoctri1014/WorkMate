@@ -2,47 +2,71 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '../components/Common';
 
-const StatCard = ({ title, value, icon, color, trend }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    className="bg-surface-container-lowest p-8 rounded-[2.5rem] shadow-sm border border-border flex flex-col gap-4 relative overflow-hidden group transition-all hover:shadow-2xl hover:shadow-primary/5"
-  >
-    <div className={`absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-all bg-${color === 'blue' ? 'blue' : color === 'emerald' ? 'emerald' : 'amber'}-500`}></div>
-    
-    <div className="flex justify-between items-start relative z-10">
-      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg bg-${color === 'blue' ? 'blue' : color === 'emerald' ? 'emerald' : 'amber'}-500 text-white transition-transform group-hover:rotate-12`}>
-        <Icon name={icon} fill={1} className="!text-2xl" />
-      </div>
-      {trend && (
-        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${trend.startsWith('+') ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-          <Icon name={trend.startsWith('+') ? 'trending_up' : 'trending_down'} className="!text-[12px]" />
-          {trend}
+const StatCard = ({ title, value, icon, color, trend }) => {
+  const getBgColor = () => {
+    if (color === 'blue') return 'brand-gradient';
+    if (color === 'emerald') return 'bg-emerald-500';
+    if (color === 'amber') return 'bg-amber-500';
+    if (color === 'rose') return 'bg-rose-500';
+    return 'bg-primary';
+  };
+
+  const getCircleColor = () => {
+    if (color === 'blue') return 'bg-sky-500';
+    if (color === 'emerald') return 'bg-emerald-500';
+    if (color === 'amber') return 'bg-amber-500';
+    if (color === 'rose') return 'bg-rose-500';
+    return 'bg-primary';
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="bg-surface-container-lowest p-8 rounded-[2.5rem] shadow-sm border border-border flex flex-col gap-4 relative overflow-hidden group transition-all hover:shadow-2xl hover:shadow-primary/5"
+    >
+      <div className={`absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-all ${getCircleColor()}`}></div>
+      
+      <div className="flex justify-between items-start relative z-10">
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg text-white transition-transform group-hover:rotate-12 ${getBgColor()}`}>
+          <Icon name={icon} fill={1} className="!text-2xl" />
         </div>
-      )}
-    </div>
-    
-    <div className="mt-4 relative z-10">
-      <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-1">{title}</p>
-      <h3 className="text-4xl font-black text-on-surface tracking-tighter transition-colors">{value}</h3>
-    </div>
-    
-    <div className="mt-2 h-1 w-full bg-surface-container-low rounded-full overflow-hidden">
-      <div className={`h-full bg-${color === 'blue' ? 'blue' : color === 'emerald' ? 'emerald' : 'amber'}-500 rounded-full`} style={{ width: '70%' }}></div>
-    </div>
-  </motion.div>
-);
+        {trend && (
+          <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${trend.startsWith('+') || trend.includes('diện hiện') || trend.includes('thành viên') ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+            <Icon name={trend.startsWith('+') || trend.includes('diện hiện') || trend.includes('thành viên') ? 'trending_up' : 'trending_down'} className="!text-[12px]" />
+            {trend}
+          </div>
+        )}
+      </div>
+      
+      <div className="mt-4 relative z-10">
+        <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-1">{title}</p>
+        <h3 className="text-4xl font-black text-on-surface tracking-tighter transition-colors">{value}</h3>
+      </div>
+      
+      <div className="mt-2 h-1 w-full bg-surface-container-low rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${getBgColor()}`} style={{ width: '70%' }}></div>
+      </div>
+    </motion.div>
+  );
+};
 
 const DashboardView = ({ employees = [], attendance = [], approvals = [], meetings = [], onNavigate }) => {
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const getLocalISODate = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayStr = getLocalISODate();
   
   // Tính toán dữ liệu cho biểu đồ 7 ngày qua
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
-    d.setDate(today.getDate() - (4 - i)); // Sắp xếp để Hnay nằm ở vị trí thứ 5 (index 4) như thiết kế
-    return d.toISOString().split('T')[0];
+    d.setDate(d.getDate() - (4 - i));
+    return getLocalISODate(d);
   });
 
   const chartData = last7Days.map(date => {

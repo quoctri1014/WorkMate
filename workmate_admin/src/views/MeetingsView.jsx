@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon, API_URL } from '../components/Common';
@@ -192,7 +192,16 @@ const MeetingsView = ({ meetings = [], notifications = [], depts = [], onRefresh
     return `${year}-${month}-${day}`;
   };
 
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr) return '---';
+    try {
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}/${y}`;
+    } catch (e) { return dateStr; }
+  };
+
   const [selectedDate, setSelectedDate] = useState(getLocalDate(new Date()));
+  const dateInputRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
   const [viewMode, setViewMode] = useState('daily'); // daily, history
 
@@ -342,9 +351,24 @@ const MeetingsView = ({ meetings = [], notifications = [], depts = [], onRefresh
 
       {/* Date Filter Bar */}
       <div className="bg-surface-container-lowest p-4 rounded-[2rem] shadow-sm border border-border flex items-center gap-4 transition-colors">
-        <div className="flex items-center gap-2 px-6 border-r border-slate-100 dark:border-slate-800 shrink-0">
-          <Icon name="calendar_today" className="text-primary" />
-          <input type="date" className="font-black text-sm outline-none bg-transparent cursor-pointer text-slate-700 dark:text-slate-200" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
+        <div 
+          onClick={() => dateInputRef.current?.showPicker()}
+          className="flex items-center gap-3 px-6 border-r border-slate-100 dark:border-slate-800 shrink-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-all"
+        >
+          <Icon name="calendar_today" className="text-primary !text-[20px]" />
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ngày đang xem</span>
+            <span className="font-black text-sm text-slate-700 dark:text-slate-200">
+              {formatDateDisplay(selectedDate)}
+            </span>
+          </div>
+          <input 
+            ref={dateInputRef}
+            type="date" 
+            className="absolute opacity-0 pointer-events-none w-0 h-0" 
+            value={selectedDate} 
+            onChange={e => setSelectedDate(e.target.value)} 
+          />
         </div>
         <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar">
           {[-1, 0, 1, 2, 3].map(offset => {

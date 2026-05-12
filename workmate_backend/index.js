@@ -73,6 +73,42 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('recall_message', async (data) => {
+    try {
+      const { message_id } = data;
+      const msgRes = await pool.query("SELECT * FROM chat_messages WHERE id = $1", [message_id]);
+      if (msgRes.rows.length === 0) return;
+      
+      const msg = msgRes.rows[0];
+      const now = new Date();
+      const sentAt = new Date(msg.created_at);
+      const diff = (now - sentAt) / (1000 * 60 * 60); // hours
+      
+      if (diff > 1) {
+        socket.emit('error_message', { message: 'Chỉ có thể thu hồi tin nhắn trong vòng 1 tiếng.' });
+        return;
+      }
+      
+      await pool.query("UPDATE chat_messages SET is_recalled = true, message = 'Tin nhắn đã được thu hồi' WHERE id = $1", [message_id]);
+      
+      const updatedMsg = { ...msg, is_recalled: true, message: 'Tin nhắn đã được thu hồi' };
+      
+      if (msg.conversation_id) {
+        io.emit(`message_recalled_conv_${msg.conversation_id}`, updatedMsg);
+      } else if (msg.receiver_id) {
+        io.emit(`message_recalled_${msg.receiver_id}`, updatedMsg);
+        io.emit(`message_recalled_${msg.sender_id}`, updatedMsg);
+      } else if (msg.chat_type === 'admin') {
+        io.emit('message_recalled_admin', updatedMsg);
+        io.emit(`message_recalled_${msg.sender_id}`, updatedMsg);
+      } else if (msg.chat_type === 'ai') {
+        io.emit(`message_recalled_${msg.sender_id}`, updatedMsg);
+      }
+    } catch (err) {
+      console.error('❌ Recall Error:', err.message);
+    }
+  });
+
   socket.on('disconnect', () => {
     if (onlineUsers.has(socket.id)) {
       const userId = onlineUsers.get(socket.id);
@@ -174,6 +210,7 @@ const initDB = async () => {
       ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_out_time TIMESTAMP;
       ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_in_method VARCHAR(50);
       ALTER TABLE employees ADD COLUMN IF NOT EXISTS fcm_token TEXT;
+      ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_recalled BOOLEAN DEFAULT FALSE;
       
       CREATE TABLE IF NOT EXISTS employee_banks (
         id SERIAL PRIMARY KEY,
@@ -1019,6 +1056,14 @@ app.get('/api/attendance/export', async (req, res) => {
       otMap[`${row.employee_id}_${row.date}`] = parseFloat(row.hours);
     });
 
+    const banksRes = await pool.query('SELECT * FROM employee_banks ORDER BY is_default DESC, created_at DESC');
+    const bankMap = {};
+    banksRes.rows.forEach(row => {
+      if (!bankMap[row.employee_id]) {
+        bankMap[row.employee_id] = row;
+      }
+    });
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Báo cáo Chi tiết');
     const summarySheet = workbook.addWorksheet('Tổng hợp Công');
@@ -1040,7 +1085,10 @@ app.get('/api/attendance/export', async (req, res) => {
     summarySheet.columns = [
       { header: 'Mã NV', key: 'code', width: 15 },
       { header: 'Họ tên', key: 'name', width: 25 },
-      { header: 'Tổng giờ làm', key: 'totalHours', width: 15 }
+      { header: 'Tổng giờ làm', key: 'totalHours', width: 15 },
+      { header: 'Ngân hàng', key: 'bank_name', width: 20 },
+      { header: 'Số tài khoản', key: 'account_number', width: 20 },
+      { header: 'Chủ tài khoản', key: 'account_holder', width: 25 }
     ];
     summarySheet.getRow(1).font = { bold: true };
 
@@ -1062,7 +1110,14 @@ app.get('/api/attendance/export', async (req, res) => {
       });
 
       if (!summaryMap[row.employee_code]) {
-        summaryMap[row.employee_code] = { name: row.employee_name, total: 0 };
+        const bank = bankMap[row.employee_id] || {};
+        summaryMap[row.employee_code] = { 
+          name: row.employee_name, 
+          total: 0,
+          bank_name: bank.bank_name || '',
+          account_number: bank.account_number || '',
+          account_holder: bank.account_holder || ''
+        };
       }
       summaryMap[row.employee_code].total += hours.total;
     });
@@ -1071,7 +1126,10 @@ app.get('/api/attendance/export', async (req, res) => {
       summarySheet.addRow({
         code: code,
         name: summaryMap[code].name,
-        totalHours: parseFloat(summaryMap[code].total.toFixed(2))
+        totalHours: parseFloat(summaryMap[code].total.toFixed(2)),
+        bank_name: summaryMap[code].bank_name,
+        account_number: summaryMap[code].account_number,
+        account_holder: summaryMap[code].account_holder
       });
     });
 
@@ -1152,12 +1210,23 @@ app.put('/api/attendance/:id', async (req, res) => {
     }
 
     if (changeLog.length > 0) {
+      const title = '⚡ Chỉnh sửa giờ công';
+      const body = `Admin đã sửa giờ công ngày ${date}:\n${changeLog.join('\n')}`;
+      
       await sendPushNotification(
         old.employee_id,
-        '⚡ Chỉnh sửa giờ công',
-        `Admin đã sửa giờ công ngày ${date}:\n${changeLog.join('\n')}`,
+        title,
+        body,
         { type: 'attendance_update', date }
       );
+
+      // Emit realtime event để lưu vào danh sách thông báo trên App
+      io.emit('attendance_edited', {
+        employee_id: old.employee_id,
+        title: title,
+        body: body,
+        date: date
+      });
     }
 
     res.json({ success: true });
@@ -1390,6 +1459,9 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
       const dayIdx = (new Date(row.check_in_time).getDay() + 6) % 7;
       weeklyData[dayIdx].normal = hours.normal;
       weeklyData[dayIdx].ot = hours.ot;
+      
+      // Gán OT vào từng dòng để trả về cho App hiển thị ở mục Lịch sử
+      row.ot_hours = approvedOT;
       
       // Kiểm tra đi muộn (So với work_start_time trong config)
       const checkInHour = new Date(row.check_in_time).getHours();

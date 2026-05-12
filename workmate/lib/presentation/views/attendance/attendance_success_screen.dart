@@ -15,7 +15,7 @@ class AttendanceSuccessScreen extends StatelessWidget {
     String t(String key) => AppTranslations.getText(lang, key);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -31,21 +31,21 @@ class AttendanceSuccessScreen extends StatelessWidget {
                     width: 160,
                     height: 160,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: (Theme.of(context).brightness == Brightness.dark ? Colors.blue : AppColors.primary).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                   ),
                   Container(
                     width: 120,
                     height: 120,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,
                       shape: BoxShape.circle,
-                      boxShadow: [
+                      boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                         BoxShadow(
-                          color: AppColors.primary,
+                          color: AppColors.primary.withOpacity(0.3),
                           blurRadius: 15,
-                          offset: Offset(0, 5),
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -60,21 +60,21 @@ class AttendanceSuccessScreen extends StatelessWidget {
               const SizedBox(height: 40),
               Text(
                 isCheckIn ? t('check_in_success') : t('check_out_success'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 isCheckIn ? t('check_in_wish') : t('check_out_wish'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.5,
                 ),
               ),

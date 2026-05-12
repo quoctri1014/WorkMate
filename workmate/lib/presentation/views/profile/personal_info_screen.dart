@@ -71,17 +71,17 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(t('personal_profile'), 
-          style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 18)),
+          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, fontSize: 18)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -92,9 +92,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: AppColors.cardShadow,
+                boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow,
               ),
               child: Column(
                 children: [
@@ -102,11 +102,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: AppColors.primarySurface,
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : AppColors.primarySurface,
                         backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
                         child: avatarUrl.isEmpty 
                           ? Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                              style: const TextStyle(fontFamily: 'Nunito', fontSize: 40, fontWeight: FontWeight.w800, color: AppColors.primary))
+                              style: TextStyle(fontFamily: 'Nunito', fontSize: 40, fontWeight: FontWeight.w800, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : AppColors.primary))
                           : null,
                       ),
                       if (_isUploading)
@@ -131,19 +131,19 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text(user.name, style: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                  Text(user.name, style: TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(color: AppColors.primarySurface, borderRadius: BorderRadius.circular(10)),
-                    child: Text(user.employeeCode, style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : AppColors.primarySurface, borderRadius: BorderRadius.circular(10)),
+                    child: Text(user.employeeCode, style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w700, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : AppColors.primary)),
                   ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _StatItem(label: t('department'), value: user.departmentName),
-                      Container(width: 1, height: 30, color: AppColors.divider),
+                      Container(width: 1, height: 30, color: Theme.of(context).dividerColor.withOpacity(0.2)),
                       _StatItem(label: t('position'), value: user.position),
                     ],
                   ),
@@ -177,9 +177,9 @@ class _StatItem extends StatelessWidget {
   const _StatItem({required this.label, required this.value});
   @override
   Widget build(BuildContext context) => Column(children: [
-    Text(value, style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+    Text(value, style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
     const SizedBox(height: 2),
-    Text(label, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, color: AppColors.textSecondary)),
+    Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
   ]);
 }
 
@@ -190,11 +190,11 @@ class _InfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: AppColors.cardShadow),
+    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(24), boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: 1)),
+        Text(title, style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary, letterSpacing: 1)),
         const SizedBox(height: 12),
         ...items,
       ],
@@ -214,16 +214,16 @@ class _InfoRow extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, size: 18, color: AppColors.primary),
+          decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : AppColors.background, borderRadius: BorderRadius.circular(10)),
+          child: Icon(icon, size: 18, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : AppColors.primary),
         ),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, color: AppColors.textSecondary)),
-              Text(value, style: const TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              Text(value, style: TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
             ],
           ),
         ),

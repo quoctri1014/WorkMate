@@ -51,8 +51,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
+          color: Theme.of(context).cardColor,
+          boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
               blurRadius: 20,
@@ -141,7 +141,7 @@ class _NavItem extends StatelessWidget {
               children: [
                 Icon(
                   isActive ? (activeIcon ?? icon) : icon,
-                  color: isActive ? AppColors.primary : AppColors.textSecondary,
+                  color: isActive ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white60 : AppColors.textSecondary),
                   size: 24,
                 ),
                 if (badge > 0)
@@ -176,7 +176,7 @@ class _NavItem extends StatelessWidget {
                 fontFamily: 'Nunito',
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                color: isActive ? AppColors.primary : AppColors.textSecondary,
+                color: isActive ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white60 : AppColors.textSecondary),
               ),
             ),
           ],

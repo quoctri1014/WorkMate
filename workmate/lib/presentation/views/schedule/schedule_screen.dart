@@ -121,17 +121,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
+        backgroundColor: Theme.of(context).cardColor,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary, size: 18),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: Theme.of(context).colorScheme.onSurface, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           t('work_schedule'),
-          style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, fontSize: 18),
         ),
       ),
       body: Column(
@@ -140,9 +140,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           Container(
             padding: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+              boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
             ),
             child: TableCalendar(
               locale: lang == 'vi' ? 'vi_VN' : 'en_US',
@@ -150,15 +150,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               lastDay: DateTime(2026, 12, 31),
               focusedDay: _focusedDay,
               selectedDayPredicate: (day) => _isSameDay(_selectedDay, day),
-              headerStyle: const HeaderStyle(
+              headerStyle: HeaderStyle(
                 formatButtonVisible: false,
                 titleCentered: true,
-                titleTextStyle: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.textPrimary),
+                titleTextStyle: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
+                leftChevronIcon: Icon(Icons.chevron_left, color: Theme.of(context).colorScheme.onSurface),
+                rightChevronIcon: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface),
               ),
-              calendarStyle: const CalendarStyle(
+              calendarStyle: CalendarStyle(
                 outsideDaysVisible: false,
-                defaultTextStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                weekendTextStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.grey),
+                defaultTextStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Theme.of(context).colorScheme.onSurface),
+                weekendTextStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.grey),
               ),
               onDaySelected: (selected, focused) {
                 setState(() {
@@ -189,11 +191,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _LegendItem(color: AppColors.success, label: 'Đúng giờ'),
+                _LegendItem(color: AppColors.success, label: t('on_time')),
                 const SizedBox(width: 16),
-                _LegendItem(color: AppColors.warning, label: 'Đi muộn'),
+                _LegendItem(color: AppColors.warning, label: t('late')),
                 const SizedBox(width: 16),
-                _LegendItem(color: AppColors.error, label: 'Nghỉ phép'),
+                _LegendItem(color: AppColors.error, label: t('leave')),
               ],
             ),
           ),
@@ -208,7 +210,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 children: [
                   Text(
                     'CHI TIẾT NGÀY ${AppDateUtils.formatDate(_selectedDay ?? DateTime.now()).toUpperCase()}',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.grey.shade500, letterSpacing: 1.2),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), letterSpacing: 1.2),
                   ),
                   const SizedBox(height: 16),
                   _buildDayDetail(_selectedDay ?? DateTime.now(), getAttendanceForDay, hasLeaveOnDay),
@@ -224,7 +226,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Widget _buildDayWidget(DateTime day, String status, {bool isSelected = false, bool isToday = false}) {
     Color? bgColor;
-    Color textColor = AppColors.textPrimary;
+    Color textColor = Theme.of(context).colorScheme.onSurface;
     
     if (status == 'leave') bgColor = AppColors.error;
     else if (status == 'late') bgColor = AppColors.warning;
@@ -324,9 +326,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
+        boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -347,13 +349,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, letterSpacing: -0.5),
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, letterSpacing: -0.5, color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     height: 1.3,
@@ -371,9 +373,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)),
       ),
       child: Row(
         children: [
@@ -386,9 +388,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey.shade400, letterSpacing: 0.5)),
+              Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), letterSpacing: 0.5)),
               const SizedBox(height: 2),
-              Text(time, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+              Text(time, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface)),
             ],
           ),
           const Spacer(),
@@ -415,7 +417,7 @@ class _LegendItem extends StatelessWidget {
       children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
       ],
     );
   }

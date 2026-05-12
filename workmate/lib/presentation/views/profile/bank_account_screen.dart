@@ -35,11 +35,11 @@ class _BankAccountScreenState extends State<BankAccountScreen> {
     final accounts = homeVm.user?.bankAccounts ?? [];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary, size: 20), onPressed: () => Navigator.pop(context)),
-        title: const Text('Tài khoản ngân hàng', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 17)),
+        backgroundColor: Theme.of(context).cardColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20), onPressed: () => Navigator.pop(context)),
+        title: Text('Tài khoản ngân hàng', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface, fontSize: 17)),
         actions: [
           if (accounts.length < 3)
             IconButton(icon: const Icon(Icons.add_rounded, color: AppColors.primary, size: 28), onPressed: () => _showBankForm(context, homeVm)),
@@ -60,12 +60,12 @@ class _BankAccountScreenState extends State<BankAccountScreen> {
   }
 
   Widget _buildEmpty(BuildContext context, HomeViewModel vm) => Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-    Container(width: 80, height: 80, decoration: BoxDecoration(color: AppColors.primarySurface, borderRadius: BorderRadius.circular(24)),
-      child: const Icon(Icons.account_balance_rounded, color: AppColors.primary, size: 40)),
+    Container(width: 80, height: 80, decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : AppColors.primarySurface, borderRadius: BorderRadius.circular(24)),
+      child: Icon(Icons.account_balance_rounded, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : AppColors.primary, size: 40)),
     const SizedBox(height: 20),
-    const Text('Chưa có tài khoản ngân hàng', style: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+    Text('Chưa có tài khoản ngân hàng', style: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
     const SizedBox(height: 8),
-    const Text('Thêm tối đa 3 tài khoản để nhận lương', style: TextStyle(fontFamily: 'Nunito', fontSize: 13, color: AppColors.textSecondary)),
+    Text('Thêm tối đa 3 tài khoản để nhận lương', style: TextStyle(fontFamily: 'Nunito', fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
     const SizedBox(height: 24),
     ElevatedButton.icon(
       onPressed: () => _showBankForm(context, vm),
@@ -88,7 +88,7 @@ class _BankAccountScreenState extends State<BankAccountScreen> {
         title: const Text('Xác nhận xóa', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800)),
         content: const Text('Bạn có chắc muốn xóa tài khoản ngân hàng này?', style: TextStyle(fontFamily: 'Nunito')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy', style: TextStyle(color: AppColors.textSecondary))),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Hủy', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))),
           TextButton(onPressed: () { Navigator.pop(ctx); vm.deleteBank(bankId); }, child: const Text('Xóa ngay', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700))),
         ],
       ),
@@ -170,16 +170,22 @@ class _BankFormDialogState extends State<_BankFormDialog> {
       backgroundColor: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.all(28),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor, 
+          borderRadius: BorderRadius.circular(28),
+          border: Theme.of(context).brightness == Brightness.dark 
+            ? Border.all(color: Colors.white.withOpacity(0.05)) 
+            : null
+        ),
         child: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text(widget.account == null ? 'Thêm tài khoản' : 'Sửa tài khoản', 
-              style: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+              style: TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface)),
             const SizedBox(height: 24),
             
             // Bank Name with Search
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Ngân hàng', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              Text('Ngân hàng', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
               const SizedBox(height: 6),
               TextField(
                 controller: _bankCtrl,
@@ -196,24 +202,24 @@ class _BankFormDialogState extends State<_BankFormDialog> {
                 },
                 decoration: InputDecoration(
                   hintText: 'Chọn hoặc tìm ngân hàng...',
-                  filled: true, fillColor: AppColors.background,
+                  filled: true, fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : AppColors.background,
                   errorText: _bankError,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700),
+                style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface),
               ),
               if (_showSuggestions && _suggestions.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.only(top: 4),
                   constraints: const BoxConstraints(maxHeight: 150),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border), boxShadow: AppColors.cardShadow),
+                  decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)), boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow),
                   child: ListView.builder(
                     shrinkWrap: true,
                     itemCount: _suggestions.length,
                     itemBuilder: (ctx, i) => ListTile(
                       dense: true,
-                      title: Text(_suggestions[i], style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600)),
+                      title: Text(_suggestions[i], style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
                       onTap: () {
                         setState(() {
                           _bankCtrl.text = _suggestions[i];
@@ -237,8 +243,8 @@ class _BankFormDialogState extends State<_BankFormDialog> {
             Row(children: [
               Expanded(child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.border), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), padding: const EdgeInsets.symmetric(vertical: 16)),
-                child: const Text('Hủy', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), padding: const EdgeInsets.symmetric(vertical: 16)),
+                child: Text('Hủy', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
               )),
               const SizedBox(width: 12),
               Expanded(child: ElevatedButton(
@@ -255,7 +261,7 @@ class _BankFormDialogState extends State<_BankFormDialog> {
 
   Widget _buildField(String label, TextEditingController ctrl, String hint, String? error, TextInputType type, [bool allCaps = false]) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+      Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
       const SizedBox(height: 6),
       TextField(
         controller: ctrl,
@@ -267,12 +273,12 @@ class _BankFormDialogState extends State<_BankFormDialog> {
         },
         decoration: InputDecoration(
           hintText: hint,
-          filled: true, fillColor: AppColors.background,
+          filled: true, fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : AppColors.background,
           errorText: error,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
-        style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700),
+        style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface),
       ),
     ]);
   }
@@ -287,30 +293,30 @@ class _BankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 16),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: AppColors.cardShadow),
+    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow),
     child: Column(children: [
       Padding(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.primarySurface, borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.account_balance_rounded, color: AppColors.primary, size: 20)),
+            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : AppColors.primarySurface, borderRadius: BorderRadius.circular(12)),
+              child: Icon(Icons.account_balance_rounded, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : AppColors.primary, size: 20)),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(account.bankName, style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-              Text(account.accountHolder, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, color: AppColors.textSecondary, letterSpacing: 0.5)),
+              Text(account.bankName, style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+              Text(account.accountHolder, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant, letterSpacing: 0.5)),
             ])),
           ]),
           const SizedBox(height: 20),
-          Text(account.accountNumber, style: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: 1.5)),
+          Text(account.accountNumber, style: TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface, letterSpacing: 1.5)),
         ]),
       ),
       Container(
-        decoration: const BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.vertical(bottom: Radius.circular(20))),
+        decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.02) : AppColors.background, borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20))),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          TextButton.icon(onPressed: onEdit, icon: const Icon(Icons.edit_rounded, size: 16), label: const Text('Sửa'), style: TextButton.styleFrom(foregroundColor: AppColors.primary, textStyle: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 13))),
-          TextButton.icon(onPressed: onDelete, icon: const Icon(Icons.delete_outline_rounded, size: 16), label: const Text('Xóa'), style: TextButton.styleFrom(foregroundColor: AppColors.error, textStyle: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 13))),
+          TextButton.icon(onPressed: onEdit, icon: const Icon(Icons.edit_rounded, size: 16), label: const Text('Sửa'), style: TextButton.styleFrom(foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : AppColors.primary, textStyle: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 13))),
+          TextButton.icon(onPressed: onDelete, icon: const Icon(Icons.delete_outline_rounded, size: 16), label: const Text('Xóa'), style: TextButton.styleFrom(foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.red[300] : AppColors.error, textStyle: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 13))),
         ]),
       )
     ]),

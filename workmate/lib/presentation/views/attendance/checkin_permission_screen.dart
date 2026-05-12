@@ -66,11 +66,11 @@ class _CheckInPermissionScreenState extends State<CheckInPermissionScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Cần quyền hệ thống'),
-          content: const Text('Quyền này đã bị từ chối vĩnh viễn. Vui lòng mở Cài đặt để cấp quyền thủ công.'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('HỦY')),
-            TextButton(onPressed: () {
+        title: Text('Cần quyền hệ thống', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        content: Text('Quyền này đã bị từ chối vĩnh viễn. Vui lòng mở Cài đặt để cấp quyền thủ công.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('HỦY', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))),
+          TextButton(onPressed: () {
               openAppSettings();
               Navigator.pop(ctx);
             }, child: const Text('CÀI ĐẶT')),
@@ -95,16 +95,16 @@ class _CheckInPermissionScreenState extends State<CheckInPermissionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
               const SizedBox(height: 20),
-              const Text('Cấp quyền ứng dụng', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+              Text('Cấp quyền ứng dụng', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface)),
               const SizedBox(height: 8),
-              const Text('Để WorkMate hoạt động chính xác, vui lòng cấp các quyền sau:', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+              Text('Để WorkMate hoạt động chính xác, vui lòng cấp các quyền sau:', textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
               const SizedBox(height: 32),
               
               _PermissionItem(icon: Icons.camera_alt_rounded, label: 'Camera', sub: 'Sử dụng cho Face ID', isOk: _cameraGranted, onTap: () => _requestPermission('camera')),
@@ -120,11 +120,11 @@ class _CheckInPermissionScreenState extends State<CheckInPermissionScreen> {
                 child: ElevatedButton(
                   onPressed: _allGranted ? _onContinue : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _allGranted ? AppColors.primary : Colors.grey[300],
+                    backgroundColor: _allGranted ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : Colors.grey[300]),
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text('TIẾP TỤC', style: TextStyle(color: _allGranted ? Colors.white : Colors.grey[600], fontWeight: FontWeight.bold)),
+                  child: Text('TIẾP TỤC', style: TextStyle(color: _allGranted ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.1) : Colors.grey[600]), fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -149,9 +149,9 @@ class _PermissionItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isOk ? AppColors.successLight.withOpacity(0.1) : Colors.white,
+        color: isOk ? AppColors.successLight.withOpacity(0.1) : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isOk ? AppColors.success.withOpacity(0.2) : Colors.grey[200]!),
+        border: Border.all(color: isOk ? AppColors.success.withOpacity(0.2) : Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -165,19 +165,19 @@ class _PermissionItem extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isOk ? AppColors.successLight : AppColors.background,
+                    color: isOk ? (Theme.of(context).brightness == Brightness.dark ? Colors.green.withOpacity(0.15) : AppColors.successLight) : (Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : AppColors.background),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: isOk ? AppColors.success : AppColors.primary, size: 22),
+                  child: Icon(icon, color: isOk ? AppColors.success : (Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : AppColors.primary), size: 22),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.textPrimary)),
+                      Text(label, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Theme.of(context).colorScheme.onSurface)),
                       const SizedBox(height: 2),
-                      Text(sub, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text(sub, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     ],
                   ),
                 ),

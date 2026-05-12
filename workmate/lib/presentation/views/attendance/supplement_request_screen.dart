@@ -54,11 +54,11 @@ class _SupplementRequestScreenState extends State<SupplementRequestScreen> {
       lastDate: DateTime.now(),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(
+          colorScheme: Theme.of(ctx).colorScheme.copyWith(
             primary: AppColors.primary,
             onPrimary: Colors.white,
-            surface: Colors.white,
-            onSurface: AppColors.textPrimary,
+            surface: Theme.of(ctx).cardColor,
+            onSurface: Theme.of(ctx).colorScheme.onSurface,
           ),
         ),
         child: child!,
@@ -135,13 +135,13 @@ class _SupplementRequestScreenState extends State<SupplementRequestScreen> {
     final bool isLimitReached = _forgotCount >= 5;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Bổ sung chấm công', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        title: Text('Bổ sung chấm công', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Theme.of(context).colorScheme.onSurface)),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: Theme.of(context).cardColor,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.pop(context)
@@ -202,26 +202,26 @@ class _SupplementRequestScreenState extends State<SupplementRequestScreen> {
             TextField(
               controller: _reasonCtrl,
               maxLines: 5,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
                 hintText: 'Nhập lý do cụ thể (VD: Quên mang thẻ, lỗi máy chấm công...)',
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 13),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).cardColor,
                 contentPadding: const EdgeInsets.all(16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                 ),
               ),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             
             const SizedBox(height: 40),
@@ -250,7 +250,7 @@ class _SupplementRequestScreenState extends State<SupplementRequestScreen> {
             Center(
               child: Text(
                 'Yêu cầu sẽ được gửi tới Ban quản lý phê duyệt',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6), fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -263,10 +263,10 @@ class _SupplementRequestScreenState extends State<SupplementRequestScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isLimitReached ? const Color(0xFFFFF1F2) : Colors.white,
+        color: isLimitReached ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF442726) : const Color(0xFFFFF1F2)) : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isLimitReached ? const Color(0xFFFDA4AF) : Colors.white),
-        boxShadow: [
+        border: Border.all(color: isLimitReached ? (Theme.of(context).brightness == Brightness.dark ? Colors.red.withOpacity(0.3) : const Color(0xFFFDA4AF)) : Theme.of(context).dividerColor.withOpacity(0.1)),
+        boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
           BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
@@ -293,14 +293,14 @@ class _SupplementRequestScreenState extends State<SupplementRequestScreen> {
                   children: [
                     Text(
                       'Giới hạn bổ sung tháng này',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: isLimitReached ? Colors.red : AppColors.textPrimary),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: isLimitReached ? Colors.red : Theme.of(context).colorScheme.onSurface),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       isLimitReached 
                         ? 'Bạn đã sử dụng hết 5 lượt cho phép'
                         : 'Bạn đã sử dụng $_forgotCount trên tổng số 5 lượt',
-                      style: TextStyle(fontSize: 11, color: isLimitReached ? Colors.red.withOpacity(0.7) : Colors.grey.shade600, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 11, color: isLimitReached ? (Theme.of(context).brightness == Brightness.dark ? Colors.redAccent : Colors.red.withOpacity(0.7)) : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7), fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -329,7 +329,7 @@ class _SupplementRequestScreenState extends State<SupplementRequestScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.grey.shade500, letterSpacing: 1.2),
+      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6), letterSpacing: 1.2),
     );
   }
 
@@ -343,24 +343,24 @@ class _SupplementRequestScreenState extends State<SupplementRequestScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
             ),
             child: Row(
               children: [
                 Icon(icon, size: 18, color: iconColor),
                 const SizedBox(width: 12),
-                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
                 const Spacer(),
-                Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: Colors.grey.shade400),
+                Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4)),
               ],
             ),
           ),

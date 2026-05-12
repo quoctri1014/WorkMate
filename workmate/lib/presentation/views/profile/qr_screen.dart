@@ -32,11 +32,11 @@ NGÀY VÀO LÀM: ${AppDateUtils.formatDate(user.joinDate)}
 ''';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary, size: 20), onPressed: () => Navigator.pop(context)),
-        title: const Text('Mã QR cá nhân', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 17)),
+        backgroundColor: Theme.of(context).cardColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20), onPressed: () => Navigator.pop(context)),
+        title: Text('Mã QR cá nhân', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface, fontSize: 17)),
       ),
       body: Center(
         child: Padding(
@@ -44,18 +44,18 @@ NGÀY VÀO LÀM: ${AppDateUtils.formatDate(user.joinDate)}
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: AppColors.cardShadow),
+              decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(24), boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow),
               child: Column(children: [
-                Text(user.name, style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                Text(user.name, style: TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
                 const SizedBox(height: 4),
-                Text(user.employeeCode, style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, color: AppColors.textSecondary)),
+                Text(user.employeeCode, style: TextStyle(fontFamily: 'Nunito', fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 20),
-                QrImageView(data: qrData, version: QrVersions.auto, size: 200, backgroundColor: Colors.white),
+                QrImageView(data: qrData, version: QrVersions.auto, size: 200, backgroundColor: Colors.white, eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.square, color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.black)),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(color: AppColors.primarySurface, borderRadius: BorderRadius.circular(10)),
-                  child: const Text('Dùng để chấm công & xác thực', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                  decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : AppColors.primarySurface, borderRadius: BorderRadius.circular(10)),
+                  child: Text('Dùng để chấm công & xác thực', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : AppColors.primary, fontWeight: FontWeight.w600)),
                 ),
               ]),
             ),
@@ -77,10 +77,10 @@ NGÀY VÀO LÀM: ${AppDateUtils.formatDate(user.joinDate)}
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const QRScannerScreen()));
                 },
-                icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.primary),
-                label: const Text('Quét mã QR đồng nghiệp', style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                icon: Icon(Icons.qr_code_scanner_rounded, color: Theme.of(context).colorScheme.primary),
+                label: Text('Quét mã QR đồng nghiệp', style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary)),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
               ),

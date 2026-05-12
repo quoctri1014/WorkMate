@@ -333,7 +333,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
             width: isCurrent ? 40 : 10,
             height: 10,
             decoration: BoxDecoration(
-              color: isDone ? const Color(0xFF00E676) : isCurrent ? const Color(0xFF40C4FF) : Colors.white24,
+              color: isDone ? const Color(0xFF00E676) : isCurrent ? Theme.of(context).colorScheme.primary : Colors.white24,
               borderRadius: BorderRadius.circular(5),
             ),
           );
@@ -411,7 +411,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
       case FaceScanState.success: return const Color(0xFF00E676);
       case FaceScanState.failed: return const Color(0xFFFF5252);
       case FaceScanState.waitingBlink: return const Color(0xFFFFD740);
-      case FaceScanState.processing: return const Color(0xFF40C4FF);
+      case FaceScanState.processing: return Theme.of(context).colorScheme.primary;
       default: return Colors.white;
     }
   }

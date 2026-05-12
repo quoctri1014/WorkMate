@@ -39,7 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -69,24 +69,24 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ),
                       ),
                       const SizedBox(height: 32),
-                      const Text(
+                      Text(
                         'WorkMate',
                         style: TextStyle(
                           fontFamily: 'Nunito',
                           fontSize: 30,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                           letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'Kiến tạo không gian làm việc số\nhiện đại và tinh gọn.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Nunito',
                           fontSize: 15,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           height: 1.6,
                         ),
                       ),
@@ -155,14 +155,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     const SizedBox(height: 14),
                     TextButton.icon(
                       onPressed: () => SupportUtils.showSupportOptions(context),
-                      icon: const Icon(Icons.help_outline_rounded,
-                          size: 18, color: AppColors.textSecondary),
-                      label: const Text(
+                      icon: Icon(Icons.help_outline_rounded,
+                          size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      label: Text(
                         'Trung tâm trợ giúp',
                         style: TextStyle(
                           fontFamily: 'Nunito',
                           fontSize: 14,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -173,7 +173,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 10,
-                        color: AppColors.textSecondary.withOpacity(0.6),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -222,19 +222,19 @@ class _FeatureRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               Text(
                 subtitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 12,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

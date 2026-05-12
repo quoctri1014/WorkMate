@@ -31,11 +31,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary, size: 20), onPressed: () => Navigator.pop(context)),
-        title: const Text('Thay đổi mật khẩu', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 17)),
+        backgroundColor: Theme.of(context).cardColor, elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20), onPressed: () => Navigator.pop(context)),
+        title: Text('Thay đổi mật khẩu', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface, fontSize: 17)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -48,12 +48,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const SizedBox(height: 16),
       Container(padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppColors.warningLight, borderRadius: BorderRadius.circular(12)),
-        child: const Row(children: [
-          Icon(Icons.warning_amber_rounded, color: AppColors.warning),
-          SizedBox(width: 10),
+        decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.amber.withOpacity(0.1) : AppColors.warningLight, borderRadius: BorderRadius.circular(12)),
+        child: Row(children: [
+          Icon(Icons.warning_amber_rounded, color: Theme.of(context).brightness == Brightness.dark ? Colors.amber[300] : AppColors.warning),
+          const SizedBox(width: 10),
           Expanded(child: Text('Để đảm bảo bảo mật, bạn cần xác thực OTP trước khi thay đổi mật khẩu.',
-            style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.warning))),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.amber[300] : AppColors.warning))),
         ]),
       ),
       const SizedBox(height: 24),
@@ -74,11 +74,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       const SizedBox(height: 8),
       Row(children: [
         Expanded(child: Container(
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor, 
+            borderRadius: BorderRadius.circular(12), 
+            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1))
+          ),
           child: TextField(controller: _otpCtrl, keyboardType: TextInputType.number, maxLength: 6,
-            decoration: const InputDecoration(hintText: 'Nhập mã 6 số', border: InputBorder.none, counterText: '', contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              hintStyle: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: AppColors.textHint)),
-            style: const TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 4)),
+            decoration: InputDecoration(
+              hintText: 'Nhập mã 6 số', border: InputBorder.none, counterText: '', 
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              hintStyle: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))
+            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 4, color: Theme.of(context).colorScheme.onSurface)),
         )),
         const SizedBox(width: 10),
         GestureDetector(
@@ -97,8 +104,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(color: AppColors.primarySurface, borderRadius: BorderRadius.circular(12)),
-            child: const Text('Gửi OTP', style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary))),
+            decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.withOpacity(0.15) : AppColors.primarySurface, borderRadius: BorderRadius.circular(12)),
+            child: Text('Gửi OTP', style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w700, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : AppColors.primary))),
         ),
       ]),
       const SizedBox(height: 28),
@@ -147,10 +154,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       Container(width: 88, height: 88, decoration: BoxDecoration(gradient: AppColors.primaryGradient, shape: BoxShape.circle),
         child: const Icon(Icons.check_rounded, color: Colors.white, size: 48)),
       const SizedBox(height: 24),
-      const Text('Đổi mật khẩu thành công!', style: TextStyle(fontFamily: 'Nunito', fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+      Text('Đổi mật khẩu thành công!', style: TextStyle(fontFamily: 'Nunito', fontSize: 22, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
       const SizedBox(height: 8),
-      const Text('Mật khẩu của bạn đã được cập nhật.\nVui lòng đăng nhập lại.', textAlign: TextAlign.center,
-        style: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: AppColors.textSecondary, height: 1.5)),
+      Text('Mật khẩu của bạn đã được cập nhật.\nVui lòng đăng nhập lại.', textAlign: TextAlign.center,
+        style: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.5)),
       const SizedBox(height: 32),
       SizedBox(width: double.infinity, height: 52,
         child: ElevatedButton(
@@ -179,14 +186,18 @@ class _PwField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+    decoration: BoxDecoration(
+      color: Theme.of(context).cardColor, 
+      borderRadius: BorderRadius.circular(12), 
+      border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1))
+    ),
     child: TextField(
       controller: controller, obscureText: obscure,
-      style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, color: AppColors.textPrimary),
+      style: TextStyle(fontFamily: 'Nunito', fontSize: 15, color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
-        hintText: hint, hintStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 14, color: AppColors.textHint),
-        prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.textSecondary),
-        suffixIcon: IconButton(icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18, color: AppColors.textSecondary), onPressed: onToggle),
+        hintText: hint, hintStyle: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
+        prefixIcon: Icon(Icons.lock_outline_rounded, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6)),
+        suffixIcon: IconButton(icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6)), onPressed: onToggle),
         border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     ),

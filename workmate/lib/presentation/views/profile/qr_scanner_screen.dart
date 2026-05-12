@@ -81,9 +81,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           left: 20, right: 20, top: 24,
           bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
         ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -110,7 +110,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Nhắn tin cho $name', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text('Nhắn tin cho $name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
                     if (code.isNotEmpty)
                       Text('Mã NV: $code', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   ],
@@ -126,9 +126,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                     autofocus: true,
                     decoration: InputDecoration(
                       hintText: 'Nhập tin nhắn...',
-                      hintStyle: TextStyle(color: Colors.grey.shade500),
+                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
                       filled: true,
-                      fillColor: const Color(0xFFF1F5F9),
+                      fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFF1F5F9),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -249,7 +249,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     final joinDate = info['NGÀY VÀO LÀM'] ?? '';
 
     return Container(
-      color: const Color(0xFFF8FAFC),
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -267,7 +267,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
+                  boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                     BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
                   ],
                 ),
@@ -310,9 +310,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
+                  boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                     BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5)),
                   ],
                 ),

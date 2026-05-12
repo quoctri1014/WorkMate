@@ -57,7 +57,12 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: AppColors.primary),
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: Theme.of(context).cardColor,
+              onSurface: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           child: child!,
         );
@@ -138,13 +143,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             children: [
               Container(
                 width: 64, height: 64,
-                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.15), shape: BoxShape.circle),
                 child: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 32),
               ),
               const SizedBox(height: 20),
-              const Text('Thông báo', style: TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1E293B))),
+              const Text('Thông báo', style: TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w900, color: Colors.orange)),
               const SizedBox(height: 12),
-              Text(message, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Color(0xFF64748B), height: 1.5, fontWeight: FontWeight.w600)),
+              Text(message, textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Theme.of(context).colorScheme.onSurface, height: 1.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -172,15 +177,15 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     double remainingLeave = totalYearlyLeave - usedLeave;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).cardColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Color(0xFF1E293B), size: 20),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Tạo đơn báo nghỉ', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: Color(0xFF1E293B), fontSize: 18)),
+        title: Text('Tạo đơn báo nghỉ', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, fontSize: 18)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -189,16 +194,16 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            const Text('Yêu cầu nghỉ phép mới', style: TextStyle(fontFamily: 'Nunito', fontSize: 28, fontWeight: FontWeight.w900, color: Color(0xFF1C6185))),
-            const Text('Vui lòng điền đầy đủ thông tin bên dưới để gửi yêu cầu nghỉ phép của bạn.', style: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Color(0xFF64748B))),
+            Text('Yêu cầu nghỉ phép mới', style: TextStyle(fontFamily: 'Nunito', fontSize: 28, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF1C6185))),
+            Text('Vui lòng điền đầy đủ thông tin bên dưới để gửi yêu cầu nghỉ phép của bạn.', style: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8))),
             const SizedBox(height: 32),
 
             // Leave Balance Cards
             Row(
               children: [
-                _BalanceCard(label: 'SỐ NGÀY PHÉP CÒN', value: remainingLeave.toString(), color: const Color(0xFF1C6185)),
+                _BalanceCard(label: 'SỐ NGÀY PHÉP CÒN', value: remainingLeave.toString(), color: Theme.of(context).brightness == Brightness.dark ? Colors.blueAccent : const Color(0xFF1C6185)),
                 const SizedBox(width: 16),
-                _BalanceCard(label: 'ĐÃ SỬ DỤNG', value: usedLeave.toString(), color: const Color(0xFF64748B)),
+                _BalanceCard(label: 'ĐÃ SỬ DỤNG', value: usedLeave.toString(), color: Theme.of(context).colorScheme.onSurfaceVariant),
               ],
             ),
             const SizedBox(height: 32),
@@ -218,14 +223,14 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             // Half day toggle
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFFE2E8F0).withOpacity(0.4), borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16)),
               child: Row(
                 children: [
-                  const Icon(Icons.wb_sunny_outlined, size: 20, color: Color(0xFF1C6185)),
+                  const Icon(Icons.wb_sunny_outlined, size: 20, color: AppColors.primary),
                   const SizedBox(width: 12),
-                  const Text('Nghỉ nửa ngày', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
+                  Text('Nghỉ nửa ngày', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
                   const Spacer(),
-                  Switch(value: _isHalfDay, onChanged: (val) => setState(() => _isHalfDay = val), activeColor: const Color(0xFF1C6185)),
+                  Switch(value: _isHalfDay, onChanged: (val) => setState(() => _isHalfDay = val), activeColor: AppColors.primary),
                 ],
               ),
             ),
@@ -237,12 +242,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               maxLines: 4,
               decoration: InputDecoration(
                 hintText: 'Nhập lý do chi tiết của bạn tại đây...',
-                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 14),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).cardColor,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.all(20),
               ),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 24),
 
@@ -255,9 +261,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 30),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5, style: BorderStyle.solid),
+                    border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1), width: 1.5, style: BorderStyle.solid),
                   ),
                   child: Column(
                     children: [
@@ -266,10 +272,10 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                       else if (_uploadedUrls.isNotEmpty)
                         const Icon(Icons.check_circle, color: Colors.green, size: 40)
                       else
-                        const Icon(Icons.cloud_upload_outlined, color: Color(0xFF1C6185), size: 40),
+                        const Icon(Icons.cloud_upload_outlined, color: AppColors.primary, size: 40),
                       const SizedBox(height: 12),
-                      Text(_uploadedUrls.isNotEmpty ? 'Đã tải lên ${_uploadedUrls.length} tệp' : 'Tải ảnh hoặc tài liệu đính kèm', style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 14)),
-                      const Text('PNG, JPG, PDF tối đa 5MB', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                      Text(_uploadedUrls.isNotEmpty ? 'Đã tải lên ${_uploadedUrls.length} tệp' : 'Tải ảnh hoặc tài liệu đính kèm', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
+                      Text('PNG, JPG, PDF tối đa 5MB', style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))),
                     ],
                   ),
                 ),
@@ -283,7 +289,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               child: ElevatedButton(
                 onPressed: _handleSubmit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9AD6FF),
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   elevation: 0,
@@ -301,7 +307,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   Widget _buildLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(label, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF64748B), letterSpacing: 1)),
+      child: Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurfaceVariant, letterSpacing: 1)),
     );
   }
 
@@ -317,14 +323,14 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _leaveType,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF94A3B8)),
+          icon: Icon(Icons.keyboard_arrow_down_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
           items: availableTypes.map((String value) {
-            return DropdownMenuItem<String>(value: value, child: Text(value, style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFF1E293B))));
+            return DropdownMenuItem<String>(value: value, child: Text(value, style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 15, color: Theme.of(context).colorScheme.onSurface)));
           }).toList(),
           onChanged: (newValue) => setState(() => _leaveType = newValue!),
         ),
@@ -338,12 +344,12 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       onTap: () => _selectDate(context, isFrom),
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
         child: Row(
           children: [
-            Text('${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}', style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFF1E293B))),
+            Text('${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 15, color: Theme.of(context).colorScheme.onSurface)),
             const Spacer(),
-            const Icon(Icons.calendar_today_outlined, size: 20, color: Color(0xFF1C6185)),
+            const Icon(Icons.calendar_today_outlined, size: 20, color: AppColors.primary),
           ],
         ),
       ),
@@ -352,7 +358,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
 
   Widget _buildSuccessView() {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -361,13 +367,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             children: [
               Container(
                 width: 120, height: 120,
-                decoration: const BoxDecoration(color: Color(0xFFF0FDF4), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.green.withOpacity(0.15) : const Color(0xFFF0FDF4), shape: BoxShape.circle),
                 child: const Icon(Icons.check_circle_rounded, color: Color(0xFF22C55E), size: 80),
               ),
               const SizedBox(height: 40),
-              const Text('Gửi đơn thành công!', style: TextStyle(fontFamily: 'Nunito', fontSize: 28, fontWeight: FontWeight.w900, color: Color(0xFF1E293B))),
+              Text('Gửi đơn thành công!', style: TextStyle(fontFamily: 'Nunito', fontSize: 28, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface)),
               const SizedBox(height: 16),
-              const Text('Yêu cầu của bạn đã được gửi tới quản lý. Vui lòng chờ thông báo duyệt đơn từ hệ thống.', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Nunito', fontSize: 16, color: Color(0xFF64748B), height: 1.5)),
+              Text('Yêu cầu của bạn đã được gửi tới quản lý. Vui lòng chờ thông báo duyệt đơn từ hệ thống.', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Nunito', fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.5)),
               const SizedBox(height: 60),
               SizedBox(
                 width: double.infinity,
@@ -375,11 +381,11 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1C6185),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     elevation: 4,
-                    shadowColor: const Color(0xFF1C6185).withOpacity(0.3),
+                    shadowColor: AppColors.primary.withOpacity(0.3),
                   ),
                   child: const Text('Quay về trang chủ', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
                 ),
@@ -403,11 +409,11 @@ class _BalanceCard extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFF1F5F9)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(24), border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05)), boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 0.5)),
+            Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), letterSpacing: 0.5)),
             const SizedBox(height: 12),
             Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: color)),
           ],
