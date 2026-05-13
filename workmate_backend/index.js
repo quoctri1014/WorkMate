@@ -36,7 +36,27 @@ const admin = require('firebase-admin');
 const ExcelJS = require('exceljs');
 
 // --- CẤU HÌNH FIREBASE ---
-const serviceAccount = require("./firebase-service-account.json");
+try {
+  let serviceAccount;
+  if (process.env.FIREBASE_CONFIG) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
+  } else if (fs.existsSync(path.join(__dirname, "firebase-service-account.json"))) {
+    serviceAccount = require("./firebase-service-account.json");
+  }
+
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    console.log("🔥 Firebase Admin initialized successfully");
+  } else {
+    console.warn("⚠️ Firebase configuration not found.");
+  }
+} catch (err) {
+  console.error("❌ Firebase Init Error:", err.message);
+}
+// OLD CODE REMOVED
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -154,13 +174,24 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   res.json({ url: fileUrl });
 });
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: String(process.env.DB_PASSWORD),
-  port: process.env.DB_PORT,
-});
+const poolConfig = process.env.DATABASE_URL 
+  ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
+  : {
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      password: String(process.env.DB_PASSWORD),
+      port: process.env.DB_PORT,
+    };
+
+const pool = new Pool(poolConfig);
+
+
+
+
+
+
+
 
 // --- UTILS ---
 function euclideanDistance(a, b) {
