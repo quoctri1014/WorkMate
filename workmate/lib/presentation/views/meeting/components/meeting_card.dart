@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:workmate/data/models/models.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/core/constants/app_colors.dart';
@@ -58,18 +59,33 @@ class MeetingCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text(
-                          meeting.isOnline ? 'Google Meet' : meeting.location,
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF1C6185),
+                        child: InkWell(
+                          onTap: () async {
+                            if (meeting.isOnline) {
+                              final url = meeting.location.startsWith('http') 
+                                ? meeting.location 
+                                : 'https://${meeting.location}';
+                              final uri = Uri.parse(url);
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              }
+                            }
+                          },
+                          child: Text(
+                            meeting.isOnline ? 'Google Meet (Nhấn để tham gia)' : meeting.location,
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF1C6185),
+                              decoration: meeting.isOnline ? TextDecoration.underline : null,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+
                     ],
                   ),
                 ),

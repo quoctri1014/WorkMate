@@ -122,7 +122,17 @@ const App = () => {
     };
   }, [user, attendanceFilterDate]);
 
-  if (!user) return <Login onLogin={setUser} />;
+  const handleLogin = (userData) => {
+    localStorage.setItem('admin_user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_user');
+    setUser(null);
+  };
+
+  if (!user) return <Login onLogin={handleLogin} />;
   
   if (loading && employees.length === 0) return (
     <div className="h-screen flex items-center justify-center bg-surface transition-colors">

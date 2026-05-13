@@ -255,9 +255,13 @@ app.post('/api/meetings', async (req, res) => {
     const { title, content, department_ids, start_time, location, is_online } = req.body;
     let meet_link = location;
     
-    if (is_online) {
-      meet_link = `https://meet.google.com/${Math.random().toString(36).slice(3,6)}-${Math.random().toString(36).slice(3,7)}-${Math.random().toString(36).slice(3,6)}`;
+    if (is_online && !location) {
+      const letters = 'abcdefghijklmnopqrstuvwxyz';
+      const gen = (len) => Array.from({length: len}, () => letters[Math.floor(Math.random() * letters.length)]).join('');
+      meet_link = `https://meet.google.com/${gen(3)}-${gen(4)}-${gen(3)}`;
     }
+
+
 
     const result = await pool.query(
       'INSERT INTO meetings (title, content, department_ids, start_time, location, is_online) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',

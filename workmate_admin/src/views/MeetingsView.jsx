@@ -3,7 +3,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon, API_URL } from '../components/Common';
 
-export const MeetingModal = ({ depts = [], onClose, initialData = null, defaultType = 'meeting' }) => {
+export const MeetingModal = ({ depts = [], onClose, onRefresh, initialData = null, defaultType = 'meeting' }) => {
   const isEdit = !!initialData;
   const [type, setType] = useState(initialData?.type || (initialData && !initialData.location ? 'notification' : defaultType));
   const [data, setData] = useState(initialData || { 
@@ -36,7 +36,8 @@ export const MeetingModal = ({ depts = [], onClose, initialData = null, defaultT
         await axios.post(`${API_URL}${endpoint}`, data);
         alert(`✅ Đã tạo ${type === 'meeting' ? 'lịch họp' : 'thông báo'} thành công!`);
       }
-      onClose(); window.location.reload();
+      if (onRefresh) onRefresh();
+      onClose();
     } catch (err) {
       console.error(err);
       alert(`❌ Lỗi: ${err.response?.data?.error || "Không thể thực hiện thao tác"}`);
@@ -91,9 +92,29 @@ export const MeetingModal = ({ depts = [], onClose, initialData = null, defaultT
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Địa điểm / Link họp</label>
-                <input required className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl py-4 px-5 outline-none font-bold focus:border-primary transition-all text-slate-700 dark:text-slate-200" placeholder={data.is_online ? "Link Google Meet / Zoom" : "Vd: Phòng họp lớn, Tầng 3"} value={data.location} onChange={e => setData({...data, location: e.target.value})} />
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    {data.is_online ? "Link họp trực tuyến" : "Địa điểm họp"}
+                  </label>
+                  {data.is_online && (
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const letters = 'abcdefghijklmnopqrstuvwxyz';
+                        const gen = (len) => Array.from({length: len}, () => letters[Math.floor(Math.random() * letters.length)]).join('');
+                        const link = `https://meet.google.com/${gen(3)}-${gen(4)}-${gen(3)}`;
+                        setData({...data, location: link});
+                      }}
+                      className="text-[9px] font-black text-sky-500 uppercase underline hover:text-sky-600 transition-colors"
+                    >
+                      Tạo link Google Meet tự động
+                    </button>
+
+                  )}
+                </div>
+                <input required className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl py-4 px-5 outline-none font-bold focus:border-primary transition-all text-slate-700 dark:text-slate-200" placeholder={data.is_online ? "https://meet.google.com/xxx-yyyy-zzz" : "Vd: Phòng họp lớn, Tầng 3"} value={data.location} onChange={e => setData({...data, location: e.target.value})} />
               </div>
+
             </>
           )}
 
@@ -438,14 +459,22 @@ const MeetingsView = ({ meetings = [], notifications = [], depts = [], onRefresh
               <div className="flex gap-2 pt-4 border-t border-slate-50 dark:border-slate-800" onClick={e => e.stopPropagation()}>
                 <button onClick={() => { setEditingItem(item); setModalType(activeSubTab); setShowModal(true); }} className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl font-black text-[10px] hover:bg-slate-200 transition-all uppercase tracking-widest border border-slate-100 dark:border-slate-700">Sửa</button>
                 <button onClick={() => handleDelete(item.id, activeSubTab)} className="flex-[1.5] py-3 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl font-black text-[10px] hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest border border-red-100 dark:border-red-900/30">Xóa</button>
-                {activeSubTab === 'meeting' && item.is_online && <button className="flex-1 py-3 bg-sky-50 dark:bg-sky-900/20 text-sky-600 rounded-xl font-black text-[10px] border border-sky-100 dark:border-sky-900/30 hover:bg-sky-500 hover:text-white transition-all uppercase tracking-widest">Link họp</button>}
+                {activeSubTab === 'meeting' && item.is_online && (
+                  <button 
+                    onClick={() => window.open(item.location.startsWith('http') ? item.location : `https://${item.location}`, '_blank')}
+                    className="flex-1 py-3 bg-sky-50 dark:bg-sky-900/20 text-sky-600 rounded-xl font-black text-[10px] border border-sky-100 dark:border-sky-900/30 hover:bg-sky-500 hover:text-white transition-all uppercase tracking-widest"
+                  >
+                    Tham gia
+                  </button>
+                )}
+
               </div>
             </motion.div>
           ))}
         </div>
       )}
 
-      {showModal && <MeetingModal depts={depts} initialData={editingItem} defaultType={modalType} onClose={() => setShowModal(false)} />}
+      {showModal && <MeetingModal depts={depts} initialData={editingItem} defaultType={modalType} onClose={() => setShowModal(false)} onRefresh={onRefresh} />}
       {showDetail && <DetailModal item={selectedItem} type={activeSubTab} depts={depts} onClose={() => setShowDetail(false)} />}
     </div>
   );
