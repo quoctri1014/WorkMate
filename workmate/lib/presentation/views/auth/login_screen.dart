@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Transform.scale(
                       scale: 1.7,
                       child: Transform.translate(
-                        offset: const Offset(12, 16),
+                        offset: const Offset(4, 6),
                         child: Image.asset(
                           'assets/icons/app_icon.png',
                           width: 100,
