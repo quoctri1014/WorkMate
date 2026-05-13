@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Transform.scale(
                       scale: 1.7,
                       child: Transform.translate(
-                        offset: const Offset(0, 8),
+                        offset: const Offset(0, 14),
                         child: Image.asset(
                           'assets/icons/app_icon.png',
                           width: 100,
@@ -182,7 +182,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
                           child: Text(
                             'Quên mật khẩu?',
-                            style: AppTextStyles.labelMedium.copyWith(
+                            style: AppTextStyles.labelLarge.copyWith(
+                              fontSize: 16,
                               color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : AppColors.primary,
                               fontWeight: FontWeight.bold,
                             ),
@@ -191,17 +192,55 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 24),
                       _buildLoginButton(),
-                      // Removed help and support section
+                      const SizedBox(height: 32),
+                      const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+                      const SizedBox(height: 32),
+                      Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              'Bạn gặp sự cố khi đăng nhập?',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            InkWell(
+                              onTap: () => SupportUtils.contactSupport(context),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.help_outline_rounded, size: 22, color: AppColors.primary),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Liên hệ hỗ trợ',
+                                      style: AppTextStyles.labelLarge.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 60),
                 // Footer
                 Text(
                   'THAM GIA CÙNG 5,000+ ĐỒNG NGHIỆP TRÊN TOÀN CẦU',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.black.withOpacity(0.5),
+                    fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
                   ),
                 ),
