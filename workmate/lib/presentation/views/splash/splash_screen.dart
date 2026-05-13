@@ -34,7 +34,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
         final prefs = await SharedPreferences.getInstance();
-        final bool isFirstRun = prefs.getBool('is_first_run') ?? true;
+        // DEMO MODE: Luôn hiển thị màn hình Onboarding (Giới thiệu).
+        // ĐỂ TẮT: Hãy xóa cụm 'true || ' ở dòng ngay bên dưới đi nhé!
+        final bool isFirstRun = true || (prefs.getBool('is_first_run') ?? true);
 
         if (isFirstRun) {
           await prefs.setBool('is_first_run', false);
@@ -92,13 +94,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(32),
                         child: Transform.scale(
-                          scale: 1.6,
+                          scale: 1.7,
                           child: Transform.translate(
-                            offset: const Offset(6, 12),
+                            offset: const Offset(-0, 8),
                             child: Image.asset(
                               'assets/icons/app_icon.png',
-                              width: 120,
-                              height: 120,
+                              width: 130,
+                              height: 130,
                               fit: BoxFit.cover,
                             ),
                           ),

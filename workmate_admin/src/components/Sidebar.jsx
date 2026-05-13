@@ -42,8 +42,8 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
           <div className="flex items-center gap-4">
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative w-14 h-14 brand-gradient rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-primary/20 transform group-hover:rotate-6 transition-transform duration-500">
-                <Icon name="business_center" fill={1} className="!text-3xl" />
+              <div className="relative w-14 h-14 brand-gradient rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-primary/20 transform group-hover:rotate-6 transition-transform duration-500 overflow-hidden">
+                <img src="/favicon.png" className="w-10 h-10 object-contain" alt="Logo" />
               </div>
             </div>
             <div>

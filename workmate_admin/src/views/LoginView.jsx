@@ -23,8 +23,8 @@ const LoginView = ({ onLogin }) => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="bg-surface-container-lowest p-12 rounded-[3.5rem] shadow-2xl w-[450px] border border-border text-center relative z-10"
       >
-        <div className="w-24 h-24 brand-gradient rounded-[2rem] flex items-center justify-center mx-auto text-white shadow-2xl shadow-primary/30 mb-10 group hover:rotate-6 transition-transform">
-          <Icon name="shield_person" fill={1} className="text-5xl" />
+        <div className="w-24 h-24 brand-gradient rounded-[2rem] flex items-center justify-center mx-auto text-white shadow-2xl shadow-primary/30 mb-10 group hover:rotate-6 transition-transform overflow-hidden">
+          <img src="/favicon.png" className="w-16 h-16 object-contain" alt="Logo" />
         </div>
         
         <div className="mb-10">

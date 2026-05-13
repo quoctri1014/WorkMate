@@ -189,6 +189,8 @@ export const EmployeeModal = ({ employee, depts = [], onClose, onRefresh }) => {
 const EmployeesView = ({ employees = [], depts = [], onRefresh, onlineUsers = [] }) => {
   const [editing, setEditing] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDeptId, setSelectedDeptId] = useState('');
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa nhân viên này khỏi hệ thống?")) return;
@@ -196,6 +198,17 @@ const EmployeesView = ({ employees = [], depts = [], onRefresh, onlineUsers = []
       await axios.delete(`${API_URL}/employees/${id}`);
       onRefresh();
     } catch (err) { alert("Lỗi khi xóa nhân viên!"); }
+  };
+
+  const filteredEmployees = employees.filter(e => {
+    const matchesSearch = e.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          e.employee_code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDept = selectedDeptId === '' || Number(e.department_id) === Number(selectedDeptId);
+    return matchesSearch && matchesDept;
+  });
+
+  const isOnline = (id) => {
+    return onlineUsers.some(onlineId => Number(onlineId) === Number(id));
   };
 
   return (
@@ -209,6 +222,33 @@ const EmployeesView = ({ employees = [], depts = [], onRefresh, onlineUsers = []
           <Icon name="person_add" fill={1} /> THÊM NHÂN SỰ MỚI
         </button>
       </div>
+
+      {/* Search & Filter Bar */}
+      <div className="flex flex-wrap gap-4 items-center bg-surface-container-low/30 p-6 rounded-[2.5rem] border border-border">
+        <div className="relative flex-1 min-w-[300px] group">
+          <Icon name="search" className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
+          <input 
+            type="text" 
+            placeholder="Tìm kiếm theo tên hoặc mã định danh..." 
+            className="w-full bg-surface-container-lowest border-2 border-transparent focus:border-primary/20 rounded-2xl py-4 pl-16 pr-6 outline-none font-bold text-on-surface transition-all shadow-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="relative min-w-[280px]">
+          <Icon name="corporate_fare" className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select 
+            className="w-full bg-surface-container-lowest border-2 border-transparent focus:border-primary/20 rounded-2xl py-4 pl-16 pr-12 outline-none font-bold text-on-surface appearance-none transition-all shadow-sm cursor-pointer"
+            value={selectedDeptId}
+            onChange={(e) => setSelectedDeptId(e.target.value)}
+          >
+            <option value="">Tất cả phòng ban</option>
+            {depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+          <Icon name="expand_more" className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+      </div>
+
       <div className="bg-surface-container-lowest rounded-[3rem] shadow-sm overflow-hidden border border-border transition-colors">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -221,32 +261,50 @@ const EmployeesView = ({ employees = [], depts = [], onRefresh, onlineUsers = []
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {employees.map(e => (
-              <tr key={e.id} className="hover:bg-primary/5 transition-all group">
-                <td className="px-10 py-5">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      {e.avatar_url ? (
-                        <img src={e.avatar_url.startsWith('http') ? e.avatar_url : `http://localhost:5000${e.avatar_url}`} className="w-12 h-12 rounded-2xl object-cover shadow-sm" alt={e.name} />
-                      ) : (
-                        <div className="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center text-primary font-black text-lg shadow-inner">{e.name?.[0]}</div>
-                      )}
-                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-surface rounded-full transition-colors duration-500 ${onlineUsers.includes(Number(e.id)) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`}></div>
+            {filteredEmployees.length > 0 ? (
+              filteredEmployees.map(e => (
+                <tr key={e.id} className="hover:bg-primary/5 transition-all group">
+                  <td className="px-10 py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        {e.avatar_url ? (
+                          <img src={e.avatar_url.startsWith('http') ? e.avatar_url : `http://localhost:5000${e.avatar_url}`} className="w-12 h-12 rounded-2xl object-cover shadow-sm" alt={e.name} />
+                        ) : (
+                          <div className="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center text-primary font-black text-lg shadow-inner">{e.name?.[0]}</div>
+                        )}
+                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-surface rounded-full transition-colors duration-500 ${isOnline(e.id) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`}></div>
+                      </div>
+                      <div><p className="text-sm font-black text-on-surface mb-0.5">{e.name}</p><p className="text-[10px] font-bold text-on-surface-variant italic">{e.email}</p></div>
                     </div>
-                    <div><p className="text-sm font-black text-on-surface mb-0.5">{e.name}</p><p className="text-[10px] font-bold text-on-surface-variant italic">{e.email}</p></div>
-                  </div>
-                </td>
-                <td className="px-6 py-5"><span className="font-mono font-black text-primary text-xs bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 tracking-wider">{e.employee_code}</span></td>
-                <td className="px-6 py-5 text-[11px] font-black text-on-surface-variant uppercase tracking-widest">{e.position}</td>
-                <td className="px-6 py-5 text-[11px] font-black text-on-surface uppercase tracking-widest">{e.department_name}</td>
-                <td className="px-10 py-5 text-right">
-                  <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
-                    <button onClick={() => setEditing(e)} className="p-2.5 text-primary hover:bg-primary/10 rounded-xl transition-all" title="Chỉnh sửa"><Icon name="edit" /></button>
-                    <button onClick={() => handleDelete(e.id)} className="p-2.5 text-error hover:bg-error/10 rounded-xl transition-all" title="Xóa hồ sơ"><Icon name="delete" /></button>
+                  </td>
+                  <td className="px-6 py-5"><span className="font-mono font-black text-primary text-xs bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 tracking-wider">{e.employee_code}</span></td>
+                  <td className="px-6 py-5 text-[11px] font-black text-on-surface-variant uppercase tracking-widest">{e.position}</td>
+                  <td className="px-6 py-5 text-[11px] font-black text-on-surface uppercase tracking-widest">{e.department_name}</td>
+                  <td className="px-10 py-5 text-right">
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
+                      <button onClick={() => setEditing(e)} className="p-2.5 text-primary hover:bg-primary/10 rounded-xl transition-all" title="Chỉnh sửa"><Icon name="edit" /></button>
+                      <button onClick={() => handleDelete(e.id)} className="p-2.5 text-error hover:bg-error/10 rounded-xl transition-all" title="Xóa hồ sơ"><Icon name="delete" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="px-10 py-24 text-center">
+                  <div className="flex flex-col items-center gap-6 text-on-surface-variant/40">
+                    <div className="w-24 h-24 rounded-full bg-surface-container-low flex items-center justify-center">
+                      <Icon name="person_search" className="!text-5xl opacity-20" fill={1} />
+                    </div>
+                    <div>
+                      <p className="text-xl font-black text-on-surface tracking-tight mb-1">
+                        {searchTerm || selectedDeptId ? "Không tìm thấy nhân sự phù hợp" : "Chưa có nhân sự nào trong hệ thống"}
+                      </p>
+                      <p className="text-sm font-medium">Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc phòng ban của bạn.</p>
+                    </div>
                   </div>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

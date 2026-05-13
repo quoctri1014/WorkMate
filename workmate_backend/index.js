@@ -10,6 +10,28 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs-extra');
 const nodemailer = require('nodemailer');
+
+// Đảm bảo thư mục upload tồn tại
+const uploadDirs = ['uploads', 'uploads/avatars', 'uploads/chat', 'uploads/attendance', 'uploads/notifications', 'uploads/approvals'];
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let dest = 'uploads/';
+    if (file.fieldname === 'avatar') dest = 'uploads/avatars/';
+    else if (file.fieldname === 'file') dest = 'uploads/chat/';
+    else if (file.fieldname === 'attendance') dest = 'uploads/attendance/';
+    else if (file.fieldname === 'notification') dest = 'uploads/notifications/';
+    else if (file.fieldname === 'approval') dest = 'uploads/approvals/';
+    cb(null, dest);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage });
 const admin = require('firebase-admin');
 const ExcelJS = require('exceljs');
 
@@ -125,18 +147,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/test', (req, res) => res.send('OK'));
 
-// Cấu hình Multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = './uploads';
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage: storage });
 
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
@@ -1629,6 +1639,15 @@ app.get('/api/chat/ai-history/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/chat/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Không có tệp nào được tải lên.' });
+  res.json({
+    file_url: `/uploads/chat/${req.file.filename}`,
+    file_name: req.file.originalname,
+    file_type: req.file.mimetype
+  });
+});
+
 // Lịch sử Admin riêng (cho Flutter app)
 app.get('/api/chat/admin-history/:userId', async (req, res) => {
   try {
@@ -1661,11 +1680,19 @@ app.get('/api/chat/history/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.delete('/api/chat/history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    await pool.query("DELETE FROM chat_messages WHERE chat_type = 'admin' AND (sender_id = $1 OR receiver_id = $1)", [userId]);
+    res.json({ message: 'Đã xóa toàn bộ lịch sử chat.' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.get('/api/chat/admin/conversations', async (req, res) => {
   try {
     const r = await pool.query(`
       SELECT DISTINCT ON (u.id) 
-        u.id, u.name, u.email, u.position, u.department_name,
+        u.id, u.name, u.email, u.position, u.department_name, u.avatar_url,
         m.message as last_message, m.created_at as last_message_time
       FROM employees u
       JOIN chat_messages m ON m.sender_id = u.id

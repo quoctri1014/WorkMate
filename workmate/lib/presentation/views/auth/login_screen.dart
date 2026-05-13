@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     boxShadow: Theme.of(context).brightness == Brightness.dark ? null : [
                       BoxShadow(
                         color: AppColors.primary.withOpacity(0.05),
-                        blurRadius: 20,
+                        blurRadius: 21,
                         offset: const Offset(0, 10),
                       ),
                     ],
@@ -109,9 +109,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
                     child: Transform.scale(
-                      scale: 1.7,
+                      scale: 1.5,
                       child: Transform.translate(
-                        offset: const Offset(6, 12),
+                        offset: const Offset(0, 6),
                         child: Image.asset(
                           'assets/icons/app_icon.png',
                           width: 100,
@@ -220,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       style: AppTextStyles.labelLarge.copyWith(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w900,
-                                        fontSize: 18,
+                                        fontSize: 16,
                                       ),
                                     ),
                                   ],

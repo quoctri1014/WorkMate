@@ -110,6 +110,7 @@ const App = () => {
     socket.on('online_users', (users) => {
       setOnlineUsers(users.map(Number));
     });
+    socket.emit('get_online_users');
 
     return () => {
       socket.off('new_attendance');
@@ -144,7 +145,7 @@ const App = () => {
   );
 
   return (
-    <div className={`min-h-screen transition-all ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-screen transition-all ${activeTab === 'chat' ? 'h-screen overflow-hidden' : ''} ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
       {/* Top Header */}
@@ -194,9 +195,9 @@ const App = () => {
       </header>
 
       {/* Main Content */}
-      <main className={`p-8 min-h-screen transition-all ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
+      <main className={`transition-all ${activeTab === 'chat' ? 'h-[calc(100vh-80px)] overflow-hidden p-0' : 'p-8 min-h-screen'} ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+          <motion.div key={activeTab} className={activeTab === 'chat' ? 'h-full' : ''} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
              {activeTab === 'dashboard' && <DashboardView employees={employees} attendance={attendance} approvals={approvals} meetings={meetings} onNavigate={setActiveTab} />}
              {activeTab === 'employees' && <EmployeesView employees={employees} depts={depts} onRefresh={fetchData} onlineUsers={onlineUsers} />}
              {activeTab === 'departments' && <DepartmentsView depts={depts} onRefresh={fetchData} />}
@@ -210,7 +211,7 @@ const App = () => {
                  onDateChange={handleAttendanceDateChange}
                />
              )}
-             {activeTab === 'chat' && <ChatView adminUser={user} onlineUsers={onlineUsers} />}
+             {activeTab === 'chat' && <ChatView adminUser={user} onlineUsers={onlineUsers} onNavigate={setActiveTab} />}
              {activeTab === 'settings' && <SettingsView config={config} onRefresh={fetchData} />}
           </motion.div>
         </AnimatePresence>
