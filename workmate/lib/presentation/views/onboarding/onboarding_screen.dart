@@ -55,8 +55,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     children: [
                       // Logo
                       Container(
-                        width: 88,
-                        height: 88,
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
                           gradient: AppColors.primaryGradient,
                           borderRadius: BorderRadius.circular(24),
@@ -66,8 +66,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           borderRadius: BorderRadius.circular(24),
                           child: Image.asset(
                             'assets/icons/app_icon.png',
-                            width: 88,
-                            height: 88,
+                            width: 120,
+                            height: 120,
                             fit: BoxFit.cover,
                           ),
                         ),

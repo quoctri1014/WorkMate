@@ -95,7 +95,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 40),
                 // Logo
                 Container(
-                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(24),
@@ -108,11 +107,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(24),
                     child: Image.asset(
                       'assets/icons/app_icon.png',
-                      width: 60,
-                      height: 60,
+                      width: 100,
+                      height: 100,
                       fit: BoxFit.cover,
                     ),
                   ),

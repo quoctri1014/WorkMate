@@ -78,7 +78,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   child: ScaleTransition(
                     scale: _scaleAnimation,
                     child: Container(
-                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.white,
                         borderRadius: BorderRadius.circular(32),
@@ -91,11 +90,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         ],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(32),
                         child: Image.asset(
                           'assets/icons/app_icon.png',
-                          width: 80,
-                          height: 80,
+                          width: 120,
+                          height: 120,
                           fit: BoxFit.cover,
                         ),
                       ),
