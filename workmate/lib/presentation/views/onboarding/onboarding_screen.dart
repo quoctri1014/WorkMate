@@ -67,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           child: Transform.scale(
                             scale: 1.6,
                             child: Transform.translate(
-                              offset: const Offset(0, 14),
+                              offset: const Offset(12, 16),
                               child: Image.asset(
                                 'assets/icons/app_icon.png',
                                 width: 120,
