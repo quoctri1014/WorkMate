@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context.read<HomeViewModel>().setUser(authVM.currentUser!);
           context.read<ProfileViewModel>().setUser(authVM.currentUser!);
           // Khởi tạo thông báo cho user mới
-          context.read<NotificationViewModel>().initForUser(authVM.currentUser!.id);
+          context.read<NotificationViewModel>().initForUser(authVM.currentUser!.id, authVM.currentUser!.departmentId);
         }
         Navigator.pushReplacementNamed(context, AppRoutes.main);
       }

@@ -692,10 +692,33 @@ class NotificationViewModel extends ChangeNotifier {
 
   List<NotificationModel> get notifications => _notifications;
 
-  Future<void> initForUser(int userId) async {
+  Future<void> initForUser(int userId, int departmentId) async {
     _currentUserId = userId;
     _socket?.emit('register', userId);
-    await _loadNotifications();
+    await _loadNotifications(); // Load local first for speed
+    await sync(userId, departmentId); // Then sync from server
+  }
+
+  Future<void> sync(int userId, int departmentId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiService.baseUrl}/notifications/sync?employee_id=$userId&department_id=$departmentId')
+      );
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        final List<NotificationModel> remoteNotifs = data.map((json) => NotificationModel.fromMap(json)).toList();
+        
+        // Merge with local (using id/server_id to avoid duplicates)
+        // For simplicity in this case, we'll replace local with server data as server is the source of truth
+        _notifications = remoteNotifs;
+        await _saveNotifications();
+        notifyListeners();
+        print('✅ Đã đồng bộ ${remoteNotifs.length} thông báo từ Server');
+      }
+    } catch (e) {
+      print('❌ Lỗi đồng bộ thông báo: $e');
+    }
   }
 
   void clear() {

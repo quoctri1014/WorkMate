@@ -25,7 +25,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authVM = context.read<AuthViewModel>();
       if (authVM.isLoggedIn && authVM.currentUser != null) {
-        context.read<NotificationViewModel>().initForUser(authVM.currentUser!.id);
+        context.read<NotificationViewModel>().initForUser(authVM.currentUser!.id, authVM.currentUser!.departmentId);
       }
     });
   }

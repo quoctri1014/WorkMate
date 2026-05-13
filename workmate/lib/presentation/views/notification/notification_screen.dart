@@ -247,62 +247,71 @@ class NotificationScreen extends StatelessWidget {
 
         // Notification list
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              if (vm.notifications.any((n) => AppDateUtils.isToday(n.createdAt))) ...[
-                _SectionHeader(t('today')),
-                ...vm.notifications.where((n) => AppDateUtils.isToday(n.createdAt)).map((n) => _NotifCard(
-                  notif: n, typeIcon: _typeIcon(n.type), typeColor: _typeColor(n.type),
-                  onTap: () => _showNotificationDetail(context, n, vm),
-                )),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              final authVM = context.read<AuthViewModel>();
+              if (authVM.currentUser != null) {
+                await vm.sync(authVM.currentUser!.id, authVM.currentUser!.departmentId);
+              }
+            },
+            color: AppColors.primary,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                if (vm.notifications.any((n) => AppDateUtils.isToday(n.createdAt))) ...[
+                  _SectionHeader(t('today')),
+                  ...vm.notifications.where((n) => AppDateUtils.isToday(n.createdAt)).map((n) => _NotifCard(
+                    notif: n, typeIcon: _typeIcon(n.type), typeColor: _typeColor(n.type),
+                    onTap: () => _showNotificationDetail(context, n, vm),
+                  )),
+                ],
+                if (vm.notifications.any((n) => !AppDateUtils.isToday(n.createdAt) && 
+                    AppDateUtils.isYesterday(n.createdAt))) ...[
+                  const SizedBox(height: 8),
+                  _SectionHeader(t('yesterday')),
+                  ...vm.notifications.where((n) => AppDateUtils.isYesterday(n.createdAt)).map((n) => _NotifCard(
+                    notif: n, typeIcon: _typeIcon(n.type), typeColor: _typeColor(n.type),
+                    onTap: () => _showNotificationDetail(context, n, vm),
+                  )),
+                ],
+                if (vm.notifications.any((n) => !AppDateUtils.isToday(n.createdAt) && 
+                    !AppDateUtils.isYesterday(n.createdAt))) ...[
+                  const SizedBox(height: 8),
+                  _SectionHeader(t('this_week')),
+                  ...vm.notifications.where((n) => !AppDateUtils.isToday(n.createdAt) && 
+                      !AppDateUtils.isYesterday(n.createdAt)).map((n) => _NotifCard(
+                    notif: n, typeIcon: _typeIcon(n.type), typeColor: _typeColor(n.type),
+                    onTap: () => _showNotificationDetail(context, n, vm),
+                  )),
+                ],
+                const SizedBox(height: 20),
+                // Promo banner
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16), boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow, border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05))),
+                  child: Column(children: [
+                    Container(height: 80, 
+                      decoration: BoxDecoration(
+                        gradient: Theme.of(context).brightness == Brightness.dark
+                          ? LinearGradient(colors: [Colors.blueGrey[800]!, Colors.blueGrey[700]!])
+                          : LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)]), 
+                        borderRadius: BorderRadius.circular(12)
+                      ),
+                      child: const Center(child: Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 36))),
+                    const SizedBox(height: 12),
+                    Text(t('welcome_version'), style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
+                    const SizedBox(height: 4),
+                    Text(t('welcome_desc'), textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.4)),
+                    const SizedBox(height: 12),
+                    SizedBox(width: double.infinity, height: 40,
+                      child: ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                        child: Text(t('explore_now'), style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)))),
+                  ]),
+                ),
+                const SizedBox(height: 80),
               ],
-              if (vm.notifications.any((n) => !AppDateUtils.isToday(n.createdAt) && 
-                  AppDateUtils.isYesterday(n.createdAt))) ...[
-                const SizedBox(height: 8),
-                _SectionHeader(t('yesterday')),
-                ...vm.notifications.where((n) => AppDateUtils.isYesterday(n.createdAt)).map((n) => _NotifCard(
-                  notif: n, typeIcon: _typeIcon(n.type), typeColor: _typeColor(n.type),
-                  onTap: () => _showNotificationDetail(context, n, vm),
-                )),
-              ],
-              if (vm.notifications.any((n) => !AppDateUtils.isToday(n.createdAt) && 
-                  !AppDateUtils.isYesterday(n.createdAt))) ...[
-                const SizedBox(height: 8),
-                _SectionHeader(t('this_week')),
-                ...vm.notifications.where((n) => !AppDateUtils.isToday(n.createdAt) && 
-                    !AppDateUtils.isYesterday(n.createdAt)).map((n) => _NotifCard(
-                  notif: n, typeIcon: _typeIcon(n.type), typeColor: _typeColor(n.type),
-                  onTap: () => _showNotificationDetail(context, n, vm),
-                )),
-              ],
-              const SizedBox(height: 20),
-              // Promo banner
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16), boxShadow: Theme.of(context).brightness == Brightness.dark ? null : AppColors.cardShadow, border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.05))),
-                child: Column(children: [
-                  Container(height: 80, 
-                    decoration: BoxDecoration(
-                      gradient: Theme.of(context).brightness == Brightness.dark
-                        ? LinearGradient(colors: [Colors.blueGrey[800]!, Colors.blueGrey[700]!])
-                        : LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)]), 
-                      borderRadius: BorderRadius.circular(12)
-                    ),
-                    child: const Center(child: Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 36))),
-                  const SizedBox(height: 12),
-                  Text(t('welcome_version'), style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
-                  const SizedBox(height: 4),
-                  Text(t('welcome_desc'), textAlign: TextAlign.center,
-                    style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.4)),
-                  const SizedBox(height: 12),
-                  SizedBox(width: double.infinity, height: 40,
-                    child: ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                      child: Text(t('explore_now'), style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)))),
-                ]),
-              ),
-              const SizedBox(height: 80),
-            ],
+            ),
           ),
         ),
       ]),

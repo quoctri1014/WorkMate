@@ -221,6 +221,25 @@ const initDB = async () => {
         is_default BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        department_ids JSONB DEFAULT '[]',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS user_notifications (
+        id SERIAL PRIMARY KEY,
+        employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        body TEXT NOT NULL,
+        type VARCHAR(50),
+        data JSONB DEFAULT '{}',
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Khởi tạo cấu hình mặc định nếu chưa có
@@ -267,6 +286,26 @@ app.post('/api/meetings', async (req, res) => {
       'INSERT INTO meetings (title, content, department_ids, start_time, location, is_online) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [title, content, JSON.stringify(department_ids), start_time, meet_link, is_online]
     );
+
+    // Lưu thông báo vào user_notifications cho tất cả nhân viên trong các phòng ban mục tiêu
+    try {
+      const depts = Array.isArray(department_ids) ? department_ids : [department_ids];
+      if (depts.length > 0) {
+        await pool.query(`
+          INSERT INTO user_notifications (employee_id, title, body, type, data)
+          SELECT id, $1, $2, 'meeting', $3
+          FROM employees 
+          WHERE department_id = ANY($4)
+        `, [
+          `📅 Lịch họp: ${title}`,
+          `Nội dung: ${content || 'Không có nội dung'}\nThời gian: ${start_time}\nĐịa điểm: ${meet_link}`,
+          JSON.stringify({ meeting_id: result.rows[0].id, start_time }),
+          depts
+        ]);
+      }
+    } catch (e) {
+      console.error('❌ Lỗi lưu thông báo cuộc họp:', e.message);
+    }
 
     io.emit('new_meeting', {
       meeting: result.rows[0],
@@ -350,6 +389,39 @@ app.delete('/api/notifications/:id', async (req, res) => {
     await pool.query('DELETE FROM notifications WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// --- API ĐỒNG BỘ THÔNG BÁO ---
+app.get('/api/notifications/sync', async (req, res) => {
+  const { employee_id, department_id } = req.query;
+  console.log(`🔄 Đồng bộ thông báo cho NV: ${employee_id}, PB: ${department_id}`);
+  try {
+    // 1. Lấy thông báo chung (từ bảng notifications)
+    const generalNotifs = await pool.query(`
+      SELECT 'announcement' as type, title, content as body, created_at, id as server_id
+      FROM notifications 
+      WHERE department_ids @> $1::jsonb OR department_ids = '[]'::jsonb
+      ORDER BY created_at DESC LIMIT 50
+    `, [JSON.stringify([Number(department_id)])]);
+
+    // 2. Lấy thông báo cá nhân (từ bảng user_notifications)
+    const userNotifs = await pool.query(`
+      SELECT type, title, body, created_at, id as server_id, data
+      FROM user_notifications 
+      WHERE employee_id = $1
+      ORDER BY created_at DESC LIMIT 50
+    `, [employee_id]);
+
+    // Gộp và sắp xếp
+    const all = [...generalNotifs.rows, ...userNotifs.rows].sort((a, b) => 
+      new Date(b.created_at) - new Date(a.created_at)
+    );
+
+    res.json(all);
+  } catch (err) {
+    console.error('❌ Lỗi đồng bộ thông báo:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- 1. API HỆ THỐNG & AUTH ---
@@ -1231,6 +1303,12 @@ app.put('/api/attendance/:id', async (req, res) => {
         body: body,
         date: date
       });
+
+      // Lưu vào user_notifications
+      await pool.query(
+        "INSERT INTO user_notifications (employee_id, title, body, type, data) VALUES ($1, $2, $3, $4, $5)",
+        [old.employee_id, title, body, 'attendance_update', JSON.stringify({ date })]
+      );
     }
 
     res.json({ success: true });
@@ -1375,6 +1453,18 @@ app.put('/api/approvals/:id', async (req, res) => {
       'Cập nhật yêu cầu',
       `Yêu cầu "${approval.type}" của bạn đã ${statusText}.`,
       { type: 'approval', id: approval.id.toString() }
+    );
+
+    // Lưu vào user_notifications
+    await pool.query(
+      "INSERT INTO user_notifications (employee_id, title, body, type, data) VALUES ($1, $2, $3, $4, $5)",
+      [
+        approval.employee_id, 
+        'Cập nhật yêu cầu', 
+        `Yêu cầu "${approval.type}" của bạn đã ${statusText}.`, 
+        'approval', 
+        JSON.stringify({ id: approval.id, status })
+      ]
     );
 
     res.json(approval);
