@@ -1,0 +1,111 @@
+require('dotenv').config();
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs-extra');
+const nodemailer = require('nodemailer');
+
+// Đảm bảo thư mục upload tồn tại
+const uploadDirs = ['uploads', 'uploads/avatars', 'uploads/chat', 'uploads/attendance', 'uploads/notifications', 'uploads/approvals'];
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let dest = 'uploads/';
+    if (file.fieldname === 'avatar') dest = 'uploads/avatars/';
+    else if (file.fieldname === 'file') dest = 'uploads/chat/';
+    else if (file.fieldname === 'attendance') dest = 'uploads/attendance/';
+    else if (file.fieldname === 'notification') dest = 'uploads/notifications/';
+    else if (file.fieldname === 'approval') dest = 'uploads/approvals/';
+    cb(null, dest);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage });
+const admin = require('firebase-admin');
+const ExcelJS = require('exceljs');
+
+// --- CẤU HÌNH FIREBASE ---
+try {
+  let serviceAccount;
+  if (process.env.FIREBASE_CONFIG) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
+  } else if (fs.existsSync(path.join(__dirname, "firebase-service-account.json"))) {
+    serviceAccount = require("./firebase-service-account.json");
+  }
+
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    console.log("🔥 Firebase Admin initialized successfully");
+  } else {
+    console.warn("⚠️ Firebase configuration not found.");
+  }
+} catch (err) {
+  console.error("❌ Firebase Init Error:", err.message);
+}
+
+// --- CẤU HÌNH EMAIL ---
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// --- CẤU HÌNH HỆ THỐNG ---
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+const onlineUsers = new Map(); // socket.id -> user_id
+
+io.on('connection', (socket) => {
+  console.log('🔌 New client connected:', socket.id);
+
+  socket.on('register', (userId) => {
+    if (userId) {
+      const id = Number(userId);
+      onlineUsers.set(socket.id, id);
+      console.log(`👤 User registered as online: ${id}`);
+      io.emit('online_users', Array.from(new Set(onlineUsers.values())));
+    }
+  });
+
+  socket.on('get_online_users', () => {
+    socket.emit('online_users', Array.from(new Set(onlineUsers.values())));
+  });
+
+  socket.on('send_message', async (data) => {
+    try {
+      const { sender_id, receiver_id, message, is_ai, chat_type, conversation_id, message_type, file_url } = data;
+      const r = await pool.query(
+        "INSERT INTO chat_messages (sender_id, receiver_id, message, is_ai, chat_type, conversation_id, message_type, file_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        [sender_id, receiver_id, message, is_ai || false, chat_type || 'admin', conversation_id || null, message_type || 'text', file_url || null]
+      );
+      const newMessage = r.rows[0];
+      
+      if (conversation_id) {
+        io.emit(`receive_message_conv_${conversation_id}`, newMessage);
+      } else if (receiver_id) {
+        io.emit(`receive_message_${receiver_id}`, newMessage);
+      } else if (chat_type === 'admin') {
+        // Gửi cho tất cả Admin
+        io.emit('receive_message_admin', newMessage);
+      }
+      io.emit(`receive_message_${sender_id}`, newMessage);
+    } catch (err) {
+      console.error('❌ Socket Error:', err.message);
+    }
+  });

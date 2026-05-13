@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -11,7 +11,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const nodemailer = require('nodemailer');
 
-// Đảm bảo thư mục upload tồn tại
+// Äáº£m báº£o thÆ° má»¥c upload tá»“n táº¡i
 const uploadDirs = ['uploads', 'uploads/avatars', 'uploads/chat', 'uploads/attendance', 'uploads/notifications', 'uploads/approvals'];
 uploadDirs.forEach(dir => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -35,7 +35,7 @@ const upload = multer({ storage });
 const admin = require('firebase-admin');
 const ExcelJS = require('exceljs');
 
-// --- CẤU HÌNH FIREBASE ---
+// --- Cáº¤U HÃŒNH FIREBASE ---
 try {
   let serviceAccount;
   if (process.env.FIREBASE_CONFIG) {
@@ -48,20 +48,15 @@ try {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
-    console.log("🔥 Firebase Admin initialized successfully");
+    console.log("ðŸ”¥ Firebase Admin initialized successfully");
   } else {
-    console.warn("⚠️ Firebase configuration not found.");
+    console.warn("âš ï¸ Firebase configuration not found.");
   }
 } catch (err) {
-  console.error("❌ Firebase Init Error:", err.message);
+  console.error("âŒ Firebase Init Error:", err.message);
 }
-// OLD CODE REMOVED
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
-// --- CẤU HÌNH EMAIL ---
+// --- Cáº¤U HÃŒNH EMAIL ---
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -70,20 +65,20 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// --- CẤU HÌNH HỆ THỐNG ---
+// --- Cáº¤U HÃŒNH Há»† THá»NG ---
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 const onlineUsers = new Map(); // socket.id -> user_id
 
 io.on('connection', (socket) => {
-  console.log('🔌 New client connected:', socket.id);
+  console.log('ðŸ”Œ New client connected:', socket.id);
 
   socket.on('register', (userId) => {
     if (userId) {
       const id = Number(userId);
       onlineUsers.set(socket.id, id);
-      console.log(`👤 User registered as online: ${id}`);
+      console.log(`ðŸ‘¤ User registered as online: ${id}`);
       io.emit('online_users', Array.from(new Set(onlineUsers.values())));
     }
   });
@@ -106,12 +101,12 @@ io.on('connection', (socket) => {
       } else if (receiver_id) {
         io.emit(`receive_message_${receiver_id}`, newMessage);
       } else if (chat_type === 'admin') {
-        // Gửi cho tất cả Admin
+        // Gá»­i cho táº¥t cáº£ Admin
         io.emit('receive_message_admin', newMessage);
       }
       io.emit(`receive_message_${sender_id}`, newMessage);
     } catch (err) {
-      console.error('❌ Socket Error:', err.message);
+      console.error('âŒ Socket Error:', err.message);
     }
   });
 
@@ -127,13 +122,13 @@ io.on('connection', (socket) => {
       const diff = (now - sentAt) / (1000 * 60 * 60); // hours
       
       if (diff > 1) {
-        socket.emit('error_message', { message: 'Chỉ có thể thu hồi tin nhắn trong vòng 1 tiếng.' });
+        socket.emit('error_message', { message: 'Chá»‰ cÃ³ thá»ƒ thu há»“i tin nháº¯n trong vÃ²ng 1 tiáº¿ng.' });
         return;
       }
       
-      await pool.query("UPDATE chat_messages SET is_recalled = true, message = 'Tin nhắn đã được thu hồi' WHERE id = $1", [message_id]);
+      await pool.query("UPDATE chat_messages SET is_recalled = true, message = 'Tin nháº¯n Ä‘Ã£ Ä‘Æ°á»£c thu há»“i' WHERE id = $1", [message_id]);
       
-      const updatedMsg = { ...msg, is_recalled: true, message: 'Tin nhắn đã được thu hồi' };
+      const updatedMsg = { ...msg, is_recalled: true, message: 'Tin nháº¯n Ä‘Ã£ Ä‘Æ°á»£c thu há»“i' };
       
       if (msg.conversation_id) {
         io.emit(`message_recalled_conv_${msg.conversation_id}`, updatedMsg);
@@ -147,7 +142,7 @@ io.on('connection', (socket) => {
         io.emit(`message_recalled_${msg.sender_id}`, updatedMsg);
       }
     } catch (err) {
-      console.error('❌ Recall Error:', err.message);
+      console.error('âŒ Recall Error:', err.message);
     }
   });
 
@@ -155,7 +150,7 @@ io.on('connection', (socket) => {
     if (onlineUsers.has(socket.id)) {
       const userId = onlineUsers.get(socket.id);
       onlineUsers.delete(socket.id);
-      console.log(`👋 User disconnected: ${userId}`);
+      console.log(`ðŸ‘‹ User disconnected: ${userId}`);
       io.emit('online_users', Array.from(new Set(onlineUsers.values())));
     }
   });
@@ -216,9 +211,9 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-const MATCH_THRESHOLD = 0.75; // Thay đổi sang Cosine Similarity threshold
+const MATCH_THRESHOLD = 0.75; // Thay Ä‘á»•i sang Cosine Similarity threshold
 
-// --- DATABASE MIGRATION (Tự động nâng cấp cấu trúc) ---
+// --- DATABASE MIGRATION (Tá»± Ä‘á»™ng nÃ¢ng cáº¥p cáº¥u trÃºc) ---
 const initDB = async () => {
   try {
     await pool.query(`
@@ -283,26 +278,26 @@ const initDB = async () => {
       );
     `);
 
-    // Khởi tạo cấu hình mặc định nếu chưa có
+    // Khá»Ÿi táº¡o cáº¥u hÃ¬nh máº·c Ä‘á»‹nh náº¿u chÆ°a cÃ³
     const configCheck = await pool.query('SELECT COUNT(*) FROM company_config');
     if (parseInt(configCheck.rows[0].count) === 0) {
-      await pool.query("INSERT INTO company_config (company_name) VALUES ('QUẬN 12')");
-      console.log('✅ Đã tạo cấu hình công ty mặc định');
+      await pool.query("INSERT INTO company_config (company_name) VALUES ('QUáº¬N 12')");
+      console.log('âœ… ÄÃ£ táº¡o cáº¥u hÃ¬nh cÃ´ng ty máº·c Ä‘á»‹nh');
     }
 
-    console.log("✅ Database đã được đồng bộ hóa thành công!");
+    console.log("âœ… Database Ä‘Ã£ Ä‘Æ°á»£c Ä‘á»“ng bá»™ hÃ³a thÃ nh cÃ´ng!");
   } catch (err) {
-    console.error("❌ Lỗi đồng bộ Database:", err.message);
+    console.error("âŒ Lá»—i Ä‘á»“ng bá»™ Database:", err.message);
   }
 };
 initDB();
 
 
-// Lưu trữ OTP tạm thời (Trong thực tế nên dùng Redis)
+// LÆ°u trá»¯ OTP táº¡m thá»i (Trong thá»±c táº¿ nÃªn dÃ¹ng Redis)
 const otpStore = new Map();
 
 
-// --- 0. API QUẢN LÝ LỊCH HỌP (MEETINGS) ---
+// --- 0. API QUáº¢N LÃ Lá»ŠCH Há»ŒP (MEETINGS) ---
 app.get('/api/meetings', async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM meetings ORDER BY start_time DESC');
@@ -328,7 +323,7 @@ app.post('/api/meetings', async (req, res) => {
       [title, content, JSON.stringify(department_ids), start_time, meet_link, is_online]
     );
 
-    // Lưu thông báo vào user_notifications cho tất cả nhân viên trong các phòng ban mục tiêu
+    // LÆ°u thÃ´ng bÃ¡o vÃ o user_notifications cho táº¥t cáº£ nhÃ¢n viÃªn trong cÃ¡c phÃ²ng ban má»¥c tiÃªu
     try {
       const depts = Array.isArray(department_ids) ? department_ids : [department_ids];
       if (depts.length > 0) {
@@ -338,14 +333,14 @@ app.post('/api/meetings', async (req, res) => {
           FROM employees 
           WHERE department_id = ANY($4)
         `, [
-          `📅 Lịch họp: ${title}`,
-          `Nội dung: ${content || 'Không có nội dung'}\nThời gian: ${start_time}\nĐịa điểm: ${meet_link}`,
+          `ðŸ“… Lá»‹ch há»p: ${title}`,
+          `Ná»™i dung: ${content || 'KhÃ´ng cÃ³ ná»™i dung'}\nThá»i gian: ${start_time}\nÄá»‹a Ä‘iá»ƒm: ${meet_link}`,
           JSON.stringify({ meeting_id: result.rows[0].id, start_time }),
           depts
         ]);
       }
     } catch (e) {
-      console.error('❌ Lỗi lưu thông báo cuộc họp:', e.message);
+      console.error('âŒ Lá»—i lÆ°u thÃ´ng bÃ¡o cuá»™c há»p:', e.message);
     }
 
     io.emit('new_meeting', {
@@ -372,7 +367,7 @@ app.put('/api/meetings/:id', async (req, res) => {
 app.delete('/api/meetings/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`🗑️ Đang yêu cầu hủy cuộc họp ID: ${id}`);
+    console.log(`ðŸ—‘ï¸ Äang yÃªu cáº§u há»§y cuá»™c há»p ID: ${id}`);
     
     const meeting = await pool.query('SELECT * FROM meetings WHERE id=$1', [id]);
     if (meeting.rows.length > 0) {
@@ -381,11 +376,11 @@ app.delete('/api/meetings/:id', async (req, res) => {
       try {
         deptIds = Array.isArray(m.department_ids) ? m.department_ids : JSON.parse(m.department_ids || '[]');
       } catch (e) {
-        console.error('❌ Lỗi parse department_ids:', m.department_ids);
+        console.error('âŒ Lá»—i parse department_ids:', m.department_ids);
         deptIds = [];
       }
       
-      console.log('📢 Phát sự kiện meeting_canceled cho các phòng:', deptIds);
+      console.log('ðŸ“¢ PhÃ¡t sá»± kiá»‡n meeting_canceled cho cÃ¡c phÃ²ng:', deptIds);
       io.emit('meeting_canceled', {
         meeting_id: id,
         title: m.title,
@@ -394,15 +389,15 @@ app.delete('/api/meetings/:id', async (req, res) => {
     }
     
     await pool.query('DELETE FROM meetings WHERE id=$1', [id]);
-    console.log('✅ Đã xóa cuộc họp khỏi DB');
+    console.log('âœ… ÄÃ£ xÃ³a cuá»™c há»p khá»i DB');
     res.json({ success: true });
   } catch (err) { 
-    console.error('❌ Lỗi xóa cuộc họp:', err.message);
+    console.error('âŒ Lá»—i xÃ³a cuá»™c há»p:', err.message);
     res.status(500).json({ error: err.message }); 
   }
 });
 
-// --- 0.2 API THÔNG BÁO (NOTIFICATIONS) ---
+// --- 0.2 API THÃ”NG BÃO (NOTIFICATIONS) ---
 app.get('/api/notifications', async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC');
@@ -432,12 +427,12 @@ app.delete('/api/notifications/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- API ĐỒNG BỘ THÔNG BÁO ---
+// --- API Äá»’NG Bá»˜ THÃ”NG BÃO ---
 app.get('/api/notifications/sync', async (req, res) => {
   const { employee_id, department_id } = req.query;
-  console.log(`🔄 Đồng bộ thông báo cho NV: ${employee_id}, PB: ${department_id}`);
+  console.log(`ðŸ”„ Äá»“ng bá»™ thÃ´ng bÃ¡o cho NV: ${employee_id}, PB: ${department_id}`);
   try {
-    // 1. Lấy thông báo chung (từ bảng notifications)
+    // 1. Láº¥y thÃ´ng bÃ¡o chung (tá»« báº£ng notifications)
     const generalNotifs = await pool.query(`
       SELECT 'announcement' as type, title, content as body, created_at, id as server_id
       FROM notifications 
@@ -445,7 +440,7 @@ app.get('/api/notifications/sync', async (req, res) => {
       ORDER BY created_at DESC LIMIT 50
     `, [JSON.stringify([Number(department_id)])]);
 
-    // 2. Lấy thông báo cá nhân (từ bảng user_notifications)
+    // 2. Láº¥y thÃ´ng bÃ¡o cÃ¡ nhÃ¢n (tá»« báº£ng user_notifications)
     const userNotifs = await pool.query(`
       SELECT type, title, body, created_at, id as server_id, data
       FROM user_notifications 
@@ -453,30 +448,30 @@ app.get('/api/notifications/sync', async (req, res) => {
       ORDER BY created_at DESC LIMIT 50
     `, [employee_id]);
 
-    // Gộp và sắp xếp
+    // Gá»™p vÃ  sáº¯p xáº¿p
     const all = [...generalNotifs.rows, ...userNotifs.rows].sort((a, b) => 
       new Date(b.created_at) - new Date(a.created_at)
     );
 
     res.json(all);
   } catch (err) {
-    console.error('❌ Lỗi đồng bộ thông báo:', err.message);
+    console.error('âŒ Lá»—i Ä‘á»“ng bá»™ thÃ´ng bÃ¡o:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// --- 1. API HỆ THỐNG & AUTH ---
+// --- 1. API Há»† THá»NG & AUTH ---
 app.post('/api/auth/send-otp', async (req, res) => {
   const { employee_id } = req.body;
   try {
     const user = await pool.query('SELECT email FROM employees WHERE id = $1', [employee_id]);
-    if (user.rows.length === 0) return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    if (user.rows.length === 0) return res.status(404).json({ message: "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng" });
 
     const email = user.rows[0].email;
-    console.log(`📧 Đang gửi OTP đến email: ${email}`);
+    console.log(`ðŸ“§ Äang gá»­i OTP Ä‘áº¿n email: ${email}`);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Lưu OTP trong 5 phút
+    // LÆ°u OTP trong 5 phÃºt
     otpStore.set(employee_id.toString(), {
       otp,
       expires: Date.now() + 5 * 60 * 1000
@@ -485,25 +480,25 @@ app.post('/api/auth/send-otp', async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: '[WorkMate] Mã xác thực OTP thay đổi mật khẩu',
+      subject: '[WorkMate] MÃ£ xÃ¡c thá»±c OTP thay Ä‘á»•i máº­t kháº©u',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2>Xác thực thay đổi mật khẩu</h2>
-          <p>Chào bạn,</p>
-          <p>Mã OTP của bạn là: <b style="font-size: 24px; color: #007bff;">${otp}</b></p>
-          <p>Mã này có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+          <h2>XÃ¡c thá»±c thay Ä‘á»•i máº­t kháº©u</h2>
+          <p>ChÃ o báº¡n,</p>
+          <p>MÃ£ OTP cá»§a báº¡n lÃ : <b style="font-size: 24px; color: #007bff;">${otp}</b></p>
+          <p>MÃ£ nÃ y cÃ³ hiá»‡u lá»±c trong 5 phÃºt. Vui lÃ²ng khÃ´ng chia sáº» mÃ£ nÃ y vá»›i báº¥t ká»³ ai.</p>
           <hr/>
-          <p style="font-size: 12px; color: #777;">Đây là email tự động từ hệ thống WorkMate.</p>
+          <p style="font-size: 12px; color: #777;">ÄÃ¢y lÃ  email tá»± Ä‘á»™ng tá»« há»‡ thá»‘ng WorkMate.</p>
         </div>
       `
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Đã gửi OTP thành công đến ${email}`);
-    res.json({ success: true, message: "OTP đã được gửi thành công" });
+    console.log(`âœ… ÄÃ£ gá»­i OTP thÃ nh cÃ´ng Ä‘áº¿n ${email}`);
+    res.json({ success: true, message: "OTP Ä‘Ã£ Ä‘Æ°á»£c gá»­i thÃ nh cÃ´ng" });
   } catch (err) {
-    console.error('❌ Lỗi gửi OTP CHI TIẾT:', err);
-    res.status(500).json({ error: err.message || "Không thể gửi email" });
+    console.error('âŒ Lá»—i gá»­i OTP CHI TIáº¾T:', err);
+    res.status(500).json({ error: err.message || "KhÃ´ng thá»ƒ gá»­i email" });
   }
 });
 
@@ -513,16 +508,16 @@ app.post('/api/auth/change-password', async (req, res) => {
     // Verify OTP
     const stored = otpStore.get(employee_id.toString());
     if (!stored || stored.otp !== otp || Date.now() > stored.expires) {
-      return res.status(400).json({ message: "Mã OTP không hợp lệ hoặc đã hết hạn" });
+      return res.status(400).json({ message: "MÃ£ OTP khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n" });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(new_password, salt);
     
     await pool.query('UPDATE employees SET password_hash = $1 WHERE id = $2', [hash, employee_id]);
-    otpStore.delete(employee_id.toString()); // Xóa OTP sau khi dùng
+    otpStore.delete(employee_id.toString()); // XÃ³a OTP sau khi dÃ¹ng
     
-    res.json({ success: true, message: "Đổi mật khẩu thành công" });
+    res.json({ success: true, message: "Äá»•i máº­t kháº©u thÃ nh cÃ´ng" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -532,7 +527,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   try {
     const user = await pool.query('SELECT id, name FROM employees WHERE email = $1', [email]);
-    if (user.rows.length === 0) return res.status(404).json({ message: "Email không tồn tại trong hệ thống" });
+    if (user.rows.length === 0) return res.status(404).json({ message: "Email khÃ´ng tá»“n táº¡i trong há»‡ thá»‘ng" });
 
     const newPassword = Math.random().toString(36).slice(-8);
     const salt = await bcrypt.genSalt(10);
@@ -543,34 +538,34 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: '[WorkMate] Khôi phục mật khẩu tài khoản',
+      subject: '[WorkMate] KhÃ´i phá»¥c máº­t kháº©u tÃ i khoáº£n',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2>Khôi phục mật khẩu</h2>
-          <p>Chào ${user.rows[0].name},</p>
-          <p>Mật khẩu mới của bạn đã được khởi tạo lại là: <b style="font-size: 18px; color: #dc3545;">${newPassword}</b></p>
-          <p>Vui lòng đăng nhập lại bằng mật khẩu này và thay đổi mật khẩu ngay để đảm bảo an toàn.</p>
+          <h2>KhÃ´i phá»¥c máº­t kháº©u</h2>
+          <p>ChÃ o ${user.rows[0].name},</p>
+          <p>Máº­t kháº©u má»›i cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c khá»Ÿi táº¡o láº¡i lÃ : <b style="font-size: 18px; color: #dc3545;">${newPassword}</b></p>
+          <p>Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i báº±ng máº­t kháº©u nÃ y vÃ  thay Ä‘á»•i máº­t kháº©u ngay Ä‘á»ƒ Ä‘áº£m báº£o an toÃ n.</p>
           <hr/>
-          <p style="font-size: 12px; color: #777;">Đây là email tự động từ hệ thống WorkMate.</p>
+          <p style="font-size: 12px; color: #777;">ÄÃ¢y lÃ  email tá»± Ä‘á»™ng tá»« há»‡ thá»‘ng WorkMate.</p>
         </div>
       `
     };
 
     await transporter.sendMail(mailOptions);
-    res.json({ success: true, message: "Mật khẩu mới đã được gửi vào email" });
+    res.json({ success: true, message: "Máº­t kháº©u má»›i Ä‘Ã£ Ä‘Æ°á»£c gá»­i vÃ o email" });
   } catch (err) {
-    console.error('❌ Lỗi quên mật khẩu:', err);
-    res.status(500).json({ error: "Lỗi hệ thống" });
+    console.error('âŒ Lá»—i quÃªn máº­t kháº©u:', err);
+    res.status(500).json({ error: "Lá»—i há»‡ thá»‘ng" });
   }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  console.log('🔑 Yêu cầu đăng nhập:', req.body);
+  console.log('ðŸ”‘ YÃªu cáº§u Ä‘Äƒng nháº­p:', req.body);
   try {
     let { code, email, password } = req.body;
     const loginIdentifier = (email || code || '').trim();
     
-    if (!loginIdentifier) return res.status(400).json({ message: "Vui lòng nhập tài khoản" });
+    if (!loginIdentifier) return res.status(400).json({ message: "Vui lÃ²ng nháº­p tÃ i khoáº£n" });
 
     const r = await pool.query(
       'SELECT * FROM employees WHERE employee_code = $1 OR email = $1', 
@@ -578,21 +573,21 @@ app.post('/api/auth/login', async (req, res) => {
     );
     
     if (r.rows.length === 0) {
-      console.log(`❌ Không tìm thấy user với định danh: ${loginIdentifier}`);
-      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+      console.log(`âŒ KhÃ´ng tÃ¬m tháº¥y user vá»›i Ä‘á»‹nh danh: ${loginIdentifier}`);
+      return res.status(404).json({ message: "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng" });
     }
     
     const user = r.rows[0];
     const valid = await bcrypt.compare(password, user.password_hash);
     
     if (!valid) {
-      console.log(`❌ Sai mật khẩu cho user: ${user.email}`);
-      return res.status(401).json({ message: "Sai mật khẩu" });
+      console.log(`âŒ Sai máº­t kháº©u cho user: ${user.email}`);
+      return res.status(401).json({ message: "Sai máº­t kháº©u" });
     }
     
-    console.log(`✅ Đăng nhập thành công: ${user.name}`);
+    console.log(`âœ… ÄÄƒng nháº­p thÃ nh cÃ´ng: ${user.name}`);
     
-    // Xóa password_hash trước khi gửi về client
+    // XÃ³a password_hash trÆ°á»›c khi gá»­i vá» client
     const loggedInUser = { ...r.rows[0] };
     delete loggedInUser.password_hash;
     
@@ -604,19 +599,19 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/face/register', async (req, res) => {
   const { employee_id, embeddings } = req.body;
   try {
-    // Nếu client gửi 1 embedding (bản cũ) thì đưa vào mảng
+    // Náº¿u client gá»­i 1 embedding (báº£n cÅ©) thÃ¬ Ä‘Æ°a vÃ o máº£ng
     const embs = Array.isArray(embeddings) && embeddings.length > 0 && Array.isArray(embeddings[0]) 
       ? embeddings 
       : (req.body.embedding ? [req.body.embedding] : []);
       
     if (embs.length === 0) {
-      return res.status(400).json({ success: false, message: "Không có dữ liệu khuôn mặt" });
+      return res.status(400).json({ success: false, message: "KhÃ´ng cÃ³ dá»¯ liá»‡u khuÃ´n máº·t" });
     }
 
-    // Xóa dữ liệu cũ
+    // XÃ³a dá»¯ liá»‡u cÅ©
     await pool.query('DELETE FROM face_embeddings WHERE employee_id = $1', [employee_id]);
     
-    // Lưu các góc mặt mới
+    // LÆ°u cÃ¡c gÃ³c máº·t má»›i
     const angles = ['center', 'left', 'right', 'up', 'down'];
     for (let i = 0; i < embs.length; i++) {
       await pool.query(
@@ -625,10 +620,10 @@ app.post('/api/face/register', async (req, res) => {
       );
     }
     
-    // Đánh dấu đã đăng ký trong bảng employees
+    // ÄÃ¡nh dáº¥u Ä‘Ã£ Ä‘Äƒng kÃ½ trong báº£ng employees
     await pool.query('UPDATE employees SET face_registered_at = NOW() WHERE id = $1', [employee_id]);
 
-    res.json({ success: true, message: "Đăng ký thành công" });
+    res.json({ success: true, message: "ÄÄƒng kÃ½ thÃ nh cÃ´ng" });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -637,11 +632,11 @@ app.post('/api/face/register', async (req, res) => {
 app.get('/api/face/embedding/:id', async (req, res) => {
   try {
     const r = await pool.query('SELECT embedding FROM face_embeddings WHERE employee_id = $1', [req.params.id]);
-    if (r.rows.length === 0) return res.status(404).json({ message: "Chưa có dữ liệu" });
+    if (r.rows.length === 0) return res.status(404).json({ message: "ChÆ°a cÃ³ dá»¯ liá»‡u" });
     
-    // Trả về danh sách embeddings
+    // Tráº£ vá» danh sÃ¡ch embeddings
     const embeddings = r.rows.map(row => typeof row.embedding === 'string' ? JSON.parse(row.embedding) : row.embedding);
-    // Để tương thích ngược với client cũ, trả về embedding đầu tiên (nhưng client mới sẽ dùng mảng)
+    // Äá»ƒ tÆ°Æ¡ng thÃ­ch ngÆ°á»£c vá»›i client cÅ©, tráº£ vá» embedding Ä‘áº§u tiÃªn (nhÆ°ng client má»›i sáº½ dÃ¹ng máº£ng)
     res.json({ success: true, embedding: embeddings[0], embeddings: embeddings });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -651,44 +646,44 @@ app.get('/api/face/embedding/:id', async (req, res) => {
 // --- HELPER: Haversine Distance (GPS) ---
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3; // metres
-  const φ1 = lat1 * Math.PI/180;
-  const φ2 = lat2 * Math.PI/180;
-  const Δφ = (lat2-lat1) * Math.PI/180;
-  const Δλ = (lon2-lon1) * Math.PI/180;
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-          Math.cos(φ1) * Math.cos(φ2) *
-          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const Ï†1 = lat1 * Math.PI/180;
+  const Ï†2 = lat2 * Math.PI/180;
+  const Î”Ï† = (lat2-lat1) * Math.PI/180;
+  const Î”Î» = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(Î”Ï†/2) * Math.sin(Î”Ï†/2) +
+          Math.cos(Ï†1) * Math.cos(Ï†2) *
+          Math.sin(Î”Î»/2) * Math.sin(Î”Î»/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c; // in metres
 }
 
 app.post('/api/face/checkin', async (req, res) => {
   const { employee_id, embedding, lat, lng, wifi_ssid, action } = req.body;
-  console.log(`📥 Nhận yêu cầu ${action} cho nhân viên ID: ${employee_id}`);
+  console.log(`ðŸ“¥ Nháº­n yÃªu cáº§u ${action} cho nhÃ¢n viÃªn ID: ${employee_id}`);
   
   try {
-    // 1. Lấy cấu hình Safe Zone
+    // 1. Láº¥y cáº¥u hÃ¬nh Safe Zone
     const configResult = await pool.query('SELECT * FROM company_config LIMIT 1');
     const config = configResult.rows[0];
 
-    // 2. Kiểm tra WiFi
+    // 2. Kiá»ƒm tra WiFi
     if (config && config.safe_wifi_ssid && wifi_ssid !== config.safe_wifi_ssid) {
-      return res.status(403).json({ success: false, message: `Vui lòng kết nối WiFi: ${config.safe_wifi_ssid}` });
+      return res.status(403).json({ success: false, message: `Vui lÃ²ng káº¿t ná»‘i WiFi: ${config.safe_wifi_ssid}` });
     }
 
-    // 3. Kiểm tra GPS
+    // 3. Kiá»ƒm tra GPS
     if (config && config.safe_lat && config.safe_lng) {
       const distance = getDistance(lat, lng, config.safe_lat, config.safe_lng);
       if (distance > config.radius_meters) {
-        return res.status(403).json({ success: false, message: `Bạn đang ở ngoài vùng cho phép (${Math.round(distance)}m)` });
+        return res.status(403).json({ success: false, message: `Báº¡n Ä‘ang á»Ÿ ngoÃ i vÃ¹ng cho phÃ©p (${Math.round(distance)}m)` });
       }
     }
 
-    // 4. Kiểm tra khuôn mặt
+    // 4. Kiá»ƒm tra khuÃ´n máº·t
     const r = await pool.query('SELECT embedding FROM face_embeddings WHERE employee_id = $1', [employee_id]);
     
 
-    if (r.rows.length === 0) return res.status(400).json({ message: "Chưa đăng ký khuôn mặt" });
+    if (r.rows.length === 0) return res.status(400).json({ message: "ChÆ°a Ä‘Äƒng kÃ½ khuÃ´n máº·t" });
     
     let maxSimilarity = -1;
     for (let row of r.rows) {
@@ -698,10 +693,10 @@ app.post('/api/face/checkin', async (req, res) => {
     }
     
     if (maxSimilarity < MATCH_THRESHOLD) {
-      return res.status(403).json({ success: false, message: "Khuôn mặt không khớp" });
+      return res.status(403).json({ success: false, message: "KhuÃ´n máº·t khÃ´ng khá»›p" });
     }
 
-    // 5. Xử lý logic Chấm công theo ACTION
+    // 5. Xá»­ lÃ½ logic Cháº¥m cÃ´ng theo ACTION
     const existing = await pool.query(
       "SELECT * FROM attendance WHERE employee_id = $1 AND DATE(check_in_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh') = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE", 
       [employee_id]
@@ -709,7 +704,7 @@ app.post('/api/face/checkin', async (req, res) => {
 
     if (action === 'check_in') {
       if (existing.rows.length > 0) {
-        return res.status(400).json({ success: false, message: "Bạn đã check-in hôm nay rồi" });
+        return res.status(400).json({ success: false, message: "Báº¡n Ä‘Ã£ check-in hÃ´m nay rá»“i" });
       }
       const result = await pool.query(
         "INSERT INTO attendance (employee_id, check_in_time, check_in_method) VALUES ($1, NOW(), 'FACE_ID') RETURNING *", 
@@ -718,17 +713,17 @@ app.post('/api/face/checkin', async (req, res) => {
       io.emit('new_attendance', result.rows[0]);
     } else if (action === 'check_out') {
       if (existing.rows.length === 0) {
-        return res.status(400).json({ success: false, message: "Bạn chưa check-in hôm nay" });
+        return res.status(400).json({ success: false, message: "Báº¡n chÆ°a check-in hÃ´m nay" });
       }
       if (existing.rows[0].check_out_time) {
-        return res.status(400).json({ success: false, message: "Bạn đã check-out hôm nay rồi" });
+        return res.status(400).json({ success: false, message: "Báº¡n Ä‘Ã£ check-out hÃ´m nay rá»“i" });
       }
 
-      // Ngăn chặn check-out quá nhanh (dưới 1 phút)
+      // NgÄƒn cháº·n check-out quÃ¡ nhanh (dÆ°á»›i 1 phÃºt)
       const checkInTime = new Date(existing.rows[0].check_in_time);
       const now = new Date();
-      if (now - checkInTime < 60000) { // 1 phút
-        return res.status(400).json({ success: false, message: "Vui lòng đợi ít nhất 1 phút sau khi check-in" });
+      if (now - checkInTime < 60000) { // 1 phÃºt
+        return res.status(400).json({ success: false, message: "Vui lÃ²ng Ä‘á»£i Ã­t nháº¥t 1 phÃºt sau khi check-in" });
       }
 
       const result = await pool.query(
@@ -738,22 +733,22 @@ app.post('/api/face/checkin', async (req, res) => {
       io.emit('attendance_updated', result.rows[0]);
     }
 
-    res.json({ success: true, message: "Thao tác thành công" });
+    res.json({ success: true, message: "Thao tÃ¡c thÃ nh cÃ´ng" });
   } catch (err) {
-    console.error('🔥 LỖI:', err);
+    console.error('ðŸ”¥ Lá»–I:', err);
     res.status(500).json({ message: err.message });
   }
 });
 
 // --- 1.2 API UPLOAD FILE ---
 app.post('/api/upload', upload.single('file'), (req, res) => {
-  console.log('📥 Nhận yêu cầu upload file:', req.file?.originalname);
+  console.log('ðŸ“¥ Nháº­n yÃªu cáº§u upload file:', req.file?.originalname);
   if (!req.file) {
-    console.log('❌ Không tìm thấy file trong request');
-    return res.status(400).json({ message: "Không có file nào được tải lên" });
+    console.log('âŒ KhÃ´ng tÃ¬m tháº¥y file trong request');
+    return res.status(400).json({ message: "KhÃ´ng cÃ³ file nÃ o Ä‘Æ°á»£c táº£i lÃªn" });
   }
   const fileUrl = `/uploads/${req.file.filename}`;
-  console.log('✅ Upload thành công:', fileUrl);
+  console.log('âœ… Upload thÃ nh cÃ´ng:', fileUrl);
   res.json({ success: true, url: fileUrl });
 });
 
@@ -765,8 +760,8 @@ app.post('/api/employees/avatar', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- 1.5. API CẤU HÌNH HỆ THỐNG (CONFIG) ---
-// Hỗ trợ cả 2 endpoint để tương thích với Frontend
+// --- 1.5. API Cáº¤U HÃŒNH Há»† THá»NG (CONFIG) ---
+// Há»— trá»£ cáº£ 2 endpoint Ä‘á»ƒ tÆ°Æ¡ng thÃ­ch vá»›i Frontend
 const getConfig = async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM company_config LIMIT 1');
@@ -779,7 +774,7 @@ const postConfig = async (req, res) => {
     company_name, safe_lat, safe_lng, safe_wifi_ssid, safe_wifi_bssid, radius_meters,
     work_start_time, work_end_time, break_start_time, break_end_time, work_days
   } = req.body;
-  console.log('📥 Nhận yêu cầu cập nhật cấu hình:', { company_name, work_days });
+  console.log('ðŸ“¥ Nháº­n yÃªu cáº§u cáº­p nháº­t cáº¥u hÃ¬nh:', { company_name, work_days });
   try {
     const existing = await pool.query('SELECT id FROM company_config LIMIT 1');
     if (existing.rows.length > 0) {
@@ -829,10 +824,10 @@ app.post('/api/company/config', postConfig);
 
 app.delete('/api/system/clear', async (req, res) => {
   await pool.query('TRUNCATE attendance, approvals, meetings, employees, departments RESTART IDENTITY CASCADE');
-  res.json({ message: "Đã xóa sạch dữ liệu hệ thống" });
+  res.json({ message: "ÄÃ£ xÃ³a sáº¡ch dá»¯ liá»‡u há»‡ thá»‘ng" });
 });
 
-// --- 2. API QUẢN LÝ PHÒNG BAN (DEPARTMENTS) ---
+// --- 2. API QUáº¢N LÃ PHÃ’NG BAN (DEPARTMENTS) ---
 app.get('/api/departments', async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM departments ORDER BY name ASC');
@@ -851,15 +846,15 @@ app.post('/api/departments', async (req, res) => {
     );
     const newDept = r.rows[0];
 
-    // Tạo group chat
-    const groupName = `Phòng ${name}`;
+    // Táº¡o group chat
+    const groupName = `PhÃ²ng ${name}`;
     const chatRes = await client.query(
       `INSERT INTO conversations (type, name, created_by) VALUES ('group', $1, 1) RETURNING id`,
       [groupName]
     );
     const chatId = chatRes.rows[0].id;
 
-    // Cập nhật group_chat_id
+    // Cáº­p nháº­t group_chat_id
     await client.query('UPDATE departments SET group_chat_id = $1 WHERE id = $2', [chatId, newDept.id]);
     newDept.group_chat_id = chatId;
 
@@ -891,7 +886,7 @@ app.delete('/api/departments/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- 3. API QUẢN LÝ NHÂN VIÊN (EMPLOYEES) ---
+// --- 3. API QUáº¢N LÃ NHÃ‚N VIÃŠN (EMPLOYEES) ---
 app.get('/api/employees', async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM employees ORDER BY created_at DESC');
@@ -903,7 +898,7 @@ app.get('/api/employees/code/:code', async (req, res) => {
   try {
     const { code } = req.params;
     const r = await pool.query('SELECT * FROM employees WHERE employee_code = $1', [code]);
-    if (r.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy nhân viên' });
+    if (r.rows.length === 0) return res.status(404).json({ error: 'KhÃ´ng tÃ¬m tháº¥y nhÃ¢n viÃªn' });
     res.json(r.rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -912,9 +907,9 @@ app.post('/api/employees', async (req, res) => {
   try {
     const { name, email, phone, department_id, position, join_date, birthday } = req.body;
     
-    // 1. Lấy thông tin phòng ban
+    // 1. Láº¥y thÃ´ng tin phÃ²ng ban
     const deptResult = await pool.query('SELECT name, code FROM departments WHERE id = $1', [department_id]);
-    if (deptResult.rows.length === 0) return res.status(400).json({ error: 'Phòng ban không tồn tại' });
+    if (deptResult.rows.length === 0) return res.status(400).json({ error: 'PhÃ²ng ban khÃ´ng tá»“n táº¡i' });
     
     const dept = deptResult.rows[0];
     const deptCode = dept.code || 'NV';
@@ -922,12 +917,12 @@ app.post('/api/employees', async (req, res) => {
     const random = Math.floor(1000 + Math.random() * 9000);
     const employee_code = `${deptCode}${year}${random}`;
     
-    // 2. Tạo mật khẩu ngẫu nhiên (8 ký tự)
+    // 2. Táº¡o máº­t kháº©u ngáº«u nhiÃªn (8 kÃ½ tá»±)
     const password = Math.random().toString(36).slice(-8);
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
-    // 3. Lưu vào DB
+    // 3. LÆ°u vÃ o DB
     const result = await pool.query(
       'INSERT INTO employees (employee_code, name, email, password_hash, phone, department_id, department_name, position, join_date, birthday) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
       [employee_code, name, email, password_hash, phone, department_id, dept.name, position, join_date, birthday]
@@ -935,39 +930,39 @@ app.post('/api/employees', async (req, res) => {
 
     const newEmp = result.rows[0];
 
-    // Thêm vào group chat phòng ban
+    // ThÃªm vÃ o group chat phÃ²ng ban
     const deptInfoRes = await pool.query('SELECT group_chat_id FROM departments WHERE id = $1', [department_id]);
     if (deptInfoRes.rows.length > 0 && deptInfoRes.rows[0].group_chat_id) {
       await pool.query('INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1, $2)', [deptInfoRes.rows[0].group_chat_id, newEmp.id]);
     }
 
-    console.log(`✨ Đã tạo nhân viên mới: ${employee_code}`);
+    console.log(`âœ¨ ÄÃ£ táº¡o nhÃ¢n viÃªn má»›i: ${employee_code}`);
 
-    // 4. Gửi Email thông báo (Chạy ngầm)
+    // 4. Gá»­i Email thÃ´ng bÃ¡o (Cháº¡y ngáº§m)
     const mailOptions = {
       from: `"WorkMate System" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Chào mừng bạn đến với WorkMate - Thông tin tài khoản của bạn',
+      subject: 'ChÃ o má»«ng báº¡n Ä‘áº¿n vá»›i WorkMate - ThÃ´ng tin tÃ i khoáº£n cá»§a báº¡n',
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
           <div style="background-color: #1C6185; padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">Chào mừng bạn đến với WorkMate!</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">ChÃ o má»«ng báº¡n Ä‘áº¿n vá»›i WorkMate!</h1>
           </div>
           <div style="padding: 40px; background-color: white; line-height: 1.6; color: #334155;">
-            <p>Xin chào <strong>${name}</strong>,</p>
-            <p>Chào mừng bạn đã gia nhập đội ngũ của chúng tôi. Tài khoản nhân viên của bạn đã được tạo thành công trên hệ thống <strong>WorkMate</strong>.</p>
-            <p>Dưới đây là thông tin đăng nhập của bạn:</p>
+            <p>Xin chÃ o <strong>${name}</strong>,</p>
+            <p>ChÃ o má»«ng báº¡n Ä‘Ã£ gia nháº­p Ä‘á»™i ngÅ© cá»§a chÃºng tÃ´i. TÃ i khoáº£n nhÃ¢n viÃªn cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c táº¡o thÃ nh cÃ´ng trÃªn há»‡ thá»‘ng <strong>WorkMate</strong>.</p>
+            <p>DÆ°á»›i Ä‘Ã¢y lÃ  thÃ´ng tin Ä‘Äƒng nháº­p cá»§a báº¡n:</p>
             <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 25px 0;">
-              <p style="margin: 0 0 10px 0;"><strong>Mã nhân viên:</strong> <span style="color: #1C6185; font-weight: bold; font-size: 18px;">${employee_code}</span></p>
-              <p style="margin: 0;"><strong>Mật khẩu tạm thời:</strong> <span style="color: #1C6185; font-weight: bold; font-size: 18px;">${password}</span></p>
+              <p style="margin: 0 0 10px 0;"><strong>MÃ£ nhÃ¢n viÃªn:</strong> <span style="color: #1C6185; font-weight: bold; font-size: 18px;">${employee_code}</span></p>
+              <p style="margin: 0;"><strong>Máº­t kháº©u táº¡m thá»i:</strong> <span style="color: #1C6185; font-weight: bold; font-size: 18px;">${password}</span></p>
             </div>
-            <p style="color: #64748b; font-size: 14px;"><em>* Vui lòng đổi mật khẩu ngay sau khi đăng nhập lần đầu để đảm bảo an toàn cho tài khoản của bạn.</em></p>
+            <p style="color: #64748b; font-size: 14px;"><em>* Vui lÃ²ng Ä‘á»•i máº­t kháº©u ngay sau khi Ä‘Äƒng nháº­p láº§n Ä‘áº§u Ä‘á»ƒ Ä‘áº£m báº£o an toÃ n cho tÃ i khoáº£n cá»§a báº¡n.</em></p>
             <div style="text-align: center; margin-top: 35px;">
-              <a href="#" style="background-color: #1C6185; color: white; padding: 14px 30px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block;">TẢI ỨNG DỤNG NGAY</a>
+              <a href="#" style="background-color: #1C6185; color: white; padding: 14px 30px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block;">Táº¢I á»¨NG Dá»¤NG NGAY</a>
             </div>
           </div>
           <div style="background-color: #f8fafc; padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0;">
-            <p style="margin: 0;">© 2025 WorkMate Ecosystem. All rights reserved.</p>
+            <p style="margin: 0;">Â© 2025 WorkMate Ecosystem. All rights reserved.</p>
           </div>
         </div>
       `
@@ -975,15 +970,15 @@ app.post('/api/employees', async (req, res) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error('❌ Lỗi gửi email:', error);
+        console.error('âŒ Lá»—i gá»­i email:', error);
       } else {
-        console.log('📧 Đã gửi email thông tin tài khoản tới:', email);
+        console.log('ðŸ“§ ÄÃ£ gá»­i email thÃ´ng tin tÃ i khoáº£n tá»›i:', email);
       }
     });
 
     res.json({ ...result.rows[0], password }); 
   } catch (err) { 
-    console.error('❌ Lỗi tạo nhân viên:', err.message);
+    console.error('âŒ Lá»—i táº¡o nhÃ¢n viÃªn:', err.message);
     res.status(500).json({ error: err.message }); 
   }
 });
@@ -991,9 +986,9 @@ app.post('/api/employees', async (req, res) => {
 app.put('/api/employees/:id', async (req, res) => {
   try {
     const { name, email, phone, department_id, position, join_date, birthday } = req.body;
-    console.log(`📝 Cập nhật nhân viên ${req.params.id}:`, { name, email, phone, birthday });
+    console.log(`ðŸ“ Cáº­p nháº­t nhÃ¢n viÃªn ${req.params.id}:`, { name, email, phone, birthday });
 
-    // Lấy tên phòng ban mới nếu có thay đổi
+    // Láº¥y tÃªn phÃ²ng ban má»›i náº¿u cÃ³ thay Ä‘á»•i
     const deptResult = await pool.query('SELECT name FROM departments WHERE id = $1', [department_id]);
     const deptName = deptResult.rows[0]?.name || '';
 
@@ -1002,10 +997,10 @@ app.put('/api/employees/:id', async (req, res) => {
       [name, email, phone, department_id, deptName, position, join_date || null, birthday || null, req.params.id]
     );
 
-    console.log(`✅ Đã cập nhật nhân viên: ${result.rows[0].employee_code}`);
+    console.log(`âœ… ÄÃ£ cáº­p nháº­t nhÃ¢n viÃªn: ${result.rows[0].employee_code}`);
     res.json(result.rows[0]);
   } catch (err) { 
-    console.error('❌ Lỗi cập nhật nhân viên:', err.message);
+    console.error('âŒ Lá»—i cáº­p nháº­t nhÃ¢n viÃªn:', err.message);
     res.status(500).json({ error: err.message }); 
   }
 });
@@ -1017,7 +1012,7 @@ app.delete('/api/employees/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- 4. API TÀI KHOẢN NGÂN HÀNG (EMPLOYEE BANKS) ---
+// --- 4. API TÃ€I KHOáº¢N NGÃ‚N HÃ€NG (EMPLOYEE BANKS) ---
 app.get('/api/employees/:id/banks', async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM employee_banks WHERE employee_id = $1 ORDER BY is_default DESC, created_at DESC', [req.params.id]);
@@ -1030,10 +1025,10 @@ app.post('/api/employees/:id/banks', async (req, res) => {
     const { id } = req.params;
     const { bank_name, account_number, account_holder } = req.body;
 
-    // Giới hạn tối đa 3 thẻ
+    // Giá»›i háº¡n tá»‘i Ä‘a 3 tháº»
     const countRes = await pool.query('SELECT COUNT(*) FROM employee_banks WHERE employee_id = $1', [id]);
     if (parseInt(countRes.rows[0].count) >= 3) {
-      return res.status(400).json({ error: 'Chỉ có thể thêm tối đa 3 tài khoản ngân hàng' });
+      return res.status(400).json({ error: 'Chá»‰ cÃ³ thá»ƒ thÃªm tá»‘i Ä‘a 3 tÃ i khoáº£n ngÃ¢n hÃ ng' });
     }
 
     const r = await pool.query(
@@ -1072,7 +1067,7 @@ app.post('/api/employees/fcm-token', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Helper tính toán giờ công theo quy định
+// Helper tÃ­nh toÃ¡n giá» cÃ´ng theo quy Ä‘á»‹nh
 function calculateWorkingHours(checkIn, checkOut, config, approvedOT = 0) {
   if (!checkIn || !checkOut) return { total: 0, normal: 0, ot: 0 };
 
@@ -1080,13 +1075,13 @@ function calculateWorkingHours(checkIn, checkOut, config, approvedOT = 0) {
   const end = new Date(checkOut);
   const dateStr = start.toISOString().split('T')[0];
 
-  // Chuyển đổi cấu hình giờ sang Date object cho ngày hiện tại
+  // Chuyá»ƒn Ä‘á»•i cáº¥u hÃ¬nh giá» sang Date object cho ngÃ y hiá»‡n táº¡i
   const workStart = new Date(`${dateStr}T${config.work_start_time || '08:00'}:00`);
   const workEnd = new Date(`${dateStr}T${config.work_end_time || '17:00'}:00`);
   const breakStart = new Date(`${dateStr}T${config.break_start_time || '12:00'}:00`);
   const breakEnd = new Date(`${dateStr}T${config.break_end_time || '13:00'}:00`);
 
-  // 1. Tính giờ hành chính (chỉ nằm trong khoảng workStart -> workEnd)
+  // 1. TÃ­nh giá» hÃ nh chÃ­nh (chá»‰ náº±m trong khoáº£ng workStart -> workEnd)
   const effectiveStart = start > workStart ? start : workStart;
   const effectiveEnd = end < workEnd ? end : workEnd;
   
@@ -1094,7 +1089,7 @@ function calculateWorkingHours(checkIn, checkOut, config, approvedOT = 0) {
   if (effectiveEnd > effectiveStart) {
     normalMs = effectiveEnd - effectiveStart;
     
-    // Trừ giờ nghỉ trưa nếu có giao thoa
+    // Trá»« giá» nghá»‰ trÆ°a náº¿u cÃ³ giao thoa
     const overlapBreakStart = effectiveStart > breakStart ? effectiveStart : breakStart;
     const overlapBreakEnd = effectiveEnd < breakEnd ? effectiveEnd : breakEnd;
     if (overlapBreakEnd > overlapBreakStart) {
@@ -1102,7 +1097,7 @@ function calculateWorkingHours(checkIn, checkOut, config, approvedOT = 0) {
     }
   }
 
-  // 2. Tính giờ OT (nếu có check out sau workEnd và có approvedOT)
+  // 2. TÃ­nh giá» OT (náº¿u cÃ³ check out sau workEnd vÃ  cÃ³ approvedOT)
   let otMs = 0;
   if (end > workEnd && approvedOT > 0) {
     const actualOTMs = end - workEnd;
@@ -1121,7 +1116,7 @@ function calculateWorkingHours(checkIn, checkOut, config, approvedOT = 0) {
 }
 
 
-// Helper gửi thông báo
+// Helper gá»­i thÃ´ng bÃ¡o
 async function sendPushNotification(employeeId, title, body, data = {}) {
   try {
     const r = await pool.query('SELECT fcm_token FROM employees WHERE id = $1', [employeeId]);
@@ -1135,16 +1130,16 @@ async function sendPushNotification(employeeId, title, body, data = {}) {
     };
 
     await admin.messaging().send(message);
-    console.log(`🚀 Đã gửi Push Notification tới ID ${employeeId}`);
+    console.log(`ðŸš€ ÄÃ£ gá»­i Push Notification tá»›i ID ${employeeId}`);
   } catch (err) {
-    console.error('❌ Lỗi gửi Push Notification:', err.message);
+    console.error('âŒ Lá»—i gá»­i Push Notification:', err.message);
   }
 }
 
 
-// --- 4. API QUẢN LÝ LỊCH HỌP (MEETINGS) ---
+// --- 4. API QUáº¢N LÃ Lá»ŠCH Há»ŒP (MEETINGS) ---
 
-// API Xuất Excel
+// API Xuáº¥t Excel
 app.get('/api/attendance/export', async (req, res) => {
   try {
     const { month } = req.query; // YYYY-MM
@@ -1165,7 +1160,7 @@ app.get('/api/attendance/export', async (req, res) => {
     const otRes = await pool.query(`
       SELECT employee_id, to_char(from_date, 'YYYY-MM-DD') as date, SUM(total_hours) as hours
       FROM approvals 
-      WHERE status = 'approved' AND type = 'Làm thêm giờ'
+      WHERE status = 'approved' AND type = 'LÃ m thÃªm giá»'
       GROUP BY employee_id, to_char(from_date, 'YYYY-MM-DD')
     `);
     const otMap = {};
@@ -1182,30 +1177,30 @@ app.get('/api/attendance/export', async (req, res) => {
     });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Báo cáo Chi tiết');
-    const summarySheet = workbook.addWorksheet('Tổng hợp Công');
+    const worksheet = workbook.addWorksheet('BÃ¡o cÃ¡o Chi tiáº¿t');
+    const summarySheet = workbook.addWorksheet('Tá»•ng há»£p CÃ´ng');
 
-    // Sheet 1: Chi tiết
+    // Sheet 1: Chi tiáº¿t
     worksheet.columns = [
-      { header: 'Mã NV', key: 'code', width: 15 },
-      { header: 'Họ tên', key: 'name', width: 25 },
-      { header: 'Ngày', key: 'date', width: 15 },
-      { header: 'Giờ vào', key: 'in', width: 12 },
-      { header: 'Giờ ra', key: 'out', width: 12 },
-      { header: 'Tổng giờ', key: 'total', width: 12 },
-      { header: 'Giờ hành chính', key: 'normal', width: 15 },
-      { header: 'Giờ OT', key: 'ot', width: 12 }
+      { header: 'MÃ£ NV', key: 'code', width: 15 },
+      { header: 'Há» tÃªn', key: 'name', width: 25 },
+      { header: 'NgÃ y', key: 'date', width: 15 },
+      { header: 'Giá» vÃ o', key: 'in', width: 12 },
+      { header: 'Giá» ra', key: 'out', width: 12 },
+      { header: 'Tá»•ng giá»', key: 'total', width: 12 },
+      { header: 'Giá» hÃ nh chÃ­nh', key: 'normal', width: 15 },
+      { header: 'Giá» OT', key: 'ot', width: 12 }
     ];
     worksheet.getRow(1).font = { bold: true };
 
-    // Sheet 2: Tổng hợp
+    // Sheet 2: Tá»•ng há»£p
     summarySheet.columns = [
-      { header: 'Mã NV', key: 'code', width: 15 },
-      { header: 'Họ tên', key: 'name', width: 25 },
-      { header: 'Tổng giờ làm', key: 'totalHours', width: 15 },
-      { header: 'Ngân hàng', key: 'bank_name', width: 20 },
-      { header: 'Số tài khoản', key: 'account_number', width: 20 },
-      { header: 'Chủ tài khoản', key: 'account_holder', width: 25 }
+      { header: 'MÃ£ NV', key: 'code', width: 15 },
+      { header: 'Há» tÃªn', key: 'name', width: 25 },
+      { header: 'Tá»•ng giá» lÃ m', key: 'totalHours', width: 15 },
+      { header: 'NgÃ¢n hÃ ng', key: 'bank_name', width: 20 },
+      { header: 'Sá»‘ tÃ i khoáº£n', key: 'account_number', width: 20 },
+      { header: 'Chá»§ tÃ i khoáº£n', key: 'account_holder', width: 25 }
     ];
     summarySheet.getRow(1).font = { bold: true };
 
@@ -1299,18 +1294,18 @@ app.put('/api/attendance/:id', async (req, res) => {
     const { id } = req.params;
     const { check_in, check_out, date } = req.body; // check_in/out format HH:mm:ss
 
-    // 1. Lấy dữ liệu cũ để so sánh
+    // 1. Láº¥y dá»¯ liá»‡u cÅ© Ä‘á»ƒ so sÃ¡nh
     const oldRes = await pool.query(`
       SELECT a.*, to_char(check_in_time, 'HH24:MI:SS') as old_in, 
              to_char(check_out_time, 'HH24:MI:SS') as old_out
       FROM attendance a WHERE id = $1
     `, [id]);
     
-    if (oldRes.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy bản ghi' });
+    if (oldRes.rows.length === 0) return res.status(404).json({ error: 'KhÃ´ng tÃ¬m tháº¥y báº£n ghi' });
     const old = oldRes.rows[0];
 
-    // 2. Cập nhật vào DB
-    // Lưu ý: check_in_time và check_out_time là TIMESTAMP, cần kết hợp với date
+    // 2. Cáº­p nháº­t vÃ o DB
+    // LÆ°u Ã½: check_in_time vÃ  check_out_time lÃ  TIMESTAMP, cáº§n káº¿t há»£p vá»›i date
     const newIn = `${date} ${check_in}`;
     const newOut = check_out ? `${date} ${check_out}` : null;
 
@@ -1319,16 +1314,16 @@ app.put('/api/attendance/:id', async (req, res) => {
       [newIn, newOut, id]
     );
 
-    // 3. Gửi Push Notification thông báo thay đổi
+    // 3. Gá»­i Push Notification thÃ´ng bÃ¡o thay Ä‘á»•i
     let changeLog = [];
-    if (old.old_in !== check_in) changeLog.push(`Giờ vào: ${old.old_in} ➔ ${check_in}`);
+    if (old.old_in !== check_in) changeLog.push(`Giá» vÃ o: ${old.old_in} âž” ${check_in}`);
     if ((old.old_out || '--:--:--') !== (check_out || '--:--:--')) {
-      changeLog.push(`Giờ ra: ${old.old_out || '--:--:--'} ➔ ${check_out || '--:--:--'}`);
+      changeLog.push(`Giá» ra: ${old.old_out || '--:--:--'} âž” ${check_out || '--:--:--'}`);
     }
 
     if (changeLog.length > 0) {
-      const title = '⚡ Chỉnh sửa giờ công';
-      const body = `Admin đã sửa giờ công ngày ${date}:\n${changeLog.join('\n')}`;
+      const title = 'âš¡ Chá»‰nh sá»­a giá» cÃ´ng';
+      const body = `Admin Ä‘Ã£ sá»­a giá» cÃ´ng ngÃ y ${date}:\n${changeLog.join('\n')}`;
       
       await sendPushNotification(
         old.employee_id,
@@ -1337,7 +1332,7 @@ app.put('/api/attendance/:id', async (req, res) => {
         { type: 'attendance_update', date }
       );
 
-      // Emit realtime event để lưu vào danh sách thông báo trên App
+      // Emit realtime event Ä‘á»ƒ lÆ°u vÃ o danh sÃ¡ch thÃ´ng bÃ¡o trÃªn App
       io.emit('attendance_edited', {
         employee_id: old.employee_id,
         title: title,
@@ -1345,7 +1340,7 @@ app.put('/api/attendance/:id', async (req, res) => {
         date: date
       });
 
-      // Lưu vào user_notifications
+      // LÆ°u vÃ o user_notifications
       await pool.query(
         "INSERT INTO user_notifications (employee_id, title, body, type, data) VALUES ($1, $2, $3, $4, $5)",
         [old.employee_id, title, body, 'attendance_update', JSON.stringify({ date })]
@@ -1354,12 +1349,12 @@ app.put('/api/attendance/:id', async (req, res) => {
 
     res.json({ success: true });
   } catch (err) { 
-    console.error('❌ Lỗi sửa attendance:', err.message);
+    console.error('âŒ Lá»—i sá»­a attendance:', err.message);
     res.status(500).json({ error: err.message }); 
   }
 });
 
-// --- 6. API PHÊ DUYỆT (APPROVALS) ---
+// --- 6. API PHÃŠ DUYá»†T (APPROVALS) ---
 app.post('/api/approvals', async (req, res) => {
   try {
     const { employee_id, employee_name, type, reason, from_date, to_date, attachment_urls, is_half_day, total_hours } = req.body;
@@ -1373,7 +1368,7 @@ app.post('/api/approvals', async (req, res) => {
 });
 
 app.post('/api/approvals/admin-assign', async (req, res) => {
-  console.log('📝 Admin gán lịch OT/Nghỉ:', req.body);
+  console.log('ðŸ“ Admin gÃ¡n lá»‹ch OT/Nghá»‰:', req.body);
   try {
     const { type, reason, from_date, to_date, total_hours, is_half_day, department_id, employee_ids } = req.body;
     
@@ -1389,11 +1384,11 @@ app.post('/api/approvals/admin-assign', async (req, res) => {
       const r = await pool.query('SELECT id, name FROM employees WHERE id = ANY($1)', [employee_ids]);
       targetEmployees = r.rows;
     } else {
-      return res.status(400).json({ error: "Vui lòng chọn đối tượng gán" });
+      return res.status(400).json({ error: "Vui lÃ²ng chá»n Ä‘á»‘i tÆ°á»£ng gÃ¡n" });
     }
 
     if (targetEmployees.length === 0) {
-      return res.status(404).json({ error: "Không tìm thấy nhân viên phù hợp" });
+      return res.status(404).json({ error: "KhÃ´ng tÃ¬m tháº¥y nhÃ¢n viÃªn phÃ¹ há»£p" });
     }
 
     for (const emp of targetEmployees) {
@@ -1409,21 +1404,21 @@ app.post('/api/approvals/admin-assign', async (req, res) => {
       
       await sendPushNotification(
         emp.id,
-        `Lịch ${type} mới`,
-        `Quản trị viên đã xếp lịch ${type} cho bạn: ${reason}`,
+        `Lá»‹ch ${type} má»›i`,
+        `Quáº£n trá»‹ viÃªn Ä‘Ã£ xáº¿p lá»‹ch ${type} cho báº¡n: ${reason}`,
         { type: 'approval_assigned', id: approval.id.toString() }
       );
     }
 
-    res.json({ success: true, message: `Đã gán lịch cho ${targetEmployees.length} nhân viên` });
+    res.json({ success: true, message: `ÄÃ£ gÃ¡n lá»‹ch cho ${targetEmployees.length} nhÃ¢n viÃªn` });
   } catch (err) {
-    console.error('❌ Lỗi admin-assign:', err.message);
+    console.error('âŒ Lá»—i admin-assign:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.get('/api/approvals', async (req, res) => {
-  console.log('🔍 Truy vấn danh sách phê duyệt:', req.query);
+  console.log('ðŸ” Truy váº¥n danh sÃ¡ch phÃª duyá»‡t:', req.query);
   try {
     const { employee_id } = req.query;
     let query = 'SELECT * FROM approvals';
@@ -1436,7 +1431,7 @@ app.get('/api/approvals', async (req, res) => {
     
     const r = await pool.query(query, params);
     
-    // Chuẩn hóa dữ liệu trước khi gửi về
+    // Chuáº©n hÃ³a dá»¯ liá»‡u trÆ°á»›c khi gá»­i vá»
     const rows = r.rows.map(row => ({
       ...row,
       from_date: row.from_date ? new Date(row.from_date).toISOString() : null,
@@ -1446,10 +1441,10 @@ app.get('/api/approvals', async (req, res) => {
       attachment_urls: typeof row.attachment_urls === 'string' ? JSON.parse(row.attachment_urls) : (row.attachment_urls || [])
     }));
 
-    console.log(`✅ Trả về ${rows.length} yêu cầu cho ID: ${employee_id || 'ALL'}`);
+    console.log(`âœ… Tráº£ vá» ${rows.length} yÃªu cáº§u cho ID: ${employee_id || 'ALL'}`);
     res.json(rows);
   } catch (err) { 
-    console.error('❌ Lỗi truy vấn approvals:', err.message);
+    console.error('âŒ Lá»—i truy váº¥n approvals:', err.message);
     res.status(500).json({ error: err.message }); 
   }
 });
@@ -1457,52 +1452,52 @@ app.get('/api/approvals', async (req, res) => {
 app.put('/api/approvals/:id', async (req, res) => {
   try {
     const { status } = req.body;
-    // 1. Cập nhật trạng thái phê duyệt
+    // 1. Cáº­p nháº­t tráº¡ng thÃ¡i phÃª duyá»‡t
     const result = await pool.query('UPDATE approvals SET status = $1 WHERE id = $2 RETURNING *', [status, req.params.id]);
     const approval = result.rows[0];
     
-    // 2. Nếu là Quên chấm công và được duyệt -> Thêm vào bảng attendance NGAY LẬP TỨC
-    if (status === 'approved' && approval.type === 'Quên chấm công') {
-      console.log('📝 Bổ sung chấm công từ đơn quên chấm công cho:', approval.employee_name);
+    // 2. Náº¿u lÃ  QuÃªn cháº¥m cÃ´ng vÃ  Ä‘Æ°á»£c duyá»‡t -> ThÃªm vÃ o báº£ng attendance NGAY Láº¬P Tá»¨C
+    if (status === 'approved' && approval.type === 'QuÃªn cháº¥m cÃ´ng') {
+      console.log('ðŸ“ Bá»• sung cháº¥m cÃ´ng tá»« Ä‘Æ¡n quÃªn cháº¥m cÃ´ng cho:', approval.employee_name);
       try {
         const checkIn = new Date(approval.from_date);
         const checkOut = new Date(approval.to_date);
         
-        // Định dạng HH:mm:ss cho các cột varchar nếu cần
+        // Äá»‹nh dáº¡ng HH:mm:ss cho cÃ¡c cá»™t varchar náº¿u cáº§n
         const cinStr = `${checkIn.getHours().toString().padStart(2, '0')}:${checkIn.getMinutes().toString().padStart(2, '0')}:${checkIn.getSeconds().toString().padStart(2, '0')}`;
         const coutStr = `${checkOut.getHours().toString().padStart(2, '0')}:${checkOut.getMinutes().toString().padStart(2, '0')}:${checkOut.getSeconds().toString().padStart(2, '0')}`;
 
         await pool.query(
           'INSERT INTO attendance (employee_id, employee_name, check_in_time, check_out_time, check_in, check_out, check_in_method) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-          [approval.employee_id, approval.employee_name, approval.from_date, approval.to_date, cinStr, coutStr, 'Quản trị viên bổ sung']
+          [approval.employee_id, approval.employee_name, approval.from_date, approval.to_date, cinStr, coutStr, 'Quáº£n trá»‹ viÃªn bá»• sung']
         );
-        console.log('✅ Đã chèn bản ghi chấm công mới thành công.');
+        console.log('âœ… ÄÃ£ chÃ¨n báº£n ghi cháº¥m cÃ´ng má»›i thÃ nh cÃ´ng.');
       } catch (insertErr) {
-        console.error('❌ Lỗi khi chèn bản ghi chấm công bổ sung:', insertErr.message);
+        console.error('âŒ Lá»—i khi chÃ¨n báº£n ghi cháº¥m cÃ´ng bá»• sung:', insertErr.message);
       }
     }
 
-    // 3. Thông báo Real-time sau khi đã chuẩn bị xong dữ liệu
+    // 3. ThÃ´ng bÃ¡o Real-time sau khi Ä‘Ã£ chuáº©n bá»‹ xong dá»¯ liá»‡u
     io.emit('approval_updated', approval);
-    io.emit('attendance_updated'); // Thông báo cho Web Admin cập nhật danh sách chấm công
+    io.emit('attendance_updated'); // ThÃ´ng bÃ¡o cho Web Admin cáº­p nháº­t danh sÃ¡ch cháº¥m cÃ´ng
 
 
-    // Gửi Push Notification
-    const statusText = status === 'approved' ? 'được PHÊ DUYỆT' : 'bị TỪ CHỐI';
+    // Gá»­i Push Notification
+    const statusText = status === 'approved' ? 'Ä‘Æ°á»£c PHÃŠ DUYá»†T' : 'bá»‹ Tá»ª CHá»I';
     await sendPushNotification(
       approval.employee_id,
-      'Cập nhật yêu cầu',
-      `Yêu cầu "${approval.type}" của bạn đã ${statusText}.`,
+      'Cáº­p nháº­t yÃªu cáº§u',
+      `YÃªu cáº§u "${approval.type}" cá»§a báº¡n Ä‘Ã£ ${statusText}.`,
       { type: 'approval', id: approval.id.toString() }
     );
 
-    // Lưu vào user_notifications
+    // LÆ°u vÃ o user_notifications
     await pool.query(
       "INSERT INTO user_notifications (employee_id, title, body, type, data) VALUES ($1, $2, $3, $4, $5)",
       [
         approval.employee_id, 
-        'Cập nhật yêu cầu', 
-        `Yêu cầu "${approval.type}" của bạn đã ${statusText}.`, 
+        'Cáº­p nháº­t yÃªu cáº§u', 
+        `YÃªu cáº§u "${approval.type}" cá»§a báº¡n Ä‘Ã£ ${statusText}.`, 
         'approval', 
         JSON.stringify({ id: approval.id, status })
       ]
@@ -1516,7 +1511,7 @@ app.post('/api/approvals/check-forgot-limit', async (req, res) => {
   const { employee_id, month } = req.body; // month: YYYY-MM
   try {
     const r = await pool.query(
-      "SELECT COUNT(*) FROM approvals WHERE employee_id = $1 AND type = 'Quên chấm công' AND status != 'rejected' AND to_char(created_at, 'YYYY-MM') = $2",
+      "SELECT COUNT(*) FROM approvals WHERE employee_id = $1 AND type = 'QuÃªn cháº¥m cÃ´ng' AND status != 'rejected' AND to_char(created_at, 'YYYY-MM') = $2",
       [employee_id, month]
     );
     res.json({ count: parseInt(r.rows[0].count) });
@@ -1524,29 +1519,29 @@ app.post('/api/approvals/check-forgot-limit', async (req, res) => {
 });
 
 app.post('/api/overtimes', async (req, res) => {
-  console.log('📥 Nhận yêu cầu OT mới:', req.body);
+  console.log('ðŸ“¥ Nháº­n yÃªu cáº§u OT má»›i:', req.body);
   try {
     const { employee_id, employee_name, date, hours, reason } = req.body;
     const result = await pool.query(
-      'INSERT INTO approvals (employee_id, employee_name, type, reason, from_date, to_date, total_hours, status) VALUES ($1, $2, \'Làm thêm giờ\', $3, $4, $4, $5, \'pending\') RETURNING *',
+      'INSERT INTO approvals (employee_id, employee_name, type, reason, from_date, to_date, total_hours, status) VALUES ($1, $2, \'LÃ m thÃªm giá»\', $3, $4, $4, $5, \'pending\') RETURNING *',
       [employee_id, employee_name, reason, date, hours]
     );
-    console.log('✅ Đã lưu đơn OT vào DB:', result.rows[0].id);
+    console.log('âœ… ÄÃ£ lÆ°u Ä‘Æ¡n OT vÃ o DB:', result.rows[0].id);
     io.emit('new_approval', result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) { 
-    console.error('❌ Lỗi lưu đơn OT:', err.message);
+    console.error('âŒ Lá»—i lÆ°u Ä‘Æ¡n OT:', err.message);
     res.status(500).json({ error: err.message }); 
   }
 });
 
-// --- 7. API THỐNG KÊ (STATISTICS) ---
+// --- 7. API THá»NG KÃŠ (STATISTICS) ---
 app.get('/api/statistics/:employeeId', async (req, res) => {
   const { employeeId } = req.params;
-  const { period, start_date, end_date } = req.query; // 'week', 'month', 'year' hoặc khoảng ngày cụ thể
+  const { period, start_date, end_date } = req.query; // 'week', 'month', 'year' hoáº·c khoáº£ng ngÃ y cá»¥ thá»ƒ
   
   try {
-    // 1. Lấy dữ liệu điểm danh
+    // 1. Láº¥y dá»¯ liá»‡u Ä‘iá»ƒm danh
     let dateFilter = "";
     let params = [employeeId];
 
@@ -1564,14 +1559,14 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
       params
     );
 
-    // 2. Lấy cấu hình và OT để tính toán
+    // 2. Láº¥y cáº¥u hÃ¬nh vÃ  OT Ä‘á»ƒ tÃ­nh toÃ¡n
     const configRes = await pool.query('SELECT * FROM company_config LIMIT 1');
     const config = configRes.rows[0];
 
     const otRes = await pool.query(`
       SELECT to_char(from_date, 'YYYY-MM-DD') as date, SUM(total_hours) as hours
       FROM approvals 
-      WHERE employee_id = $1 AND status = 'approved' AND type = 'Làm thêm giờ'
+      WHERE employee_id = $1 AND status = 'approved' AND type = 'LÃ m thÃªm giá»'
       GROUP BY to_char(from_date, 'YYYY-MM-DD')
     `, [employeeId]);
     const otMap = {};
@@ -1595,10 +1590,10 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
       weeklyData[dayIdx].normal = hours.normal;
       weeklyData[dayIdx].ot = hours.ot;
       
-      // Gán OT vào từng dòng để trả về cho App hiển thị ở mục Lịch sử
+      // GÃ¡n OT vÃ o tá»«ng dÃ²ng Ä‘á»ƒ tráº£ vá» cho App hiá»ƒn thá»‹ á»Ÿ má»¥c Lá»‹ch sá»­
       row.ot_hours = approvedOT;
       
-      // Kiểm tra đi muộn (So với work_start_time trong config)
+      // Kiá»ƒm tra Ä‘i muá»™n (So vá»›i work_start_time trong config)
       const checkInHour = new Date(row.check_in_time).getHours();
       const checkInMin = new Date(row.check_in_time).getMinutes();
       const [limitHour, limitMin] = (config.work_start_time || '08:30').split(':').map(Number);
@@ -1608,7 +1603,7 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
       }
     });
 
-    // 3. Lấy số ngày nghỉ từ approvals (Xử lý dữ liệu lỗi/ngược ngày)
+    // 3. Láº¥y sá»‘ ngÃ y nghá»‰ tá»« approvals (Xá»­ lÃ½ dá»¯ liá»‡u lá»—i/ngÆ°á»£c ngÃ y)
     const leavesQuery = await pool.query(
       `SELECT 
         id, type, total_hours, from_date, to_date, is_half_day,
@@ -1620,8 +1615,8 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
        FROM approvals 
        WHERE employee_id::text = $1::text 
        AND status IN ('approved', 'pending') 
-       AND (LOWER(type) LIKE '%nghỉ%' OR LOWER(type) LIKE '%phép%')
-       AND LOWER(type) NOT LIKE '%thêm%'`,
+       AND (LOWER(type) LIKE '%nghá»‰%' OR LOWER(type) LIKE '%phÃ©p%')
+       AND LOWER(type) NOT LIKE '%thÃªm%'`,
       [employeeId]
     );
 
@@ -1655,7 +1650,7 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
 // --- 6. API CHAT & AI BOT ---
 const HybridChatbot = require('./hybrid_chatbot');
 
-// Lịch sử AI riêng
+// Lá»‹ch sá»­ AI riÃªng
 app.get('/api/chat/ai-history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1671,7 +1666,7 @@ app.get('/api/chat/ai-history/:userId', async (req, res) => {
 });
 
 app.post('/api/chat/upload', upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'Không có tệp nào được tải lên.' });
+  if (!req.file) return res.status(400).json({ error: 'KhÃ´ng cÃ³ tá»‡p nÃ o Ä‘Æ°á»£c táº£i lÃªn.' });
   res.json({
     file_url: `/uploads/chat/${req.file.filename}`,
     file_name: req.file.originalname,
@@ -1679,7 +1674,7 @@ app.post('/api/chat/upload', upload.single('file'), (req, res) => {
   });
 });
 
-// Lịch sử Admin riêng (cho Flutter app)
+// Lá»‹ch sá»­ Admin riÃªng (cho Flutter app)
 app.get('/api/chat/admin-history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1695,7 +1690,7 @@ app.get('/api/chat/admin-history/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Lịch sử chat theo userId (cho Web Admin dùng)
+// Lá»‹ch sá»­ chat theo userId (cho Web Admin dÃ¹ng)
 app.get('/api/chat/history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1715,7 +1710,7 @@ app.delete('/api/chat/history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     await pool.query("DELETE FROM chat_messages WHERE chat_type = 'admin' AND (sender_id = $1 OR receiver_id = $1)", [userId]);
-    res.json({ message: 'Đã xóa toàn bộ lịch sử chat.' });
+    res.json({ message: 'ÄÃ£ xÃ³a toÃ n bá»™ lá»‹ch sá»­ chat.' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -1738,7 +1733,7 @@ app.post('/api/chat/ai', async (req, res) => {
   try {
     const { userId, message } = req.body;
     
-    // Lưu câu hỏi của user (chat_type='ai')
+    // LÆ°u cÃ¢u há»i cá»§a user (chat_type='ai')
     await pool.query(
       "INSERT INTO chat_messages (sender_id, message, is_ai, chat_type) VALUES ($1, $2, false, 'ai')",
       [userId, message]
@@ -1748,7 +1743,7 @@ app.post('/api/chat/ai', async (req, res) => {
     const result = await bot.processMessage(userId, message);
     const reply = result.text;
 
-    // Lưu câu trả lời AI (chat_type='ai', is_ai=true)
+    // LÆ°u cÃ¢u tráº£ lá»i AI (chat_type='ai', is_ai=true)
     await pool.query(
       "INSERT INTO chat_messages (sender_id, message, is_ai, chat_type) VALUES ($1, $2, true, 'ai')",
       [userId, reply]
@@ -1761,12 +1756,12 @@ app.post('/api/chat/ai', async (req, res) => {
       source: result.source || 'rule'
     });
   } catch (err) { 
-    console.error('❌ Lỗi AI Chat:', err.message);
-    res.status(500).json({ error: err.message, reply: "Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại hoặc chat với Admin.", suggestAdmin: true, suggestions: ['Thử lại'], source: 'system' }); 
+    console.error('âŒ Lá»—i AI Chat:', err.message);
+    res.status(500).json({ error: err.message, reply: "Xin lá»—i, tÃ´i Ä‘ang gáº·p sá»± cá»‘. Vui lÃ²ng thá»­ láº¡i hoáº·c chat vá»›i Admin.", suggestAdmin: true, suggestions: ['Thá»­ láº¡i'], source: 'system' }); 
   }
 });
 
-// Lấy danh sách hội thoại của user
+// Láº¥y danh sÃ¡ch há»™i thoáº¡i cá»§a user
 app.get('/api/conversations', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -1813,7 +1808,7 @@ app.get('/api/conversations/:id/messages', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Tạo nhóm mới
+// Táº¡o nhÃ³m má»›i
 app.post('/api/conversations/group', async (req, res) => {
   const { name, createdBy, memberIds } = req.body;
   const client = await pool.connect();
@@ -1841,7 +1836,7 @@ app.post('/api/conversations/group', async (req, res) => {
   }
 });
 
-// Lấy đồng nghiệp (trừ admin)
+// Láº¥y Ä‘á»“ng nghiá»‡p (trá»« admin)
 app.get('/api/users/colleagues', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -1850,7 +1845,7 @@ app.get('/api/users/colleagues', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Lấy những người đã từng chat 1-1 (để gợi ý tạo nhóm mới)
+// Láº¥y nhá»¯ng ngÆ°á»i Ä‘Ã£ tá»«ng chat 1-1 (Ä‘á»ƒ gá»£i Ã½ táº¡o nhÃ³m má»›i)
 app.get('/api/users/chatted-colleagues', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -1866,8 +1861,8 @@ app.get('/api/users/chatted-colleagues', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- KHỞI CHẠY SERVER ---
+// --- KHá»žI CHáº Y SERVER ---
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 WorkMate Server is clean and running on port ${PORT} (0.0.0.0)`);
+  console.log(`ðŸš€ WorkMate Server is clean and running on port ${PORT} (0.0.0.0)`);
 });
