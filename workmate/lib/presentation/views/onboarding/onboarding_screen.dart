@@ -62,10 +62,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: AppColors.buttonShadow,
                         ),
-                        child: const Icon(
-                          Icons.access_time_rounded,
-                          size: 50,
-                          color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.asset(
+                            'assets/icons/app_icon.png',
+                            width: 88,
+                            height: 88,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 32),
