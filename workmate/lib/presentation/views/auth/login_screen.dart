@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 16),
                             InkWell(
-                              onTap: () => SupportUtils.contactSupport(context),
+                              onTap: () => SupportUtils.showSupportOptions(context),
                               borderRadius: BorderRadius.circular(12),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
