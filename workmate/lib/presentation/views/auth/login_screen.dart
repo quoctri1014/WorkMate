@@ -110,11 +110,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(24),
                     child: Transform.scale(
                       scale: 1.7,
-                      child: Image.asset(
-                        'assets/icons/app_icon.png',
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
+                      child: Transform.translate(
+                        offset: const Offset(0, 8),
+                        child: Image.asset(
+                          'assets/icons/app_icon.png',
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),

@@ -93,11 +93,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         borderRadius: BorderRadius.circular(32),
                         child: Transform.scale(
                           scale: 1.6,
-                          child: Image.asset(
-                            'assets/icons/app_icon.png',
-                            width: 120,
-                            height: 120,
-                            fit: BoxFit.cover,
+                          child: Transform.translate(
+                            offset: const Offset(0, 8),
+                            child: Image.asset(
+                              'assets/icons/app_icon.png',
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),

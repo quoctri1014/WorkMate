@@ -66,11 +66,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           borderRadius: BorderRadius.circular(24),
                           child: Transform.scale(
                             scale: 1.6,
-                            child: Image.asset(
-                              'assets/icons/app_icon.png',
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
+                            child: Transform.translate(
+                              offset: const Offset(0, 8),
+                              child: Image.asset(
+                                'assets/icons/app_icon.png',
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         ),
