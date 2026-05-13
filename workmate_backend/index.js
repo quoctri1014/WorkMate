@@ -1836,6 +1836,7 @@ app.get('/api/users/chatted-colleagues', async (req, res) => {
 });
 
 // --- KHỞI CHẠY SERVER ---
-server.listen(5000, '0.0.0.0', () => {
-  console.log('🚀 WorkMate Server is clean and running on port 5000 (0.0.0.0)');
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 WorkMate Server is clean and running on port ${PORT} (0.0.0.0)`);
 });
