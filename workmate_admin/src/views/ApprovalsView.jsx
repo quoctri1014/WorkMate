@@ -392,8 +392,8 @@ const ApprovalsView = ({ approvals = [], onRefresh }) => {
                         {attachments.length > 0 && (
                           <div className="flex gap-1.5 mt-2">
                             {attachments.map((url, idx) => (
-                              <a key={idx} href={url.startsWith('http') ? url : `http://localhost:5000${url}`} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 hover:scale-110 transition-transform">
-                                <img src={url.startsWith('http') ? url : `http://localhost:5000${url}`} className="w-full h-full object-cover" alt="Minh chứng" />
+                              <a key={idx} href={url.startsWith('http') ? url : `https://workmate-backend-k8nk.onrender.com${url}`} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 hover:scale-110 transition-transform">
+                                <img src={url.startsWith('http') ? url : `https://workmate-backend-k8nk.onrender.com${url}`} className="w-full h-full object-cover" alt="Minh chứng" />
                               </a>
                             ))}
                           </div>

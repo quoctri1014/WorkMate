@@ -268,7 +268,7 @@ const EmployeesView = ({ employees = [], depts = [], onRefresh, onlineUsers = []
                     <div className="flex items-center gap-4">
                       <div className="relative">
                         {e.avatar_url ? (
-                          <img src={e.avatar_url.startsWith('http') ? e.avatar_url : `http://localhost:5000${e.avatar_url}`} className="w-12 h-12 rounded-2xl object-cover shadow-sm" alt={e.name} />
+                          <img src={e.avatar_url.startsWith('http') ? e.avatar_url : `https://workmate-backend-k8nk.onrender.com${e.avatar_url}`} className="w-12 h-12 rounded-2xl object-cover shadow-sm" alt={e.name} />
                         ) : (
                           <div className="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center text-primary font-black text-lg shadow-inner">{e.name?.[0]}</div>
                         )}

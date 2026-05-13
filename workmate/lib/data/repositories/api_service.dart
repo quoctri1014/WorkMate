@@ -4,10 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:workmate/data/models/models.dart';
 
 class ApiService {
-  // Tự động nhận diện IP cho Android Emulator (10.0.2.2) và iOS thực tế (Dùng IP máy tính)
+  // Trỏ về Server Render
   static String get baseHost {
-    if (Platform.isAndroid) return 'http://10.0.2.2:5000';
-    return 'http://172.20.10.2:5000'; // IP máy tính khi kết nối Điểm truy cập cá nhân từ iPhone
+    return 'https://workmate-backend-k8nk.onrender.com';
   }
 
   static String get baseUrl => '$baseHost/api';

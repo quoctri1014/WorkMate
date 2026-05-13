@@ -14,7 +14,7 @@ import ChatView from './views/ChatView';
 import Login from './views/LoginView';
 import { Icon, API_URL } from './components/Common';
 
-const socket = io("http://localhost:5000");
+const socket = io("https://workmate-backend-k8nk.onrender.com");
 
 const App = () => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('admin_user')));

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Icon, API_URL } from '../components/Common';
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000");
+const socket = io("https://workmate-backend-k8nk.onrender.com");
 
 const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
   const [conversations, setConversations] = useState([]);
@@ -135,7 +135,7 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
 
   const renderMessageContent = (m) => {
     const isMe = Number(m.sender_id) === Number(adminUser.id);
-    const serverUrl = 'http://localhost:5000';
+    const serverUrl = 'https://workmate-backend-k8nk.onrender.com';
 
     if (m.message_type === 'image') {
       return (
@@ -211,7 +211,7 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
               <div className="relative">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg overflow-hidden transition-transform duration-500 ${activeChat?.id === c.id ? 'scale-110 shadow-lg' : 'bg-surface-container-low'}`}>
                   {c.avatar_url ? (
-                    <img src={c.avatar_url.startsWith('http') ? c.avatar_url : `http://localhost:5000${c.avatar_url}`} className="w-full h-full object-cover" alt={c.name} />
+                    <img src={c.avatar_url.startsWith('http') ? c.avatar_url : `https://workmate-backend-k8nk.onrender.com${c.avatar_url}`} className="w-full h-full object-cover" alt={c.name} />
                   ) : (
                     <span className="text-primary opacity-40">{c.name?.[0]}</span>
                   )}
@@ -241,7 +241,7 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
               <div className="flex items-center gap-5">
                 <div className="w-14 h-14 rounded-2xl brand-gradient text-white flex items-center justify-center font-black text-xl shadow-xl shadow-primary/20 overflow-hidden ring-4 ring-primary/5">
                   {activeChat.avatar_url ? (
-                    <img src={activeChat.avatar_url.startsWith('http') ? activeChat.avatar_url : `http://localhost:5000${activeChat.avatar_url}`} className="w-full h-full object-cover" alt={activeChat.name} />
+                    <img src={activeChat.avatar_url.startsWith('http') ? activeChat.avatar_url : `https://workmate-backend-k8nk.onrender.com${activeChat.avatar_url}`} className="w-full h-full object-cover" alt={activeChat.name} />
                   ) : (
                     activeChat.name?.[0]
                   )}
