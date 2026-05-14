@@ -560,35 +560,33 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  console.log('ðŸ”‘ YÃªu cáº§u Ä‘Äƒng nháº­p:', req.body);
   try {
     let { code, email, password } = req.body;
     const loginIdentifier = (email || code || '').trim();
-    
-    if (!loginIdentifier) return res.status(400).json({ message: "Vui lÃ²ng nháº­p tÃ i khoáº£n" });
+    if (!loginIdentifier) return res.status(400).json({ message: "Vui lòng nhập tài khoản" });
 
-    const r = await pool.query(
-      'SELECT * FROM employees WHERE employee_code = $1 OR email = $1', 
-      [loginIdentifier]
-    );
-    
-    if (r.rows.length === 0) {
-      console.log(`âŒ KhÃ´ng tÃ¬m tháº¥y user vá»›i Ä‘á»‹nh danh: ${loginIdentifier}`);
-      return res.status(404).json({ message: "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng" });
+    let r = await pool.query('SELECT * FROM employees WHERE employee_code = $1 OR email = $1', [loginIdentifier]);
+    let user = r.rows[0];
+    let isAdmin = false;
+
+    if (!user) {
+      r = await pool.query('SELECT * FROM admins WHERE email = $1', [loginIdentifier]);
+      if (r.rows.length > 0) {
+        user = r.rows[0];
+        isAdmin = true;
+      }
     }
     
-    const user = r.rows[0];
-    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
+
+    // Admin dùng cột 'password', Employee dùng 'password_hash'
+    const storedHash = isAdmin ? user.password : user.password_hash;
+    const valid = await bcrypt.compare(password, storedHash);
     
-    if (!valid) {
-      console.log(`âŒ Sai máº­t kháº©u cho user: ${user.email}`);
-      return res.status(401).json({ message: "Sai máº­t kháº©u" });
-    }
+    if (!valid) return res.status(401).json({ message: "Sai mật khẩu" });
     
-    console.log(`âœ… ÄÄƒng nháº­p thÃ nh cÃ´ng: ${user.name}`);
-    
-    // XÃ³a password_hash trÆ°á»›c khi gá»­i vá» client
-    const loggedInUser = { ...r.rows[0] };
+    const loggedInUser = { ...user };
+    delete loggedInUser.password;
     delete loggedInUser.password_hash;
     
     res.json({ user: loggedInUser });
