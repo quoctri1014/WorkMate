@@ -46,7 +46,7 @@ export const MeetingModal = ({ depts = [], onClose, onRefresh, initialData = nul
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-surface-container-lowest w-full max-w-2xl rounded-[2.5rem] p-10 shadow-2xl relative overflow-y-auto max-h-[90vh] transition-colors">
+      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-surface-container-lowest w-full max-w-2xl rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-y-auto max-h-[90vh] transition-colors">
         <button onClick={onClose} className="absolute top-8 right-8 text-slate-400 hover:text-red-500 transition-colors"><Icon name="close" /></button>
         
         <div className="mb-8">
@@ -76,7 +76,7 @@ export const MeetingModal = ({ depts = [], onClose, onRefresh, initialData = nul
           
           {type === 'meeting' && (
             <>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thời gian bắt đầu</label>
                   <input required type="datetime-local" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl py-4 px-5 outline-none font-bold focus:border-primary transition-all text-slate-700 dark:text-slate-200" value={data.start_time && !isNaN(new Date(data.start_time).getTime()) ? new Date(new Date(data.start_time).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''} onChange={e => setData({...data, start_time: e.target.value})} />
@@ -120,7 +120,7 @@ export const MeetingModal = ({ depts = [], onClose, onRefresh, initialData = nul
 
           <div className="space-y-4">
             <div className="flex justify-between items-center"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phòng ban nhận thông tin</label><button type="button" onClick={() => setData({...data, department_ids: depts.map(d => d.id)})} className="text-[10px] font-black text-primary uppercase underline">Chọn tất cả</button></div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               {depts.map(d => (
                 <button type="button" key={d.id} onClick={() => handleToggleDept(d.id)} className={`px-3 py-2.5 rounded-xl text-[10px] font-black border transition-all ${data.department_ids.includes(d.id) ? 'bg-primary text-white border-primary shadow-md shadow-primary/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'}`}>{d.name}</button>
               ))}
@@ -145,8 +145,8 @@ const DetailModal = ({ item, type, onClose, depts }) => {
   
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-surface-container-lowest w-full max-w-xl rounded-[3rem] p-10 shadow-2xl relative overflow-y-auto max-h-[85vh] border border-border/50">
-        <button onClick={onClose} className="absolute top-8 right-8 w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 transition-all"><Icon name="close" /></button>
+      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-surface-container-lowest w-full max-w-xl rounded-[3rem] p-6 md:p-10 shadow-2xl relative overflow-y-auto max-h-[85vh] border border-border/50">
+        <button onClick={onClose} className="absolute top-6 right-6 md:top-8 md:right-8 w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 transition-all"><Icon name="close" /></button>
         
         <div className="flex items-center gap-4 mb-8">
           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${type === 'meeting' ? 'bg-primary/10 text-primary' : 'bg-amber-500/10 text-amber-500'}`}>
@@ -163,7 +163,7 @@ const DetailModal = ({ item, type, onClose, depts }) => {
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium whitespace-pre-wrap">{item.content}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100/50">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thời gian</p>
               <p className="text-xs font-black text-on-surface">{new Date(item.start_time || item.created_at).toLocaleString('vi-VN')}</p>
@@ -313,10 +313,10 @@ const MeetingsView = ({ meetings = [], notifications = [], depts = [], onRefresh
           <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">Lịch họp & Sự kiện</h2>
           <p className="text-slate-500 mt-1 font-medium italic">Điều phối các buổi họp phòng ban và trực tuyến.</p>
         </div>
-        <div className="relative">
+        <div className="relative w-full md:w-auto">
           <button 
             onClick={() => setShowOptions(!showOptions)}
-            className="flex items-center gap-2 brand-gradient text-white px-8 py-4 rounded-full font-black shadow-lg hover:scale-105 active:scale-95 transition-all text-xs tracking-widest uppercase"
+            className="flex w-full md:w-auto justify-center items-center gap-2 brand-gradient text-white px-8 py-4 rounded-full font-black shadow-lg hover:scale-105 active:scale-95 transition-all text-xs tracking-widest uppercase"
           >
             <Icon name="add" /> TẠO NỘI DUNG MỚI <Icon name={showOptions ? "expand_less" : "expand_more"} />
           </button>
@@ -355,26 +355,26 @@ const MeetingsView = ({ meetings = [], notifications = [], depts = [], onRefresh
         </div>
       </div>
 
-      <div className="flex gap-4 p-1 bg-surface-container-low rounded-2xl w-fit">
+      <div className="flex flex-col sm:flex-row gap-4 p-1 bg-surface-container-low rounded-2xl w-full sm:w-fit">
         <button 
           onClick={() => setActiveSubTab('meeting')}
-          className={`px-8 py-3 rounded-xl text-xs font-black transition-all ${activeSubTab === 'meeting' ? 'bg-primary text-white shadow-lg' : 'text-on-surface-variant hover:bg-surface-container'}`}
+          className={`px-8 py-3 rounded-xl text-xs font-black transition-all w-full sm:w-auto ${activeSubTab === 'meeting' ? 'bg-primary text-white shadow-lg' : 'text-on-surface-variant hover:bg-surface-container'}`}
         >
           LỊCH HỌP ({dailyMeetings.length})
         </button>
         <button 
           onClick={() => setActiveSubTab('notification')}
-          className={`px-8 py-3 rounded-xl text-xs font-black transition-all ${activeSubTab === 'notification' ? 'bg-amber-500 text-white shadow-lg' : 'text-on-surface-variant hover:bg-surface-container'}`}
+          className={`px-8 py-3 rounded-xl text-xs font-black transition-all w-full sm:w-auto ${activeSubTab === 'notification' ? 'bg-amber-500 text-white shadow-lg' : 'text-on-surface-variant hover:bg-surface-container'}`}
         >
           THÔNG BÁO ({dailyNotifications.length})
         </button>
       </div>
 
       {/* Date Filter Bar */}
-      <div className="bg-surface-container-lowest p-4 rounded-[2rem] shadow-sm border border-border flex items-center gap-4 transition-colors">
+      <div className="bg-surface-container-lowest p-4 rounded-[2rem] shadow-sm border border-border flex flex-col md:flex-row items-stretch md:items-center gap-4 transition-colors">
         <div 
           onClick={() => dateInputRef.current?.showPicker()}
-          className="flex items-center gap-3 px-6 border-r border-slate-100 dark:border-slate-800 shrink-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-all"
+          className="flex items-center justify-between md:justify-start gap-3 px-6 md:border-r border-slate-100 dark:border-slate-800 shrink-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-all"
         >
           <Icon name="calendar_today" className="text-primary !text-[20px]" />
           <div className="flex flex-col">

@@ -73,8 +73,8 @@ const AdminAssignModal = ({ onClose, onRefresh }) => {
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-          <div className="grid grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Loại lịch</label>
@@ -149,7 +149,7 @@ const AdminAssignModal = ({ onClose, onRefresh }) => {
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Chọn nhân viên</label>
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 custom-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 custom-scrollbar">
                   {employees
                     .filter(e => selectedFilterDept === 'all' || e.department_id?.toString() === selectedFilterDept.toString())
                     .map(e => (
@@ -176,7 +176,7 @@ const AdminAssignModal = ({ onClose, onRefresh }) => {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Từ ngày / Giờ bắt đầu</label>
               <input 
@@ -199,7 +199,7 @@ const AdminAssignModal = ({ onClose, onRefresh }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Số giờ (nếu là OT)</label>
               <input 
@@ -279,19 +279,19 @@ const ApprovalsView = ({ approvals = [], onRefresh }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h2 className="text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100">Phê duyệt yêu cầu</h2>
           <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Quản lý và xử lý các đơn báo nghỉ, tăng ca từ nhân viên.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
            <button 
              onClick={() => setShowAssignModal(true)}
-             className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/25 text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:scale-[1.05] transition-all active:scale-95"
+             className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/25 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.05] transition-all active:scale-95 w-full sm:w-auto"
            >
              <Icon name="add" className="!text-lg" /> Gán lịch mới
            </button>
-           <div className="px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center gap-2">
+           <div className="px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center justify-center gap-2 w-full sm:w-auto">
              <span className="w-2 h-2 rounded-full bg-orange-400"></span> {approvals.filter(a => a.status === 'pending').length} Chờ duyệt
            </div>
         </div>
@@ -339,8 +339,8 @@ const ApprovalsView = ({ approvals = [], onRefresh }) => {
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                 <th className="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Nhân viên</th>

@@ -39,9 +39,9 @@ export const AddDeptModal = ({ dept, onClose, onRefresh }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={onClose} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-      <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl relative border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] p-6 md:p-10 shadow-2xl relative border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="brand-gradient h-3 absolute top-0 left-0 right-0" />
-        <button onClick={onClose} className="absolute top-8 right-8 w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all duration-300"><Icon name="close" /></button>
+        <button onClick={onClose} className="absolute top-6 right-6 md:top-8 md:right-8 w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all duration-300"><Icon name="close" /></button>
         
         <div className="mb-10">
           <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{dept ? 'Cập nhật phòng ban' : 'Thêm phòng ban mới'}</h2>
@@ -104,7 +104,7 @@ const DepartmentsView = ({ depts = [], onRefresh }) => {
           <h2 className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">Cấu trúc Tổ chức</h2>
           <p className="text-slate-500 font-medium text-lg mt-2 italic opacity-80">Quản lý các phòng ban và sơ đồ vị trí chuyên môn.</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-3 brand-gradient text-white px-10 py-5 rounded-full font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest text-xs">
+        <button onClick={() => setShowAdd(true)} className="flex items-center justify-center gap-3 brand-gradient text-white px-10 py-5 rounded-full font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest text-xs w-full md:w-auto">
           <Icon name="domain_add" className="!text-xl" /> THÊM PHÒNG BAN
         </button>
       </div>
@@ -116,17 +116,17 @@ const DepartmentsView = ({ depts = [], onRefresh }) => {
             <motion.div 
               layout
               key={d.id} 
-              className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 p-10 flex flex-col gap-8 relative group hover:shadow-2xl hover:shadow-primary/5 transition-all overflow-hidden"
+              className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 p-6 lg:p-10 flex flex-col gap-8 relative group hover:shadow-2xl hover:shadow-primary/5 transition-all overflow-hidden"
             >
                {/* Decorative background element */}
                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 transition-all group-hover:scale-125 duration-700"></div>
                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-slate-50 dark:bg-slate-800/20 rounded-full transition-all group-hover:translate-x-5 duration-500"></div>
 
-               <div className="flex justify-between items-start relative z-10">
-                  <div className="flex items-center gap-8">
-                     <div className="w-24 h-24 rounded-[2rem] bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border-2 border-white dark:border-slate-800 shadow-xl transition-transform group-hover:rotate-6 duration-500">
+               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center relative z-10 gap-4">
+                  <div className="flex items-center gap-4 sm:gap-8">
+                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] bg-slate-50 dark:bg-slate-800 flex flex-col items-center justify-center border-2 border-white dark:border-slate-800 shadow-xl transition-transform group-hover:rotate-6 duration-500 shrink-0">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mã PB</span>
-                        <span className="text-2xl font-black text-primary leading-none">{d.code}</span>
+                        <span className="text-xl sm:text-2xl font-black text-primary leading-none">{d.code}</span>
                      </div>
                      <div>
                        <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight mb-2 group-hover:text-primary transition-colors">{d.name}</h3>

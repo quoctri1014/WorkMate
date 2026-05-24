@@ -149,7 +149,7 @@ const App = () => {
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
       {/* Top Header */}
-      <header className={`h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-40 transition-all ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
+      <header className={`h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-40 transition-all ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -195,7 +195,7 @@ const App = () => {
       </header>
 
       {/* Main Content */}
-      <main className={`transition-all ${activeTab === 'chat' ? 'h-[calc(100vh-80px)] overflow-hidden p-0' : 'p-8 min-h-screen'} ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
+      <main className={`transition-all ${activeTab === 'chat' ? 'h-[calc(100vh-80px)] overflow-hidden p-0' : 'p-4 lg:p-8 min-h-screen'} ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} className={activeTab === 'chat' ? 'h-full' : ''} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
              {activeTab === 'dashboard' && <DashboardView employees={employees} attendance={attendance} approvals={approvals} meetings={meetings} onNavigate={setActiveTab} />}

@@ -82,12 +82,12 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
 
   return (
     <div className="space-y-10">
-      <section className="flex justify-between items-center">
+      <section className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
         <div>
-          <h2 className="text-4xl font-black tracking-tighter text-on-surface">Bảng tổng quan</h2>
-          <p className="text-on-surface-variant mt-1 font-medium italic">Chào buổi sáng, Admin. Hệ thống đang vận hành ổn định.</p>
+          <h2 className="text-2xl md:text-4xl font-black tracking-tighter text-on-surface">Bảng tổng quan</h2>
+          <p className="text-on-surface-variant mt-1 font-medium italic text-sm md:text-base">Chào buổi sáng, Admin. Hệ thống đang vận hành ổn định.</p>
         </div>
-        <div className="flex items-center gap-3 bg-surface-container-low px-6 py-3 rounded-2xl border border-border">
+        <div className="flex items-center gap-3 bg-surface-container-low px-6 py-3 rounded-2xl border border-border w-full md:w-auto justify-center md:justify-start">
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
           <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Hệ thống đang trực tuyến</span>
         </div>
@@ -110,8 +110,8 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2 space-y-8">
-          <div className="bg-surface-container-lowest rounded-[3rem] p-10 border border-border shadow-sm">
-            <div className="flex items-center justify-between mb-12">
+          <div className="bg-surface-container-lowest rounded-[3rem] p-6 lg:p-10 border border-border shadow-sm">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-12">
               <div>
                 <h3 className="text-xl font-black tracking-tight">Hiệu suất vận hành</h3>
                 <p className="text-xs text-on-surface-variant font-medium mt-1">Tỷ lệ chuyên cần trong 7 ngày qua</p>
@@ -122,7 +122,7 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
               </div>
             </div>
             
-            <div className="h-64 flex items-end justify-between gap-6 px-4">
+            <div className="h-64 flex items-end justify-between gap-2 sm:gap-6 px-1 md:px-4">
               {chartData.map((h, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-4 group">
                   <div className="w-full bg-surface-container-low rounded-2xl relative h-48 overflow-hidden">
@@ -147,7 +147,7 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
         </div>
 
         <div className="space-y-8">
-          <div className="brand-gradient rounded-[3rem] p-10 text-white relative overflow-hidden flex flex-col min-h-[450px] shadow-2xl shadow-primary/20">
+          <div className="brand-gradient rounded-[3rem] p-6 lg:p-10 text-white relative overflow-hidden flex flex-col min-h-[450px] shadow-2xl shadow-primary/20">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-10">

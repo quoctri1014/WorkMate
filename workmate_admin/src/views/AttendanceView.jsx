@@ -94,7 +94,7 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
 
       {/* Date Selection Bar */}
       <div className="relative group">
-        <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800 transition-all hover:border-primary/30">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-sm border border-white dark:border-slate-800 transition-all hover:border-primary/30">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-2 flex-1 relative z-10">
             {getDates().map(d => (
               <button
@@ -142,8 +142,9 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
         </div>
       </div>
 
-      <div className="bg-surface-container-lowest rounded-[2rem] p-8 shadow-sm border border-white dark:border-slate-800 overflow-hidden transition-colors">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-surface-container-lowest rounded-[2rem] p-4 sm:p-8 shadow-sm border border-white dark:border-slate-800 overflow-hidden transition-colors">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider border-b border-surface-container-low">
               <th className="pb-4 pl-4">Nhân viên</th>
@@ -194,12 +195,13 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Edit Modal */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl border border-white/20">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-6 md:p-10 shadow-2xl border border-white/20">
             <h3 className="text-2xl font-black mb-2 tracking-tight">Chỉnh sửa giờ công</h3>
             <p className="text-sm text-slate-500 mb-8 font-medium italic">
               ID: {editing.id} | {editing.employee_name} ngày {editing.date}
@@ -251,7 +253,7 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
       {/* Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl border border-white/20 transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md p-6 md:p-10 shadow-2xl border border-white/20 transition-colors">
             <h3 className="text-2xl font-black mb-6 tracking-tight">Xuất báo cáo tháng</h3>
             <p className="text-sm text-slate-500 mb-8 font-medium">Chọn tháng bạn muốn kết xuất dữ liệu Excel</p>
             

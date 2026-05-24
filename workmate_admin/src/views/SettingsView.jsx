@@ -76,10 +76,10 @@ const SettingsView = ({ config, onRefresh }) => {
   return (
     <div className="max-w-5xl mx-auto space-y-12 relative">
       {/* Header Section */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
         <div>
-          <h2 className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">Cài đặt Hệ thống</h2>
-          <p className="text-slate-500 mt-2 font-medium text-lg italic opacity-70">Cấu hình Vùng an toàn và tham số chấm công lõi.</p>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 dark:text-white">Cài đặt Hệ thống</h2>
+          <p className="text-slate-500 mt-2 font-medium text-sm md:text-lg italic opacity-70">Cấu hình Vùng an toàn và tham số chấm công lõi.</p>
         </div>
         <div className="flex items-center gap-4">
           <button 
@@ -112,7 +112,7 @@ const SettingsView = ({ config, onRefresh }) => {
               className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
             >
               <div className="brand-gradient h-3 w-full" />
-              <div className="p-10 space-y-8 max-h-[80vh] overflow-y-auto no-scrollbar">
+              <div className="p-6 md:p-10 space-y-8 max-h-[80vh] overflow-y-auto no-scrollbar">
                 <div className="flex justify-between items-center">
                   <h3 className="text-3xl font-black tracking-tighter">Hướng dẫn Cấu hình</h3>
                   <button onClick={() => setShowGuide(false)} className="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
@@ -196,8 +196,8 @@ const SettingsView = ({ config, onRefresh }) => {
 
       <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative transition-colors">
         <div className="brand-gradient h-4"></div>
-        <form onSubmit={handleSave} className="p-10 space-y-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <form onSubmit={handleSave} className="p-6 md:p-10 space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             {/* Cài đặt chung */}
             <div className="col-span-2">
                <h3 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
@@ -228,7 +228,7 @@ const SettingsView = ({ config, onRefresh }) => {
                       key={day.id}
                       type="button"
                       onClick={() => toggleDay(day.id)}
-                      className={`px-8 py-4 rounded-2xl font-black text-sm transition-all border-2 ${
+                      className={`px-5 py-3 sm:px-8 sm:py-4 rounded-2xl font-black text-xs sm:text-sm transition-all border-2 ${
                         isWorkDay(day.id)
                           ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/20 scale-105'
                           : 'bg-slate-50 dark:bg-slate-800 text-slate-400 border-transparent hover:border-indigo-500/30'
@@ -317,7 +317,7 @@ const SettingsView = ({ config, onRefresh }) => {
         </form>
       </div>
 
-      <div className="bg-amber-500/5 border-2 border-amber-500/20 rounded-[2.5rem] p-8 flex gap-6 items-start">
+      <div className="bg-amber-500/5 border-2 border-amber-500/20 rounded-[2.5rem] p-6 md:p-8 flex flex-col sm:flex-row gap-6 items-start">
         <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0"><Icon name="warning" fill={1} /></div>
         <div className="text-sm text-slate-500 font-medium leading-relaxed">
           <p className="font-black mb-2 uppercase tracking-widest text-amber-500">Lưu ý bảo mật quan trọng:</p>

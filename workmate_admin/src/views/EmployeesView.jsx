@@ -81,8 +81,8 @@ export const EmployeeModal = ({ employee, depts = [], onClose, onRefresh }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 text-left">
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-surface-container-lowest w-full max-w-4xl rounded-[3.5rem] p-12 shadow-2xl relative transition-colors overflow-y-auto max-h-[90vh]">
-        <button onClick={onClose} className="absolute top-12 right-12 text-on-surface-variant hover:rotate-90 transition-all duration-500"><Icon name="close" /></button>
+      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-surface-container-lowest w-full max-w-4xl rounded-[3.5rem] p-6 md:p-12 shadow-2xl relative transition-colors overflow-y-auto max-h-[90vh]">
+        <button onClick={onClose} className="absolute top-6 right-6 md:top-12 md:right-12 text-on-surface-variant hover:rotate-90 transition-all duration-500"><Icon name="close" /></button>
         
         <div className="flex items-center gap-6 mb-12">
           <div className="w-20 h-20 rounded-3xl brand-gradient flex items-center justify-center text-white shadow-2xl shadow-primary/20">
@@ -95,7 +95,7 @@ export const EmployeeModal = ({ employee, depts = [], onClose, onRefresh }) => {
         </div>
 
         <form onSubmit={handleSave} className="space-y-10">
-           <div className="grid grid-cols-2 gap-x-12 gap-y-8">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
               <div className="space-y-3">
                 <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">Thông tin định danh</label>
                 <div className="space-y-4">
@@ -136,7 +136,7 @@ export const EmployeeModal = ({ employee, depts = [], onClose, onRefresh }) => {
 
               <div className="space-y-3">
                 <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">Thời gian & Liên hệ</label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="relative group">
                     <input type="date" className="w-full bg-surface-container-low border-2 border-transparent focus:border-primary/20 rounded-2xl py-5 px-6 outline-none font-bold text-on-surface transition-all" value={data.join_date} onChange={e => setData({...data, join_date: e.target.value})} title="Ngày vào làm" />
                   </div>
@@ -158,7 +158,7 @@ export const EmployeeModal = ({ employee, depts = [], onClose, onRefresh }) => {
            {emp && banks.length > 0 && (
              <div className="pt-8 border-t border-border">
                 <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 mb-4 block">Tài khoản thanh toán ({banks.length})</label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {banks.map(b => (
                     <div key={b.id} className="bg-surface-container-low p-5 rounded-[2rem] flex items-center justify-between border border-border group hover:border-primary/30 transition-all">
                       <div className="flex items-center gap-4">
@@ -213,12 +213,12 @@ const EmployeesView = ({ employees = [], depts = [], onRefresh, onlineUsers = []
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-end mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
         <div>
-          <h2 className="text-4xl font-black tracking-tighter text-on-surface">Đội ngũ nhân sự</h2>
-          <p className="text-on-surface-variant mt-1 font-medium italic">Quản lý và điều phối nguồn lực WorkMate.</p>
+          <h2 className="text-2xl md:text-4xl font-black tracking-tighter text-on-surface">Đội ngũ nhân sự</h2>
+          <p className="text-on-surface-variant mt-1 font-medium italic text-sm md:text-base">Quản lý và điều phối nguồn lực WorkMate.</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 brand-gradient text-white px-8 py-4 rounded-full font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-xs tracking-widest uppercase">
+        <button onClick={() => setShowAdd(true)} className="flex items-center justify-center gap-2 brand-gradient text-white px-8 py-4 rounded-full font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-xs tracking-widest uppercase w-full md:w-auto">
           <Icon name="person_add" fill={1} /> THÊM NHÂN SỰ MỚI
         </button>
       </div>
@@ -250,7 +250,8 @@ const EmployeesView = ({ employees = [], depts = [], onRefresh, onlineUsers = []
       </div>
 
       <div className="bg-surface-container-lowest rounded-[3rem] shadow-sm overflow-hidden border border-border transition-colors">
-        <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-surface-container-low/30 border-b border-border">
               <th className="px-10 py-6 text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">Hồ sơ nhân viên</th>
@@ -307,6 +308,7 @@ const EmployeesView = ({ employees = [], depts = [], onRefresh, onlineUsers = []
             )}
           </tbody>
         </table>
+        </div>
       </div>
       {(showAdd || editing) && (
         <EmployeeModal 

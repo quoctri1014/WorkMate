@@ -191,9 +191,9 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
   };
 
   return (
-    <div className="h-full flex overflow-hidden p-6 gap-6 select-none relative">
+    <div className="h-[calc(100vh-[var(--header-height)])] flex overflow-hidden p-2 sm:p-6 gap-2 sm:gap-6 select-none relative">
       {/* List Conversations */}
-      <div className="w-80 h-full bg-surface-container-lowest rounded-[2.5rem] border border-border flex flex-col shadow-sm overflow-hidden">
+      <div className={`w-full md:w-80 h-full bg-surface-container-lowest rounded-[2.5rem] border border-border flex-col shadow-sm overflow-hidden ${activeChat ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-8 border-b border-border/50 bg-surface-container-lowest/50 backdrop-blur-md">
           <h3 className="text-2xl font-black text-on-surface tracking-tighter">Hỗ trợ trực tuyến</h3>
           <p className="text-[10px] text-on-surface-variant font-black uppercase tracking-[0.2em] mt-1.5 opacity-60">Hộp thư hỗ trợ nhân viên</p>
@@ -234,12 +234,18 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
       </div>
 
       {/* Chat Box */}
-      <div className="flex-1 h-full bg-surface-container-lowest rounded-[3rem] border border-border flex flex-col shadow-sm relative overflow-hidden">
+      <div className={`flex-1 h-full bg-surface-container-lowest rounded-[3rem] border border-border flex-col shadow-sm relative overflow-hidden ${!activeChat ? 'hidden md:flex' : 'flex'}`}>
         {activeChat ? (
           <>
-            <div className="p-8 border-b border-border/50 flex items-center justify-between bg-surface-container-lowest/80 backdrop-blur-xl z-20 shadow-sm shadow-black/5">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-2xl brand-gradient text-white flex items-center justify-center font-black text-xl shadow-xl shadow-primary/20 overflow-hidden ring-4 ring-primary/5">
+            <div className="p-4 sm:p-8 border-b border-border/50 flex items-center justify-between bg-surface-container-lowest/80 backdrop-blur-xl z-20 shadow-sm shadow-black/5">
+              <div className="flex items-center gap-3 sm:gap-5">
+                <button 
+                  className="md:hidden p-2 rounded-xl text-on-surface hover:bg-surface-container-low transition-colors" 
+                  onClick={() => setActiveChat(null)}
+                >
+                  <Icon name="arrow_back" />
+                </button>
+                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl brand-gradient text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-xl shadow-primary/20 overflow-hidden ring-4 ring-primary/5 shrink-0">
                   {activeChat.avatar_url ? (
                     <img src={activeChat.avatar_url.startsWith('http') ? activeChat.avatar_url : `https://workmate-backend-k8nk.onrender.com${activeChat.avatar_url}`} className="w-full h-full object-cover" alt={activeChat.name} />
                   ) : (
@@ -247,7 +253,7 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
                   )}
                 </div>
                 <div>
-                  <h4 className="text-xl font-black text-on-surface tracking-tight leading-none">{activeChat.name}</h4>
+                  <h4 className="text-lg sm:text-xl font-black text-on-surface tracking-tight leading-none">{activeChat.name}</h4>
                   <div className="flex items-center gap-2 mt-1.5">
                     <div className={`w-2 h-2 rounded-full ${isOnline(activeChat.id) ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                     <p className={`text-[10px] font-black uppercase tracking-widest ${isOnline(activeChat.id) ? 'text-emerald-500' : 'text-on-surface-variant opacity-60'}`}>{isOnline(activeChat.id) ? 'Đang trực tuyến' : 'Ngoại tuyến'}</p>
@@ -294,7 +300,7 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar bg-[radial-gradient(circle_at_top_right,var(--primary-light),transparent_40%)]">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-10 space-y-6 sm:space-y-8 custom-scrollbar bg-[radial-gradient(circle_at_top_right,var(--primary-light),transparent_40%)]">
               {messages.map((m, i) => {
                 const isMe = Number(m.sender_id) === Number(adminUser.id);
                 return (
@@ -304,8 +310,8 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
                     key={m.id} 
                     className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className={`max-w-[65%] group`}>
-                      <div className={`p-5 rounded-[2rem] shadow-sm relative transition-all duration-300 ${isMe ? 'brand-gradient text-white rounded-tr-none shadow-primary/20' : m.is_ai ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-900 dark:text-amber-100 border border-amber-200/50 rounded-tl-none' : 'bg-surface-container-low text-on-surface border border-border/50 rounded-tl-none'}`}>
+                    <div className={`max-w-[85%] sm:max-w-[65%] group`}>
+                      <div className={`p-4 sm:p-5 rounded-[2rem] shadow-sm relative transition-all duration-300 ${isMe ? 'brand-gradient text-white rounded-tr-none shadow-primary/20' : m.is_ai ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-900 dark:text-amber-100 border border-amber-200/50 rounded-tl-none' : 'bg-surface-container-low text-on-surface border border-border/50 rounded-tl-none'}`}>
                         {m.is_ai && <p className="text-[9px] font-black uppercase tracking-widest mb-2 opacity-50 flex items-center gap-1.5"><Icon name="auto_awesome" className="!text-[12px]" /> AI Assistant</p>}
                         
                         {renderMessageContent(m)}
@@ -321,7 +327,7 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
               <div ref={chatEndRef} />
             </div>
 
-            <div className="p-8 bg-surface-container-lowest/80 backdrop-blur-xl border-t border-border/50">
+            <div className="p-4 sm:p-8 bg-surface-container-lowest/80 backdrop-blur-xl border-t border-border/50">
               <div className="flex gap-4 items-center bg-surface-container-low p-2 rounded-[2rem] border border-border shadow-inner">
                 
                 <input 
