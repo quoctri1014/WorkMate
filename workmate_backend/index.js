@@ -1797,6 +1797,22 @@ app.get('/api/conversations', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.put('/api/conversations/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    
+    await pool.query(
+      `UPDATE conversation_members SET last_read_at = NOW() WHERE conversation_id = $1 AND user_id = $2`,
+      [id, userId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/conversations/:id/messages', async (req, res) => {
   try {
     const { id } = req.params;
