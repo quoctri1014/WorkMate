@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:workmate/data/repositories/api_service.dart';
 import 'package:workmate/core/constants/app_colors.dart';
@@ -62,7 +63,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
     if (user == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    String t(String key) => AppTranslations.getText(lang, key);
+    String t(String key) => key.tr();
 
     // Xử lý URL ảnh (nếu là đường dẫn tương đối thì thêm base url)
     String avatarUrl = user.avatarUrl;

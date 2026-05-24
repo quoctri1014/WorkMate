@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
@@ -50,7 +51,7 @@ class _OTHistoryScreenState extends State<OTHistoryScreen> {
     final vm = context.watch<OvertimeViewModel>();
     final profileVM = context.watch<ProfileViewModel>();
     final lang = profileVM.selectedLanguage;
-    String t(String key) => AppTranslations.getText(lang, key);
+    String t(String key) => key.tr();
 
     final filteredOvertimes = vm.overtimes.where((o) => 
       o.date.year == _selectedMonth.year && o.date.month == _selectedMonth.month

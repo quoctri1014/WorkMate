@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/i18n/app_translations.dart';
@@ -12,7 +13,7 @@ class AttendanceSuccessScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final profileVM = context.watch<ProfileViewModel>();
     final lang = profileVM.selectedLanguage;
-    String t(String key) => AppTranslations.getText(lang, key);
+    String t(String key) => key.tr();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

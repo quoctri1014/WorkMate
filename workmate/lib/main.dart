@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -55,7 +56,15 @@ void main() async {
   await initializeDateFormatting('vi', null);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.dark));
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  runApp(const WorkMateApp());
+  await EasyLocalization.ensureInitialized();
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('vi'), Locale('en')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('vi'),
+      child: const WorkMateApp(),
+    ),
+  );
 }
 
 class WorkMateApp extends StatelessWidget {
@@ -79,6 +88,9 @@ class WorkMateApp extends StatelessWidget {
       child: Consumer<ThemeViewModel>(
         builder: (context, themeVM, child) {
           return MaterialApp(
+            localizationsDelegates: context.localizationDelegates,
+            supportedLocales: context.supportedLocales,
+            locale: context.locale,
             title: 'WorkMate',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,

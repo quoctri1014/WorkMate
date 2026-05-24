@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
@@ -21,11 +22,11 @@ class ProfileScreen extends StatelessWidget {
     final vm = context.watch<ProfileViewModel>();
     final themeVm = context.watch<ThemeViewModel>();
     final user = vm.user;
-    final lang = vm.selectedLanguage;
+    final lang = context.locale.languageCode;
 
     if (user == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    String t(String key) => AppTranslations.getText(lang, key);
+    String t(String key) => key.tr();
 
     return Scaffold(
       appBar: AppBar(
@@ -230,9 +231,9 @@ class ProfileScreen extends StatelessWidget {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text('Chọn ngôn ngữ / Select Language', style: TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
           const SizedBox(height: 24),
-          _LangOption(label: '🇻🇳  Tiếng Việt', isSelected: vm.selectedLanguage == 'vi', onTap: () { vm.setLanguage('vi'); Navigator.pop(context); }),
+          _LangOption(label: '🇻🇳  Tiếng Việt', isSelected: context.locale.languageCode == 'vi', onTap: () { context.setLocale(const Locale('vi')); Navigator.pop(context); }),
           const SizedBox(height: 12),
-          _LangOption(label: '🇬🇧  English', isSelected: vm.selectedLanguage == 'en', onTap: () { vm.setLanguage('en'); Navigator.pop(context); }),
+          _LangOption(label: '🇬🇧  English', isSelected: context.locale.languageCode == 'en', onTap: () { context.setLocale(const Locale('en')); Navigator.pop(context); }),
         ]),
       ),
     );

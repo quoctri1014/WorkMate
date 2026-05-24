@@ -278,16 +278,16 @@ const initDB = async () => {
       );
     `);
 
-    // Khá»Ÿi táº¡o cáº¥u hÃ¬nh máº·c Ä‘á»‹nh náº¿u chÆ°a cÃ³
+    // Khoi tao cau hinh mac dinh neu chua co
     const configCheck = await pool.query('SELECT COUNT(*) FROM company_config');
     if (parseInt(configCheck.rows[0].count) === 0) {
-      await pool.query("INSERT INTO company_config (company_name) VALUES ('QUáº¬N 12')");
-      console.log('âœ… ÄÃ£ táº¡o cáº¥u hÃ¬nh cÃ´ng ty máº·c Ä‘á»‹nh');
+      await pool.query("INSERT INTO company_config (company_name) VALUES ('QUAN 12')");
+      console.log('[OK] Da tao cau hinh cong ty mac dinh');
     }
 
-    console.log("âœ… Database Ä‘Ã£ Ä‘Æ°á»£c Ä‘á»“ng bá»™ hÃ³a thÃ nh cÃ´ng!");
+    console.log("[OK] Database da duoc dong bo hoa thanh cong!");
   } catch (err) {
-    console.error("âŒ Lá»—i Ä‘á»“ng bá»™ Database:", err.message);
+    console.error("[ERROR] Loi dong bo Database:", err.message);
   }
 };
 initDB();

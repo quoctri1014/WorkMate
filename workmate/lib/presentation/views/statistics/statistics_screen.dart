@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:workmate/core/constants/app_colors.dart';
@@ -118,7 +119,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final vm = context.watch<StatisticsViewModel>();
     final profileVM = context.watch<ProfileViewModel>();
     final lang = profileVM.selectedLanguage;
-    String t(String key) => AppTranslations.getText(lang, key);
+    String t(String key) => key.tr();
     
     return Scaffold(
       body: RefreshIndicator(
@@ -180,10 +181,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                               constraints: const BoxConstraints(),
                               onPressed: _selectedWeekIndex > 0 ? () => setState(() => _selectedWeekIndex--) : null,
                             ),
-                            const SizedBox(width: 8),
-                            Text(lang == 'vi' ? 'Tuần ${_selectedWeekIndex + 1}' : 'Week ${_selectedWeekIndex + 1}', 
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 4),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(lang == 'vi' ? 'Tuần ${_selectedWeekIndex + 1}' : 'Week ${_selectedWeekIndex + 1}', 
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                                Text(
+                                  '${_weeks[_selectedWeekIndex].first.day}/${_weeks[_selectedWeekIndex].first.month} - ${_weeks[_selectedWeekIndex].last.day}/${_weeks[_selectedWeekIndex].last.month}',
+                                  style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8))
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 4),
                             IconButton(
                               icon: const Icon(Icons.chevron_right, size: 20, color: AppColors.primary),
                               padding: EdgeInsets.zero,
@@ -199,7 +209,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     builder: (context) {
                       final currentWeek = _weeks.isNotEmpty ? _weeks[_selectedWeekIndex] : <DateTime>[];
                       final chartData = _getChartData(vm, currentWeek);
-                      return _buildAdvancedChart(chartData, lang);
+                      return _buildAdvancedChart(chartData, lang, currentWeek);
                     }
                   ),
                   
@@ -278,7 +288,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _buildAdvancedChart(List<Map<String, double>> chartData, String lang) {
+  Widget _buildAdvancedChart(List<Map<String, double>> chartData, String lang, List<DateTime> currentWeek) {
     return Container(
       height: 240,
       padding: const EdgeInsets.all(20),
@@ -319,15 +329,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
+                reservedSize: 36,
                 getTitlesWidget: (v, _) {
                   final daysVi = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
                   final daysEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                   final days = lang == 'vi' ? daysVi : daysEn;
                   int idx = v.toInt();
                   if (idx < 0 || idx >= days.length) return const SizedBox();
+                  
+                  String dateStr = '';
+                  if (currentWeek.isNotEmpty && idx < currentWeek.length) {
+                    dateStr = '\n${currentWeek[idx].day}/${currentWeek[idx].month}';
+                  }
+                  
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(days[idx], style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6), fontSize: 11)),
+                    child: Text(days[idx] + dateStr, textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6), fontSize: 10)),
                   );
                 },
               ),

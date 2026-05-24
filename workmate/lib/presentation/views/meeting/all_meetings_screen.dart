@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
@@ -15,7 +16,7 @@ class AllMeetingsScreen extends StatelessWidget {
     final profileVM = context.watch<ProfileViewModel>();
     final meetingVM = context.watch<MeetingViewModel>();
     final lang = profileVM.selectedLanguage;
-    String t(String key) => AppTranslations.getText(lang, key);
+    String t(String key) => key.tr();
 
     // Group meetings by month manually
     final groupedMeetings = <String, List<MeetingModel>>{};

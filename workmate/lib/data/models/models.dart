@@ -201,31 +201,15 @@ class AttendanceModel {
   double get displayNormalHours {
     if (checkIn == null || checkOut == null) return 0;
     
-    // Đảm bảo dùng giờ địa phương (Local Time) để so sánh với 8h-17h
-    final localCheckIn = checkIn!.toLocal();
-    final localCheckOut = checkOut!.toLocal();
-
-    double start = localCheckIn.hour + localCheckIn.minute / 60.0;
-    double end = localCheckOut.hour + localCheckOut.minute / 60.0;
+    double diff = checkOut!.difference(checkIn!).inMinutes / 60.0;
+    if (diff < 0) diff += 24.0; // Handle overnight shifts or timezone rollovers
     
-    // Giới hạn trong khung giờ hành chính [8:00 - 17:00]
-    double normalStart = start < 8.0 ? 8.0 : start;
-    double normalEnd = end > 17.0 ? 17.0 : end;
-    
-    if (normalEnd <= normalStart) return 0;
-    
-    double hours = normalEnd - normalStart;
-    
-    // Trừ giờ nghỉ trưa (12:00 - 13:00) nếu khoảng thời gian làm việc bao phủ
-    if (normalStart <= 12.0 && normalEnd >= 13.0) {
-      hours -= 1.0;
-    } else if (normalStart < 12.0 && normalEnd > 12.0) {
-      hours -= (normalEnd - 12.0);
-    } else if (normalStart < 13.0 && normalEnd > 13.0) {
-      hours -= (13.0 - normalStart);
+    // Trừ giờ nghỉ trưa (1 tiếng) nếu làm trên 4.5 tiếng
+    if (diff >= 4.5) {
+      diff -= 1.0;
     }
     
-    return hours > 8.0 ? 8.0 : (hours < 0 ? 0 : hours);
+    return diff > 8.0 ? 8.0 : (diff < 0 ? 0 : diff);
   }
 
   double get displayTotalHours {

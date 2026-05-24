@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:workmate/core/constants/app_colors.dart';
@@ -47,7 +48,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final homeVM = context.watch<HomeViewModel>();
     
     final lang = profileVM.selectedLanguage;
-    String t(String key) => AppTranslations.getText(lang, key);
+    String t(String key) => key.tr();
 
     final history = statsVM.attendanceHistory;
     final leaves = leaveVM.leaves.where((l) => l.status == 'approved').toList();
