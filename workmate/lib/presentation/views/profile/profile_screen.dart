@@ -8,7 +8,7 @@ import 'change_password_screen.dart';
 import 'qr_screen.dart';
 import 'bank_account_screen.dart';
 import 'package:workmate/presentation/views/profile/face_registration_screen.dart';
-import 'package:workmate/core/i18n/app_translations.dart';
+
 import 'package:workmate/data/repositories/api_service.dart';
 import 'package:workmate/core/utils/support_utils.dart';
 import 'personal_info_screen.dart';

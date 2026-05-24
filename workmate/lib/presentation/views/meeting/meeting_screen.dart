@@ -6,7 +6,7 @@ import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/data/repositories/mock_data.dart';
 import 'package:workmate/data/models/models.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
-import 'package:workmate/core/i18n/app_translations.dart';
+
 import 'package:workmate/presentation/views/meeting/all_meetings_screen.dart';
 import 'package:workmate/presentation/views/meeting/components/meeting_card.dart';
 

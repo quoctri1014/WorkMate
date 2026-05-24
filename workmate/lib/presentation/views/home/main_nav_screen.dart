@@ -7,7 +7,7 @@ import 'package:workmate/presentation/views/home/home_screen.dart';
 import 'package:workmate/presentation/views/notification/notification_screen.dart';
 import 'package:workmate/presentation/views/statistics/statistics_screen.dart';
 import 'package:workmate/presentation/views/profile/profile_screen.dart';
-import 'package:workmate/core/i18n/app_translations.dart';
+
 
 class MainNavScreen extends StatefulWidget {
   const MainNavScreen({super.key});

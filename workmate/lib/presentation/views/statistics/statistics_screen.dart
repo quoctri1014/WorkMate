@@ -5,7 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
-import 'package:workmate/core/i18n/app_translations.dart';
+
 import 'package:workmate/data/models/models.dart';
 
 class StatisticsScreen extends StatefulWidget {

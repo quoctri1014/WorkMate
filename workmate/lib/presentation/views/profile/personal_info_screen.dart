@@ -5,7 +5,7 @@ import 'package:workmate/data/repositories/api_service.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
-import 'package:workmate/core/i18n/app_translations.dart';
+
 import 'package:workmate/core/services/upload_service.dart';
 import 'dart:io';
 

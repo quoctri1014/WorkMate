@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
-import 'package:workmate/core/i18n/app_translations.dart';
+
 import 'ot_history_screen.dart';
 
 class OTRequestScreen extends StatefulWidget {

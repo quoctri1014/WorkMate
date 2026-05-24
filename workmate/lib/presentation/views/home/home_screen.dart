@@ -19,7 +19,7 @@ import 'package:workmate/presentation/views/meeting/meeting_screen.dart';
 import 'package:workmate/presentation/views/profile/personal_info_screen.dart';
 import 'package:workmate/presentation/views/profile/seniority_screen.dart';
 import 'package:workmate/presentation/views/attendance/supplement_request_screen.dart';
-import 'package:workmate/core/i18n/app_translations.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
