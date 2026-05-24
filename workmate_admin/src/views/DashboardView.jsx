@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from \'react-i18next\';
 import { motion } from 'framer-motion';
 import { Icon } from '../components/Common';
 
@@ -53,6 +54,7 @@ const StatCard = ({ title, value, icon, color, trend }) => {
 };
 
 const DashboardView = ({ employees = [], attendance = [], approvals = [], meetings = [], onNavigate }) => {
+  const { t } = useTranslation();
   const getLocalISODate = (date = new Date()) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -84,12 +86,12 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
     <div className="space-y-10">
       <section className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
         <div>
-          <h2 className="text-2xl md:text-4xl font-black tracking-tighter text-on-surface">Bảng tổng quan</h2>
+          <h2 className="text-2xl md:text-4xl font-black tracking-tighter text-on-surface">{t('overview')}</h2>
           <p className="text-on-surface-variant mt-1 font-medium italic text-sm md:text-base">Chào buổi sáng, Admin. Hệ thống đang vận hành ổn định.</p>
         </div>
         <div className="flex items-center gap-3 bg-surface-container-low px-6 py-3 rounded-2xl border border-border w-full md:w-auto justify-center md:justify-start">
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Hệ thống đang trực tuyến</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t('system_online')}</span>
         </div>
       </section>
 
@@ -113,12 +115,12 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
           <div className="bg-surface-container-lowest rounded-[3rem] p-6 lg:p-10 border border-border shadow-sm">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-12">
               <div>
-                <h3 className="text-xl font-black tracking-tight">Hiệu suất vận hành</h3>
-                <p className="text-xs text-on-surface-variant font-medium mt-1">Tỷ lệ chuyên cần trong 7 ngày qua</p>
+                <h3 className="text-xl font-black tracking-tight">{t('operational_performance')}</h3>
+                <p className="text-xs text-on-surface-variant font-medium mt-1">{t('attendance_7_days')}</p>
               </div>
               <div className="flex gap-2">
-                <button className="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all">Tuần</button>
-                <button className="px-4 py-2 bg-surface-container-low text-on-surface-variant text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-surface-container-high transition-all">Tháng</button>
+                <button className="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all">{t('week')}</button>
+                <button className="px-4 py-2 bg-surface-container-low text-on-surface-variant text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-surface-container-high transition-all">{t('month')}</button>
               </div>
             </div>
             
@@ -152,7 +154,7 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-10">
                 <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20"><Icon name="event" /></div>
-                <h3 className="text-lg font-black tracking-tight">Lịch trình sắp tới</h3>
+                <h3 className="text-lg font-black tracking-tight">{t('upcoming_schedule')}</h3>
               </div>
               
               <div className="space-y-4">
@@ -174,7 +176,7 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
                 )) : (
                   <div className="py-20 text-center opacity-60">
                     <Icon name="event_busy" className="!text-5xl mb-4" />
-                    <p className="text-xs font-black uppercase tracking-widest">Không có lịch họp hôm nay</p>
+                    <p className="text-xs font-black uppercase tracking-widest">{t('no_meeting_today')}</p>
                   </div>
                 )}
               </div>

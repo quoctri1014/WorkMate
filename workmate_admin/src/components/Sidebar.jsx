@@ -1,19 +1,22 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Icon, NavItem } from './Common';
 
 const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
+  const { t, i18n } = useTranslation();
+
   const adminMenu = [
-    { id: 'dashboard', label: 'Bảng tổng quan', icon: 'grid_view' },
-    { id: 'employees', label: 'Đội ngũ nhân sự', icon: 'group' },
-    { id: 'departments', label: 'Cơ cấu tổ chức', icon: 'account_tree' },
-    { id: 'chat', label: 'Hỗ trợ trực tuyến', icon: 'chat' },
+    { id: 'dashboard', label: t('dashboard'), icon: 'grid_view' },
+    { id: 'employees', label: t('employees'), icon: 'group' },
+    { id: 'departments', label: t('departments'), icon: 'account_tree' },
+    { id: 'chat', label: t('chat'), icon: 'chat' },
   ];
 
   const businessMenu = [
-    { id: 'meetings', label: 'Lịch họp & Sự kiện', icon: 'event' },
-    { id: 'approvals', label: 'Phê duyệt yêu cầu', icon: 'fact_check' },
-    { id: 'attendance', label: 'Chấm công & Lịch', icon: 'calendar_month' },
-    { id: 'settings', label: 'Cài đặt hệ thống', icon: 'settings' },
+    { id: 'meetings', label: t('meetings'), icon: 'event' },
+    { id: 'approvals', label: t('approvals'), icon: 'fact_check' },
+    { id: 'attendance', label: t('attendance'), icon: 'calendar_month' },
+    { id: 'settings', label: t('settings'), icon: 'settings' },
   ];
 
   const handleLogout = () => {
@@ -24,6 +27,11 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
   const handleTabClick = (id) => {
     onTabChange(id);
     if (window.innerWidth < 1024) onClose();
+  };
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'vi' ? 'en' : 'vi';
+    i18n.changeLanguage(newLang);
   };
 
   return (
@@ -48,7 +56,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
             </div>
             <div>
               <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-1.5">WorkMate</h1>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Hệ thống Core</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('core_system')}</p>
             </div>
           </div>
           <button onClick={onClose} className="lg:hidden p-2 text-slate-400 hover:text-primary transition-colors">
@@ -60,7 +68,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto px-4 space-y-8 no-scrollbar">
           {/* Admin Section */}
           <div>
-            <p className="px-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-4 opacity-70">Menu điều hành</p>
+            <p className="px-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-4 opacity-70">{t('admin_menu')}</p>
             <div className="space-y-1">
               {adminMenu.map(item => (
                 <NavItem 
@@ -76,7 +84,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
 
           {/* Business Section */}
           <div>
-            <p className="px-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-4 opacity-70">Quản lý nghiệp vụ</p>
+            <p className="px-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-4 opacity-70">{t('business_management')}</p>
             <div className="space-y-1">
               {businessMenu.map(item => (
                 <NavItem 
@@ -93,13 +101,22 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
 
         {/* Footer Section */}
         <div className="p-6 mt-auto">
+          <div className="flex gap-2 mb-4">
+            <button 
+              onClick={toggleLanguage}
+              className="flex-1 flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-[1.25rem] py-3 border border-slate-100 dark:border-slate-800 hover:bg-slate-100 transition-colors text-[11px] font-black uppercase tracking-widest text-slate-500"
+            >
+              <Icon name="language" className="!text-lg" />
+              {i18n.language === 'vi' ? 'English' : 'Tiếng Việt'}
+            </button>
+          </div>
           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-2 border border-slate-100 dark:border-slate-800">
             <button 
               onClick={handleLogout}
               className="w-full flex items-center gap-4 px-6 py-4 text-slate-500 dark:text-slate-400 hover:bg-rose-500/10 hover:text-rose-500 rounded-[1.25rem] transition-all font-black text-[11px] uppercase tracking-widest group"
             >
               <Icon name="logout" className="!text-xl rotate-180 group-hover:-translate-x-1 transition-transform" />
-              <span>ĐĂNG XUẤT</span>
+              <span>{t('logout')}</span>
             </button>
           </div>
           <p className="text-center text-[10px] text-slate-400 mt-6 font-bold tracking-widest opacity-40">VERSION 2.4.0 • 2026</p>

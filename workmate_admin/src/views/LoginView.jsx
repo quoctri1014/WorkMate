@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useTranslation } from \'react-i18next\';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Icon, API_URL } from '../components/Common';
 
 const LoginView = ({ onLogin }) => {
+  const { t } = useTranslation();
   const [e, setE] = useState(''); const [p, setP] = useState('');
   const submit = async () => {
     try {
@@ -29,12 +31,12 @@ const LoginView = ({ onLogin }) => {
         
         <div className="mb-10">
           <h2 className="text-4xl font-black text-on-surface tracking-tighter mb-2">WorkMate</h2>
-          <p className="text-on-surface-variant font-medium text-sm tracking-widest uppercase italic">Quản trị hệ thống Core</p>
+          <p className="text-on-surface-variant font-medium text-sm tracking-widest uppercase italic">{t('admin_core_system')}</p>
         </div>
 
         <div className="space-y-4 text-left">
           <div className="space-y-1">
-            <p className="ml-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Tài khoản quản trị</p>
+            <p className="ml-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">{t('admin_account')}</p>
             <input 
               className="w-full bg-surface-container-low border-2 border-transparent rounded-[1.5rem] py-4 px-6 outline-none focus:border-primary/30 focus:bg-surface-container-lowest transition-all text-on-surface font-bold text-sm" 
               placeholder="admin@workmate.com" 
@@ -44,7 +46,7 @@ const LoginView = ({ onLogin }) => {
           </div>
           
           <div className="space-y-1">
-            <p className="ml-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Mật khẩu bảo mật</p>
+            <p className="ml-5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">{t('admin_password')}</p>
             <input 
               className="w-full bg-surface-container-low border-2 border-transparent rounded-[1.5rem] py-4 px-6 outline-none focus:border-primary/30 focus:bg-surface-container-lowest transition-all text-on-surface font-bold text-sm" 
               type="password" 
