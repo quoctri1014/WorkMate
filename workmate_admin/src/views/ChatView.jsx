@@ -191,7 +191,7 @@ const ChatView = ({ adminUser, onlineUsers = [], onNavigate }) => {
   };
 
   return (
-    <div className="h-[calc(100vh-[var(--header-height)])] flex overflow-hidden p-2 sm:p-6 gap-2 sm:gap-6 select-none relative">
+    <div className="h-full flex overflow-hidden p-2 sm:p-6 gap-2 sm:gap-6 select-none relative">
       {/* List Conversations */}
       <div className={`w-full md:w-80 h-full bg-surface-container-lowest rounded-[2.5rem] border border-border flex-col shadow-sm overflow-hidden ${activeChat ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-8 border-b border-border/50 bg-surface-container-lowest/50 backdrop-blur-md">
