@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { io } from "socket.io-client";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +18,7 @@ import { Icon, API_URL } from './components/Common';
 const socket = io("https://workmate-backend-k8nk.onrender.com");
 
 const App = () => {
+  const { t, i18n } = useTranslation();
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('admin_user')));
   const [activeTab, setActiveTab] = useState('dashboard');
   const [employees, setEmployees] = useState([]);
@@ -49,6 +51,11 @@ const App = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+  };
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'vi' ? 'en' : 'vi';
+    i18n.changeLanguage(newLang);
   };
 
   const fetch = async (url, setter, p = {}) => {
@@ -166,6 +173,14 @@ const App = () => {
              className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400 group"
            >
              <Icon name={isDarkMode ? "light_mode" : "dark_mode"} className="group-active:rotate-90 transition-transform duration-500" />
+           </button>
+
+           {/* Language Toggle */}
+           <button 
+             onClick={toggleLanguage}
+             className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 dark:text-slate-400 group flex items-center justify-center font-black uppercase text-[10px] tracking-widest"
+           >
+             {i18n.language === 'vi' ? 'EN' : 'VI'}
            </button>
 
            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />

@@ -29,11 +29,6 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
     if (window.innerWidth < 1024) onClose();
   };
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'vi' ? 'en' : 'vi';
-    i18n.changeLanguage(newLang);
-  };
-
   return (
     <>
       {/* Mobile Overlay */}
@@ -101,15 +96,6 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
 
         {/* Footer Section */}
         <div className="p-6 mt-auto">
-          <div className="flex gap-2 mb-4">
-            <button 
-              onClick={toggleLanguage}
-              className="flex-1 flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-[1.25rem] py-3 border border-slate-100 dark:border-slate-800 hover:bg-slate-100 transition-colors text-[11px] font-black uppercase tracking-widest text-slate-500"
-            >
-              <Icon name="language" className="!text-lg" />
-              {i18n.language === 'vi' ? 'English' : 'Tiếng Việt'}
-            </button>
-          </div>
           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-2 border border-slate-100 dark:border-slate-800">
             <button 
               onClick={handleLogout}
