@@ -15,6 +15,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/data/repositories/api_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -444,9 +445,63 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildRichContent(String type, String? text, String? url, bool isMe) {
-    if (type == 'image' && url != null) return ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.network(url, width: 200));
-    if (type == 'audio' && url != null) return IconButton(icon: const Icon(Icons.play_circle), color: isMe ? Colors.white : Colors.blue, onPressed: () => _audioPlayer.play(UrlSource(url)));
-    if (type == 'file' && url != null) return Padding(padding: const EdgeInsets.all(10), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.description, color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface), const SizedBox(width: 8), Text(text ?? 'File', style: TextStyle(color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface))]));
+    String? fullUrl;
+    if (url != null) {
+      fullUrl = url.startsWith('http') ? url : '${ApiService.baseUrl.replaceAll('/api', '')}$url';
+    }
+
+    if (type == 'image' && fullUrl != null) {
+      return GestureDetector(
+        onTap: () => launchUrl(Uri.parse(fullUrl!)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16), 
+          child: Image.network(fullUrl, width: 200, errorBuilder: (ctx, err, stack) => Icon(Icons.broken_image, color: Colors.grey, size: 50))
+        )
+      );
+    }
+    
+    if (type == 'video' && fullUrl != null) {
+      return GestureDetector(
+        onTap: () => launchUrl(Uri.parse(fullUrl!)),
+        child: Container(
+          width: 200,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.black12,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: Icon(Icons.play_circle_fill, size: 50, color: isMe ? Colors.white : Colors.blue),
+          ),
+        ),
+      );
+    }
+
+    if (type == 'audio' && fullUrl != null) {
+      return IconButton(
+        icon: const Icon(Icons.play_circle), 
+        color: isMe ? Colors.white : Colors.blue, 
+        onPressed: () => _audioPlayer.play(UrlSource(fullUrl!))
+      );
+    }
+    
+    if (type == 'file' && fullUrl != null) {
+      return GestureDetector(
+        onTap: () => launchUrl(Uri.parse(fullUrl!), mode: LaunchMode.externalApplication),
+        child: Padding(
+          padding: const EdgeInsets.all(10), 
+          child: Row(
+            mainAxisSize: MainAxisSize.min, 
+            children: [
+              Icon(Icons.description, color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface), 
+              const SizedBox(width: 8), 
+              Flexible(child: Text(text ?? 'Tài liệu', style: TextStyle(color: isMe ? Colors.white : Theme.of(context).colorScheme.onSurface, decoration: TextDecoration.underline)))
+            ]
+          )
+        )
+      );
+    }
+
     return Text(text ?? '', style: TextStyle(color: isMe ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87)));
   }
 
