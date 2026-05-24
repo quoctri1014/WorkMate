@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTranslation } from \'react-i18next\';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Icon, API_URL } from '../components/Common';
