@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import \'package:easy_localization/easy_localization.dart\';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/data/models/models.dart';
@@ -14,7 +15,7 @@ class LeaveDetailScreen extends StatelessWidget {
     Color statusColor;
     String statusText;
     switch (leave.status) {
-      case 'approved': statusColor = const Color(0xFF10B981); statusText = 'ĐÃ DUYỆT'; break;
+      case 'approved': statusColor = const Color(0xFF10B981); statusText = tr('approved').toUpperCase(); break;
       case 'rejected': statusColor = const Color(0xFFEF4444); statusText = 'TỪ CHỐI'; break;
       default: statusColor = const Color(0xFFF59E0B); statusText = 'CHỜ DUYỆT';
     }
@@ -25,7 +26,7 @@ class LeaveDetailScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text('Chi tiết nghỉ phép', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface, fontSize: 18)),
+        title: Text(tr('leave_details'), style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface, fontSize: 18)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_rounded, color: Theme.of(context).colorScheme.onSurface, size: 20),
           onPressed: () => Navigator.pop(context),
@@ -75,7 +76,7 @@ class LeaveDetailScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 24),
-            Text('THÔNG TIN CHI TIẾT', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7), letterSpacing: 1)),
+            Text(tr('detailed_information'), style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7), letterSpacing: 1)),
             const SizedBox(height: 12),
 
             Container(

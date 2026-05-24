@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import \'package:easy_localization/easy_localization.dart\';
+import \'package:easy_localization/easy_localization.dart\';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:workmate/core/constants/app_colors.dart';
@@ -15,7 +17,7 @@ class QRScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final homeVm = context.watch<HomeViewModel>();
     final user = homeVm.user;
-    final companyName = homeVm.companyConfig?.companyName ?? 'QUẬN 12';
+    final companyName = homeVm.companyConfig?.companyName ?? tr('QUẬN 12');
 
     if (user == null) return const Scaffold(body: Center(child: Text('Không tìm thấy thông tin')));
 

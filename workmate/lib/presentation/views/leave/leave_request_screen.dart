@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import \'package:easy_localization/easy_localization.dart\';
 import 'package:provider/provider.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/presentation/viewmodels/viewmodels.dart';
@@ -13,7 +14,7 @@ class LeaveRequestScreen extends StatefulWidget {
 }
 
 class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
-  String _leaveType = 'Nghỉ phép năm';
+  String _leaveType = tr('annual_leave');
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
   bool _isHalfDay = false;
@@ -22,7 +23,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   bool _isUploading = false;
   bool _isSuccess = false;
 
-  final List<String> _types = ['Nghỉ phép năm', 'Nghỉ bệnh', 'Nghỉ việc riêng', 'Nghỉ không lương'];
+  final List<String> _types = [tr('annual_leave'), tr('sick_leave'), tr('personal_leave'), tr('unpaid_leave')];
 
   @override
   void dispose() {
@@ -99,7 +100,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
 
     final double remainingLeave = vm.remainingLeave;
     final double totalDays = _isHalfDay ? 0.5 : (_toDate.difference(_fromDate).inDays + 1).toDouble();
-    if (_leaveType == 'Nghỉ phép năm' && totalDays > remainingLeave) {
+    if (_leaveType == tr('annual_leave') && totalDays > remainingLeave) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Bạn chỉ còn $remainingLeave ngày phép năm. Vui lòng chọn lại.')));
       return;
     }
@@ -212,11 +213,11 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             _buildDropdown(remainingLeave),
             const SizedBox(height: 24),
 
-            _buildLabel('TỪ NGÀY'),
+            _buildLabel(tr('from_date').toUpperCase()),
             _buildDatePicker(true),
             const SizedBox(height: 24),
 
-            _buildLabel('ĐẾN NGÀY'),
+            _buildLabel(tr('to_date').toUpperCase()),
             _buildDatePicker(false),
             const SizedBox(height: 24),
 
@@ -241,7 +242,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               controller: _reasonController,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: 'Nhập lý do chi tiết của bạn tại đây...',
+                hintText: tr('enter_detailed_reason'),
                 hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 14),
                 filled: true,
                 fillColor: Theme.of(context).cardColor,
@@ -315,8 +316,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     // Lọc danh sách loại nghỉ nếu hết phép năm
     List<String> availableTypes = List.from(_types);
     if (remainingLeave <= 0) {
-      availableTypes.remove('Nghỉ phép năm');
-      if (_leaveType == 'Nghỉ phép năm' && availableTypes.isNotEmpty) {
+      availableTypes.remove(tr('annual_leave'));
+      if (_leaveType == tr('annual_leave') && availableTypes.isNotEmpty) {
         _leaveType = availableTypes[0];
       }
     }

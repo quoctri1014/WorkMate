@@ -60,9 +60,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Row(
               children: [
-                _StatCard(label: 'CÒN LẠI', value: '${leaveVM.remainingLeave} ngày', color: const Color(0xFF0369A1)),
+                _StatCard(label: tr('remaining').toUpperCase(), value: '${leaveVM.remainingLeave} ngày', color: const Color(0xFF0369A1)),
                 const SizedBox(width: 16),
-                _StatCard(label: 'ĐANG CHỜ', value: '${leaveVM.leaves.where((l) => l.status == 'pending').length} đơn', color: const Color(0xFFF59E0B)),
+                _StatCard(label: tr('pending').toUpperCase(), value: '${leaveVM.leaves.where((l) => l.status == 'pending').length} đơn', color: const Color(0xFFF59E0B)),
               ],
             ),
           ),
@@ -74,9 +74,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
             child: Row(
               children: [
-                _TabItem(label: 'Tất cả', isActive: _activeTab == 'all', onTap: () => setState(() => _activeTab = 'all')),
-                _TabItem(label: 'Đã duyệt', isActive: _activeTab == 'approved', onTap: () => setState(() => _activeTab = 'approved')),
-                _TabItem(label: 'Đang chờ', isActive: _activeTab == 'pending', onTap: () => setState(() => _activeTab = 'pending')),
+                _TabItem(label: tr('all'), isActive: _activeTab == 'all', onTap: () => setState(() => _activeTab = 'all')),
+                _TabItem(label: tr('approved'), isActive: _activeTab == 'approved', onTap: () => setState(() => _activeTab = 'approved')),
+                _TabItem(label: tr('pending'), isActive: _activeTab == 'pending', onTap: () => setState(() => _activeTab = 'pending')),
               ],
             ),
           ),
@@ -115,7 +115,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     Color statusColor;
     String statusText;
     switch (leave.status) {
-      case 'approved': statusColor = const Color(0xFF10B981); statusText = 'ĐÃ DUYỆT'; break;
+      case 'approved': statusColor = const Color(0xFF10B981); statusText = tr('approved').toUpperCase(); break;
       case 'rejected': statusColor = const Color(0xFFEF4444); statusText = 'TỪ CHỐI'; break;
       default: statusColor = const Color(0xFFF59E0B); statusText = 'CHỜ DUYỆT';
     }
@@ -162,13 +162,13 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
           ),
           Row(
             children: [
-              _buildDateInfo('Từ ngày', AppDateUtils.formatDate(leave.fromDate)),
+              _buildDateInfo(tr('from_date'), AppDateUtils.formatDate(leave.fromDate)),
               const Spacer(),
-              _buildDateInfo('Đến ngày', AppDateUtils.formatDate(leave.toDate)),
+              _buildDateInfo(tr('to_date'), AppDateUtils.formatDate(leave.toDate)),
               const SizedBox(width: 20),
               GestureDetector(
                 onTap: () => _showDetail(leave),
-                child: Text('Chi tiết >', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, fontSize: 13, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF0369A1))),
+                child: Text(tr('details_arrow'), style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, fontSize: 13, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF0369A1))),
               ),
             ],
           ),

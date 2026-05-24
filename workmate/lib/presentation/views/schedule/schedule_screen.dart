@@ -210,7 +210,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'CHI TIẾT NGÀY ${AppDateUtils.formatDate(_selectedDay ?? DateTime.now()).toUpperCase()}',
+                    tr('date_details') + ' ' + AppDateUtils.formatDate(_selectedDay ?? DateTime.now()).toUpperCase(),
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), letterSpacing: 1.2),
                   ),
                   const SizedBox(height: 16),
@@ -308,8 +308,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       return _buildInfoTile(
         icon: Icons.beach_access_rounded,
         color: AppColors.error,
-        title: 'Ngày nghỉ phép',
-        subtitle: 'Bạn không có lịch làm việc hôm nay',
+        title: tr('leave_day'),
+        subtitle: tr('no_work_schedule_today'),
       );
     }
 

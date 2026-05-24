@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import \'package:easy_localization/easy_localization.dart\';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/data/models/models.dart';
@@ -146,7 +147,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Nội dung chi tiết',
+                    tr('detailed_content'),
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 14,

@@ -114,7 +114,7 @@ class _OTHistoryScreenState extends State<OTHistoryScreen> {
             children: [
               Expanded(
                 child: _SummaryCard(
-                  title: 'TỔNG GIỜ ĐÃ DUYỆT',
+                  title: tr('total_approved_hours'),
                   value: '${approvedHours.toStringAsFixed(1)} giờ',
                   color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.withOpacity(0.15) : const Color(0xFFE0F2FE),
                   textColor: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300]! : const Color(0xFF0369A1),
@@ -128,7 +128,7 @@ class _OTHistoryScreenState extends State<OTHistoryScreen> {
             children: [
               Expanded(
                 child: _SummaryCard(
-                  title: 'YÊU CẦU ĐANG CHỜ',
+                  title: tr('pending_requests'),
                   value: pendingCount.toString().padLeft(2, '0'),
                   subtitle: 'Đang đợi kiểm duyệt',
                   color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.withOpacity(0.15) : const Color(0xFFFFF7ED),
@@ -252,7 +252,7 @@ class _OTItemCard extends StatelessWidget {
       case 'approved':
         statusColor = const Color(0xFF059669);
         statusBg = Theme.of(context).brightness == Brightness.dark ? const Color(0xFF064E3B).withOpacity(0.5) : const Color(0xFFECFDF5);
-        statusText = 'Đã duyệt';
+        statusText = tr('approved');
         break;
       case 'rejected':
         statusColor = const Color(0xFFDC2626);

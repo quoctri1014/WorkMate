@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import \'package:easy_localization/easy_localization.dart\';
 import 'dart:convert';
 
 // Bank Account Model
@@ -255,13 +256,13 @@ class LeaveModel {
   }
   String get leaveTypeLabel {
     switch(leaveType) {
-      case 'annual': return 'Nghỉ phép năm';
+      case 'annual': return tr('annual_leave');
       case 'sick': return 'Nghỉ ốm';
       case 'personal': return 'Việc riêng';
       default: return leaveType;
     }
   }
-  String get statusLabel => status == 'pending' ? 'Chờ duyệt' : (status == 'approved' ? 'Đã duyệt' : 'Từ chối');
+  String get statusLabel => status == 'pending' ? tr('pending') : (status == 'approved' ? tr('approved') : 'Từ chối');
 
   factory LeaveModel.fromMap(Map<String, dynamic> map) {
     return LeaveModel(
@@ -314,7 +315,7 @@ class OvertimeModel {
     this.type = 'Làm thêm giờ',
   });
 
-  String get statusLabel => status == 'pending' ? 'Chờ duyệt' : (status == 'approved' ? 'Đã duyệt' : 'Từ chối');
+  String get statusLabel => status == 'pending' ? tr('pending') : (status == 'approved' ? tr('approved') : 'Từ chối');
 
   factory OvertimeModel.fromMap(Map<String, dynamic> map) {
     return OvertimeModel(

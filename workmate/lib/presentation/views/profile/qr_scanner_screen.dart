@@ -1,4 +1,6 @@
 import 'dart:convert';
+import \'package:easy_localization/easy_localization.dart\';
+import \'package:easy_localization/easy_localization.dart\';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:workmate/core/constants/app_colors.dart';
@@ -319,13 +321,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Thông tin chi tiết', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.black87)),
+                    const Text(tr('detailed_information'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.black87)),
                     const SizedBox(height: 16),
-                    if (dept.isNotEmpty) _buildInfoRow(Icons.business_rounded, 'Bộ phận', dept),
-                    if (position.isNotEmpty) _buildInfoRow(Icons.work_rounded, 'Chức vụ', position),
-                    if (phone.isNotEmpty) _buildInfoRow(Icons.phone_rounded, 'Điện thoại', phone),
-                    if (email.isNotEmpty) _buildInfoRow(Icons.email_rounded, 'Email', email),
-                    if (birthday.isNotEmpty) _buildInfoRow(Icons.cake_rounded, 'Ngày sinh', birthday),
+                    if (dept.isNotEmpty) _buildInfoRow(Icons.business_rounded, tr('department_label'), dept.tr()),
+                    if (position.isNotEmpty) _buildInfoRow(Icons.work_rounded, tr('position_label'), position.tr()),
+                    if (phone.isNotEmpty) _buildInfoRow(Icons.phone_rounded, tr('phone_label'), phone),
+                    if (email.isNotEmpty) _buildInfoRow(Icons.email_rounded, tr('email_label'), email),
+                    if (birthday.isNotEmpty) _buildInfoRow(Icons.cake_rounded, tr('birthday'), birthday),
                     if (joinDate.isNotEmpty) _buildInfoRow(Icons.calendar_month_rounded, 'Ngày vào làm', joinDate),
                   ],
                 ),

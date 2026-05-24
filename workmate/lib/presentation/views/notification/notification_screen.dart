@@ -197,7 +197,7 @@ class NotificationScreen extends StatelessWidget {
                   elevation: 0,
                 ),
                 child: Text(
-                  isMeetingCanceled ? 'Đóng' : 'Xem chi tiết', 
+                  isMeetingCanceled ? tr('close') : tr('view_details'), 
                   style: const TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)
                 ),
               ),
