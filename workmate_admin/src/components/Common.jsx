@@ -1,7 +1,5 @@
 import React from 'react';
-
-export const API_URL = "http://localhost:5000/api";
-
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 export const Icon = ({ name, fill = 0, className = "" }) => (
   <span className={`material-symbols-outlined ${fill ? 'fill-icon' : ''} ${className}`}>
     {name}
