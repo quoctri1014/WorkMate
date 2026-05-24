@@ -50,7 +50,14 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this)
-      ..addListener(() => setState(() => _currentTab = _tabController.index));
+      ..addListener(() {
+        if (_currentTab != _tabController.index) {
+          setState(() => _currentTab = _tabController.index);
+          if (_currentTab == 0 || _currentTab == 1) {
+            _scrollToBottom();
+          }
+        }
+      });
     
     final user = context.read<ProfileViewModel>().user;
     if (user != null) {
@@ -181,8 +188,17 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(_scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+      if (mounted && _scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && _scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent + 500,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
       }
     });
   }

@@ -123,11 +123,16 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollCtrl.hasClients) {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted && _scrollCtrl.hasClients) {
+        _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+      }
+    });
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && _scrollCtrl.hasClients) {
         _scrollCtrl.animateTo(
-          _scrollCtrl.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
+          _scrollCtrl.position.maxScrollExtent + 500, // Thêm khoảng bù trừ
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
       }

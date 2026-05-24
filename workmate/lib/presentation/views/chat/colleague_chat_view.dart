@@ -198,6 +198,14 @@ class _ColleagueChatViewState extends State<ColleagueChatView> with SingleTicker
         ],
       ),
       onTap: () {
+        final user = context.read<ProfileViewModel>().user;
+        if (user != null) {
+          // Gửi API đánh dấu đã đọc
+          http.put(Uri.parse('${ApiService.baseUrl}/conversations/${conv['id']}/read?userId=${user.id}'));
+          // Xóa badge tạm thời trên UI để mượt
+          if (mounted) setState(() => conv['unread_count'] = 0);
+        }
+
         Navigator.push(
           context,
           MaterialPageRoute(
