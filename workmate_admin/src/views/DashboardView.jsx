@@ -120,7 +120,6 @@ const DashboardView = ({ employees = [], attendance = [], approvals = [], meetin
               </div>
               <div className="flex gap-2">
                 <button className="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all">{t('week')}</button>
-                <button className="px-4 py-2 bg-surface-container-low text-on-surface-variant text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-surface-container-high transition-all">{t('month')}</button>
               </div>
             </div>
             
