@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import \'package:easy_localization/easy_localization.dart\';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:workmate/core/constants/app_colors.dart';
 import 'package:workmate/core/utils/date_utils.dart';
 import 'package:workmate/data/models/models.dart';
@@ -19,7 +19,7 @@ class OTDetailScreen extends StatelessWidget {
       case 'approved':
         statusColor = const Color(0xFF059669);
         statusBg = Theme.of(context).brightness == Brightness.dark ? const Color(0xFF064E3B).withOpacity(0.5) : const Color(0xFFECFDF5);
-        statusText = tr('approved').toUpperCase();
+        statusText = 'approved'.tr().toUpperCase();
         statusIcon = Icons.check_circle_rounded;
         break;
       case 'rejected':
@@ -45,7 +45,7 @@ class OTDetailScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          tr('ot_registration_details'),
+          'ot_registration_details'.tr(),
           style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
         ),
         actions: [
@@ -87,7 +87,7 @@ class OTDetailScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Text(tr('ot_details'), style: TextStyle(fontFamily: 'Nunito', fontSize: 24, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface)),
+                    Text('ot_details'.tr(), style: TextStyle(fontFamily: 'Nunito', fontSize: 24, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface)),
                     const SizedBox(height: 8),
                     Text(
                       'Yêu cầu làm thêm giờ cho nội dung công việc: ${ot.workContent}',
@@ -125,7 +125,7 @@ class OTDetailScreen extends StatelessWidget {
                   Text('Trạng thái Phê duyệt', style: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : const Color(0xFF0369A1))),
                   const SizedBox(height: 8),
                   Text(
-                    ot.status == 'approved' ? tr('ot_approved_desc') : tr('ot_pending_desc'),
+                    ot.status == 'approved' ? 'ot_approved_desc'.tr() : 'ot_pending_desc'.tr(),
                     textAlign: TextAlign.center,
                     style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[100] : const Color(0xFF0369A1), fontWeight: FontWeight.w600, height: 1.5),
                   ),
@@ -151,10 +151,10 @@ class OTDetailScreen extends StatelessWidget {
               title: 'NỘI DUNG CÔNG VIỆC',
               icon: Icons.description_rounded,
               children: [
-                Text(tr('detailed_description'), style: TextStyle(fontFamily: 'Nunito', fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.textHint, letterSpacing: 0.5)),
+                Text('detailed_description'.tr(), style: TextStyle(fontFamily: 'Nunito', fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.textHint, letterSpacing: 0.5)),
                 const SizedBox(height: 8),
                 Text(
-                  ot.workContent.isEmpty ? tr('no_detailed_description') : ot.workContent,
+                  ot.workContent.isEmpty ? 'no_detailed_description'.tr() : ot.workContent,
                   style: TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, height: 1.6),
                 ),
                 const SizedBox(height: 20),

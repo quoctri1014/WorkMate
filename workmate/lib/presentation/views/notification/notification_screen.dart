@@ -197,7 +197,7 @@ class NotificationScreen extends StatelessWidget {
                   elevation: 0,
                 ),
                 child: Text(
-                  isMeetingCanceled ? tr('close') : tr('view_details'), 
+                  isMeetingCanceled ? 'close'.tr() : 'view_details'.tr(), 
                   style: const TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)
                 ),
               ),

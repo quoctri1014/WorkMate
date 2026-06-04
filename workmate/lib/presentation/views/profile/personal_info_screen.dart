@@ -159,8 +159,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               items: [
                 _InfoRow(icon: Icons.email_rounded, label: t('email'), value: user.email),
                 _InfoRow(icon: Icons.phone_rounded, label: t('phone'), value: user.phone),
-                _InfoRow(icon: Icons.cake_rounded, label: tr('birthday'), value: AppDateUtils.formatDate(user.birthday)),
-                _InfoRow(icon: Icons.business_rounded, label: t('company'), value: context.watch<HomeViewModel>().companyConfig?.companyName ?? tr('QUẬN 12')),
+                _InfoRow(icon: Icons.cake_rounded, label: 'birthday'.tr(), value: AppDateUtils.formatDate(user.birthday)),
+                _InfoRow(icon: Icons.business_rounded, label: t('company'), value: context.watch<HomeViewModel>().companyConfig?.companyName ?? 'QUẬN 12'.tr()),
                 _InfoRow(icon: Icons.calendar_today_rounded, label: t('join_date'), value: AppDateUtils.formatDate(user.joinDate)),
               ],
             ),
