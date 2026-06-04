@@ -250,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 final isCompleted = homeVM.checkInTime != null && homeVM.checkOutTime != null;
                                 final isSupplemented = homeVM.checkInMethod?.contains('bổ sung') == true;
 
-                                return ElevatedButton(
+                                final btn = ElevatedButton(
                                   onPressed: (homeVM.isCheckingIn || isCompleted)
                                       ? null
                                       : () async {
