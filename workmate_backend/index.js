@@ -1654,8 +1654,9 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
        FROM approvals 
        WHERE employee_id::text = $1::text 
        AND status IN ('approved', 'pending') 
-       AND type != 'Làm thêm giờ'
-       AND type NOT LIKE '%thêm%'`,
+       AND type NOT IN ('Làm thêm giờ', 'OT', 'LÃ m thÃªm giá»')
+       AND type NOT LIKE '%thêm%'
+       AND type NOT LIKE '%OT%'`,
       [employeeId]
     );
 
