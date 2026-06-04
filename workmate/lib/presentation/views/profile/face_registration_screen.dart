@@ -174,8 +174,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen>
   String _getStepGuide() {
     switch (_regStep) {
       case RegistrationStep.center: return 'Nhìn thẳng vào khung';
-      case RegistrationStep.left: return 'Nghiêng mặt sang TRÁI';
-      case RegistrationStep.right: return 'Nghiêng mặt sang PHẢI';
+      case RegistrationStep.left: return 'Nghiêng mặt sang PHẢI';
+      case RegistrationStep.right: return 'Nghiêng mặt sang TRÁI';
       case RegistrationStep.up: return 'Ngẩng mặt LÊN';
       case RegistrationStep.down: return 'Cúi mặt XUỐNG';
       default: return '';

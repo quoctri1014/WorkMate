@@ -988,17 +988,50 @@ app.post('/api/employees', async (req, res) => {
 
 app.put('/api/employees/:id', async (req, res) => {
   try {
-    const { name, email, phone, department_id, position, join_date, birthday } = req.body;
+    const { name, email, phone, department_id, position, join_date, birthday, password } = req.body;
     console.log(`ðŸ“ Cáº­p nháº­t nhÃ¢n viÃªn ${req.params.id}:`, { name, email, phone, birthday });
 
     // Láº¥y tÃªn phÃ²ng ban má»›i náº¿u cÃ³ thay Ä‘á»•i
     const deptResult = await pool.query('SELECT name FROM departments WHERE id = $1', [department_id]);
     const deptName = deptResult.rows[0]?.name || '';
 
-    const result = await pool.query(
-      'UPDATE employees SET name = $1, email = $2, phone = $3, department_id = $4, department_name = $5, position = $6, join_date = $7, birthday = $8 WHERE id = $9 RETURNING *',
-      [name, email, phone, department_id, deptName, position, join_date || null, birthday || null, req.params.id]
-    );
+    let result;
+    if (password && password.trim() !== '') {
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(password, salt);
+      result = await pool.query(
+        'UPDATE employees SET name = $1, email = $2, phone = $3, department_id = $4, department_name = $5, position = $6, join_date = $7, birthday = $8, password_hash = $9 WHERE id = $10 RETURNING *',
+        [name, email, phone, department_id, deptName, position, join_date || null, birthday || null, hash, req.params.id]
+      );
+      
+      try {
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: '[WorkMate] Thay đổi mật khẩu tài khoản',
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+              <h2>Cập nhật mật khẩu tài khoản</h2>
+              <p>Chào ${name},</p>
+              <p>Tài khoản của bạn trên hệ thống WorkMate đã được Quản trị viên cập nhật mật khẩu mới.</p>
+              <p>Mật khẩu mới của bạn là: <b style="font-size: 18px; color: #dc3545;">${password}</b></p>
+              <p>Vui lòng đăng nhập lại bằng mật khẩu này và thay đổi mật khẩu ngay để đảm bảo an toàn.</p>
+              <hr/>
+              <p style="font-size: 12px; color: #777;">Đây là email tự động từ hệ thống WorkMate.</p>
+            </div>
+          `
+        };
+        await transporter.sendMail(mailOptions);
+        console.log("Da gui email mat khau moi den " + email);
+      } catch (mailErr) {
+        console.error("Loi gui email mat khau moi:", mailErr);
+      }
+    } else {
+      result = await pool.query(
+        'UPDATE employees SET name = $1, email = $2, phone = $3, department_id = $4, department_name = $5, position = $6, join_date = $7, birthday = $8 WHERE id = $9 RETURNING *',
+        [name, email, phone, department_id, deptName, position, join_date || null, birthday || null, req.params.id]
+      );
+    }
 
     console.log(`âœ… ÄÃ£ cáº­p nháº­t nhÃ¢n viÃªn: ${result.rows[0].employee_code}`);
     res.json(result.rows[0]);
