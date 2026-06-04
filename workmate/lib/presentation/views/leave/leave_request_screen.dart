@@ -388,7 +388,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                     elevation: 4,
                     shadowColor: AppColors.primary.withOpacity(0.3),
                   ),
-                  child: const Text('Quay về trang chủ', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
+                  child: Text('back_home'.tr(), style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
                 ),
               ),
             ],

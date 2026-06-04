@@ -24,5 +24,9 @@
   "week": "Week",
   "month": "Month",
   "upcoming_schedule": "Upcoming Schedule",
-  "no_meeting_today": "No meetings today"
+  "no_meeting_today": "No meetings today",
+  "attendance_completed": "Completed",
+  "forgot_checkout": "Forgot check-out",
+  "forgot_checkout_penalty": "Forgot check-out (Penalty)",
+  "working": "Working"
 }

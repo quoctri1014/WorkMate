@@ -166,5 +166,12 @@
   "email_label": "Email",
   "BỘ PHẬN": "BỘ PHẬN",
   "CHỨC VỤ": "CHỨC VỤ",
-  "SỐ ĐIỆN THOẠI": "SỐ ĐIỆN THOẠI"
+  "SỐ ĐIỆN THOẠI": "SỐ ĐIỆN THOẠI",
+  "confirm_check_out": "Xác nhận CHECK OUT",
+  "check_out_desc": "Bạn có chắc chắn muốn thực hiện chấm công ra không? Hành động này sẽ ghi nhận giờ kết thúc ca làm của bạn.",
+  "confirm": "XÁC NHẬN",
+  "supplemented_completed": "ĐÃ BỔ SUNG CÔNG",
+  "attendance_completed": "ĐÃ HOÀN TẤT CHẤM CÔNG",
+  "forgot_checkout_warning": "⚠️ Quên check out",
+  "forgot_checkout_penalty": "⚠️ Quên check out (Quá 3 lần/tháng -> 0h)"
 }

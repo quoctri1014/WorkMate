@@ -59,8 +59,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     for (var att in vm.attendanceHistory) {
       int dayIdx = att.date.weekday - 1; 
       if (currentWeek.any((d) => d.year == att.date.year && d.month == att.date.month && d.day == att.date.day)) {
-        res[dayIdx]['normal'] = (res[dayIdx]['normal'] ?? 0) + att.displayNormalHours;
-        res[dayIdx]['ot'] = (res[dayIdx]['ot'] ?? 0) + att.otHours;
+        double normal = att.displayNormalHours;
+        double ot = att.otHours;
+        double deficiency = 0.0;
+        
+        if (normal > 0 && normal < 8.0) {
+          deficiency = 8.0 - normal;
+        }
+        
+        res[dayIdx]['normal'] = (res[dayIdx]['normal'] ?? 0) + normal;
+        res[dayIdx]['ot'] = (res[dayIdx]['ot'] ?? 0) + ot;
+        res[dayIdx]['deficiency'] = (res[dayIdx]['deficiency'] ?? 0) + deficiency;
       }
     }
     return res;
@@ -289,6 +298,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildAdvancedChart(List<Map<String, double>> chartData, String lang, List<DateTime> currentWeek) {
+    double maxY = 8.0;
+    for (var d in chartData) {
+      double total = d['normal']! + d['deficiency']! + d['ot']!;
+      if (total > maxY) maxY = total;
+    }
+    maxY = (maxY + 2).ceilToDouble(); // Add some padding on top
+
     return Container(
       height: 240,
       padding: const EdgeInsets.all(20),
@@ -299,6 +315,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       ),
       child: BarChart(
         BarChartData(
+          maxY: maxY,
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
               getTooltipColor: (_) => Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey[800]! : AppColors.textPrimary,
@@ -306,10 +323,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 final d = chartData[groupIndex];
                 String text = '';
-                if (d['ot']! > 0) text = 'OT: ${d['ot']}h\n';
-                text += 'Work: ${d['normal']! + d['deficiency']!}h';
+                if (d['normal']! > 0) text += 'Làm việc: ${d['normal']!.toStringAsFixed(1)}h\n';
+                if (d['deficiency']! > 0) text += 'Đi trễ/sớm: ${d['deficiency']!.toStringAsFixed(1)}h\n';
+                if (d['ot']! > 0) text += 'Tăng ca (OT): ${d['ot']!.toStringAsFixed(1)}h';
+                if (text.isEmpty) text = 'Không có dữ liệu';
                 return BarTooltipItem(
-                  text,
+                  text.trim(),
                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                 );
               },
@@ -322,6 +341,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
+                interval: 2,
                 getTitlesWidget: (v, _) => Text('${v.toInt()}h', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6), fontSize: 10)),
                 reservedSize: 28,
               ),
@@ -354,6 +374,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
+            horizontalInterval: 2,
             getDrawingHorizontalLine: (v) => FlLine(color: Theme.of(context).dividerColor.withOpacity(0.1), strokeWidth: 1),
           ),
           barGroups: List.generate(7, (i) {
@@ -362,16 +383,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               x: i,
               barRods: [
                 BarChartRodData(
-                  toY: d['normal']! + d['ot']! + d['deficiency']!,
+                  toY: d['normal']! + d['deficiency']! + d['ot']!,
                   width: 20,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                   rodStackItems: [
-                    if (d['deficiency']! > 0)
-                      BarChartRodStackItem(0, d['deficiency']!, const Color(0xFFFBBF24)), // Yellow
                     if (d['normal']! > 0)
                       BarChartRodStackItem(0, d['normal']!, const Color(0xFF10B981)), // Green
+                    if (d['deficiency']! > 0)
+                      BarChartRodStackItem(d['normal']!, d['normal']! + d['deficiency']!, const Color(0xFFFBBF24)), // Yellow
                     if (d['ot']! > 0)
-                      BarChartRodStackItem(d['normal']!, d['normal']! + d['ot']!, const Color(0xFFEF4444)), // Red
+                      BarChartRodStackItem(d['normal']! + d['deficiency']!, d['normal']! + d['deficiency']! + d['ot']!, const Color(0xFFF97316)), // Orange
                   ],
                 ),
               ],
@@ -411,9 +432,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 Row(children: [
                   Icon(Icons.access_time_rounded, size: 12, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6)),
                   const SizedBox(width: 4),
-                  Text('${att.checkIn != null ? AppDateUtils.formatTime(att.checkIn!) : '--:--'} - ${att.checkOut != null ? AppDateUtils.formatTime(att.checkOut!) : t('working')}', 
+                  Text('${att.checkIn != null ? AppDateUtils.formatTime(att.checkIn!) : '--:--'} - ${att.checkOut != null ? AppDateUtils.formatTime(att.checkOut!) : (att.isForgotCheckout ? t('forgot_checkout_warning') : t('working'))}', 
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w600)),
                 ]),
+                if (att.isForgotCheckout)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      att.isForgotPenalty ? t('forgot_checkout_penalty') : t('forgot_checkout_warning'),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: att.isForgotPenalty ? Colors.red : Colors.orange),
+                    ),
+                  ),
               ],
             ),
           ),

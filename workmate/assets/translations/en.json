@@ -166,5 +166,12 @@
   "email_label": "Email",
   "BỘ PHẬN": "DEPARTMENT",
   "CHỨC VỤ": "POSITION",
-  "SỐ ĐIỆN THOẠI": "PHONE NUMBER"
+  "SỐ ĐIỆN THOẠI": "PHONE NUMBER",
+  "confirm_check_out": "Confirm CHECK OUT",
+  "check_out_desc": "Are you sure you want to check out? This action will record the end time of your shift.",
+  "confirm": "CONFIRM",
+  "supplemented_completed": "SUPPLEMENTED",
+  "attendance_completed": "ATTENDANCE COMPLETED",
+  "forgot_checkout_warning": "⚠️ Forgot check-out",
+  "forgot_checkout_penalty": "⚠️ Forgot check-out (Over 3 times/month -> 0h)"
 }

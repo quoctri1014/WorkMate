@@ -139,8 +139,8 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen>
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: const Text(
-                          'Về trang chủ',
+                        child: Text(
+                          'back_home'.tr(),
                           style: TextStyle(
                             fontFamily: 'Nunito',
                             fontSize: 16,

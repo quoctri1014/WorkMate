@@ -273,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     mainAxisSize: MainAxisSize.min,
                                                     children: [
                                                       Text(
-                                                        'Xác nhận CHECK OUT',
+                                                        t('confirm_check_out'),
                                                         style: TextStyle(
                                                           fontSize: 20,
                                                           fontWeight: FontWeight.w800,
@@ -283,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       ),
                                                       const SizedBox(height: 16),
                                                       Text(
-                                                        'Bạn có chắc chắn muốn thực hiện chấm công ra không? Hành động này sẽ ghi nhận giờ kết thúc ca làm của bạn.',
+                                                        t('check_out_desc'),
                                                         style: TextStyle(
                                                           fontSize: 14,
                                                           color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
@@ -292,14 +292,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         textAlign: TextAlign.center,
                                                       ),
                                                       const SizedBox(height: 32),
-                                                      // Nút XÁC NHẬN (To, tròn)
                                                       SizedBox(
                                                         width: double.infinity,
                                                         height: 54,
                                                         child: ElevatedButton(
                                                           onPressed: () => Navigator.pop(ctx, true),
                                                           style: ElevatedButton.styleFrom(
-                                                            backgroundColor: const Color(0xFF1B5E83), // Màu xanh như hình
+                                                            backgroundColor: const Color(0xFF1B5E83),
                                                             foregroundColor: Colors.white,
                                                             elevation: 4,
                                                             shadowColor: const Color(0xFF1B5E83).withOpacity(0.3),
@@ -307,9 +306,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                               borderRadius: BorderRadius.circular(30),
                                                             ),
                                                           ),
-                                                          child: const Text(
-                                                            'XÁC NHẬN',
-                                                            style: TextStyle(
+                                                          child: Text(
+                                                            t('confirm'),
+                                                            style: const TextStyle(
                                                               fontSize: 16,
                                                               fontWeight: FontWeight.w800,
                                                               letterSpacing: 1.1,
@@ -325,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           padding: const EdgeInsets.symmetric(vertical: 12),
                                                         ),
                                                         child: Text(
-                                                          'HỦY BỎ',
+                                                          t('cancel'),
                                                           style: TextStyle(
                                                             fontSize: 14,
                                                             color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
@@ -362,9 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           }
                                         },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isCompleted
-                                        ? Colors.white.withOpacity(0.3)
-                                        : (homeVM.isCheckedIn ? const Color(0xFF2C7BAE) : Colors.white),
+                                    backgroundColor: homeVM.isCheckedIn ? const Color(0xFF2C7BAE) : Colors.white,
                                     disabledBackgroundColor: Colors.white.withOpacity(0.3),
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
@@ -377,20 +374,54 @@ class _HomeScreenState extends State<HomeScreen> {
                                           color: AppColors.primary,
                                         )
                                       : Text(
-                                          isCompleted
-                                              ? (isSupplemented ? 'ĐÃ BỔ SUNG CÔNG' : 'ĐÃ HOÀN TẤT CHẤM CÔNG')
-                                              : (homeVM.isCheckedIn ? 'CHECK OUT' : 'CHECK IN'),
+                                          homeVM.isCheckedIn ? 'CHECK OUT' : 'CHECK IN',
                                           style: TextStyle(
                                             fontFamily: 'Nunito',
                                             fontSize: 16,
                                             fontWeight: FontWeight.w800,
-                                            color: (homeVM.isCheckedIn || isCompleted)
-                                                ? Colors.white
-                                                : AppColors.primary,
+                                            color: homeVM.isCheckedIn ? Colors.white : AppColors.primary,
                                             letterSpacing: 1,
                                           ),
                                         ),
                                 );
+
+                                if (isCompleted) {
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF34D399), Color(0xFF059669)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF059669).withOpacity(0.4),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        )
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 22),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          isSupplemented ? t('supplemented_completed') : t('attendance_completed'),
+                                          style: const TextStyle(
+                                            fontFamily: 'Nunito',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.white,
+                                            letterSpacing: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                                return btn;
                               }()),
                             ),
                             const SizedBox(height: 8),

@@ -1,8 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+//, { useState, useRef } from 'react';
 import axios from 'axios';
 import { Icon, API_URL } from '../components/Common';
 
 const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange }) => {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -171,9 +174,24 @@ const AttendanceView = ({ attendance = [], onRefresh, selectedDate, onDateChange
                     <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{a.method}</span>
                   </div>
                 </td>
-                <td className="py-5 text-right pr-4">
-                  <span className={`px-3 py-1 ${a.check_out ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'} rounded-full text-[11px] font-bold`}>
-                    {a.check_out ? 'Hoàn tất' : 'Đang làm'}
+                                <td className="py-5 text-right pr-4">
+                  <span className={`px-3 py-1 ${
+                    a.check_out 
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' 
+                      : a.is_forgot_penalty
+                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                        : a.is_forgot_checkout
+                          ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
+                          : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                  } rounded-full text-[11px] font-bold`}>
+                    {a.check_out 
+                      ? t('attendance_completed', 'Hoàn tất') 
+                      : a.is_forgot_penalty
+                        ? t('forgot_checkout_penalty', 'Quên check out (Phạt)')
+                        : a.is_forgot_checkout
+                          ? t('forgot_checkout', 'Quên check out')
+                          : t('working', 'Đang làm')
+                    }
                   </span>
                 </td>
                 <td className="py-5 text-center">

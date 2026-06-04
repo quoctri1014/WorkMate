@@ -141,6 +141,9 @@ class AttendanceModel {
   final String? shiftName;
   final double workedHours;
   final double otHours;
+  final double? calculatedNormalHours;
+  final bool isForgotCheckout;
+  final bool isForgotPenalty;
 
   AttendanceModel({
     required this.id,
@@ -154,6 +157,9 @@ class AttendanceModel {
     this.shiftName,
     this.workedHours = 0,
     this.otHours = 0,
+    this.calculatedNormalHours,
+    this.isForgotCheckout = false,
+    this.isForgotPenalty = false,
   });
 
   String get statusLabel {
@@ -196,10 +202,16 @@ class AttendanceModel {
       otHours: double.tryParse(
         (map['ot_hours'] ?? map['otHours'] ?? map['overtime_hours'] ?? '0').toString()
       ) ?? 0,
+      calculatedNormalHours: map['calculated_normal_hours'] != null 
+          ? double.tryParse(map['calculated_normal_hours'].toString())
+          : null,
+      isForgotCheckout: map['is_forgot_checkout'] ?? false,
+      isForgotPenalty: map['is_forgot_penalty'] ?? false,
     );
   }
 
   double get displayNormalHours {
+    if (calculatedNormalHours != null) return calculatedNormalHours!;
     if (checkIn == null || checkOut == null) return 0;
     
     double diff = checkOut!.difference(checkIn!).inMinutes / 60.0;
@@ -269,7 +281,7 @@ class LeaveModel {
       id: (map['id'] ?? '').toString(),
       userId: (map['employee_id'] ?? map['uid'] ?? '').toString(),
       userName: map['employee_name'] ?? map['name'] ?? '',
-      leaveType: map['type'] ?? 'Nghỉ phép',
+      leaveType: (map['type'] ?? 'Nghỉ phép').toString().replaceAll('LÃ m thÃªm giá»', 'Làm thêm giờ').trim(),
       reason: map['reason'] ?? '',
       status: map['status'] ?? 'pending',
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : (map['createdAt'] != null ? (map['createdAt'] is String ? DateTime.parse(map['createdAt']) : DateTime.now()) : DateTime.now()),
@@ -335,7 +347,7 @@ class OvertimeModel {
       reviewedAt: map['reviewedAt'] != null 
           ? (map['reviewedAt'] is String ? DateTime.parse(map['reviewedAt']) : (map['reviewedAt'] as Timestamp).toDate()) 
           : null,
-      type: map['type'] ?? 'Làm thêm giờ',
+      type: (map['type'] ?? 'Làm thêm giờ').toString().replaceAll('LÃ m thÃªm giá»', 'Làm thêm giờ').trim(),
       rejectReason: map['rejectReason'] ?? map['reject_reason'],
     );
   }

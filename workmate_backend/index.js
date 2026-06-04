@@ -1575,6 +1575,17 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
     const otMap = {};
     otRes.rows.forEach(row => { otMap[row.date] = parseFloat(row.hours); });
 
+    const forgotRes = await pool.query(`
+      SELECT check_in_time::date as date
+      FROM attendance
+      WHERE employee_id = $1 
+        AND check_in_time >= date_trunc('month', NOW())
+        AND check_out_time IS NULL
+        AND check_in_time::date < CURRENT_DATE
+      ORDER BY check_in_time ASC
+    `, [employeeId]);
+    const forgotDates = forgotRes.rows.map(r => new Date(r.date).toISOString().split('T')[0]);
+
     let totalNormalHours = 0;
     let totalOTHours = 0;
     let lateDays = 0;
@@ -1583,8 +1594,33 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
     
     attendance.rows.forEach(row => {
       const dateStr = new Date(row.check_in_time).toISOString().split('T')[0];
+      const todayStr = new Date().toISOString().split('T')[0];
       const approvedOT = otMap[dateStr] || 0;
-      const hours = calculateWorkingHours(row.check_in_time, row.check_out_time, config, approvedOT);
+      
+      let isForgotCheckout = false;
+      let isPenalty = false;
+      
+      if (!row.check_out_time && row.check_in_time && dateStr < todayStr) {
+        isForgotCheckout = true;
+        const idx = forgotDates.indexOf(dateStr);
+        if (idx >= 3) {
+          isPenalty = true;
+        }
+      }
+      
+      let hours = { normal: 0, ot: 0, total: 0 };
+      if (isForgotCheckout && !isPenalty) {
+         const workEndStr = `${dateStr}T${config.work_end_time || '17:00'}:00`;
+         hours = calculateWorkingHours(row.check_in_time, workEndStr, config, approvedOT);
+      } else if (isForgotCheckout && isPenalty) {
+         hours = { normal: 0, ot: 0, total: 0 };
+      } else {
+         hours = calculateWorkingHours(row.check_in_time, row.check_out_time, config, approvedOT);
+      }
+      
+      row.calculated_normal_hours = hours.normal;
+      row.is_forgot_checkout = isForgotCheckout;
+      row.is_forgot_penalty = isPenalty;
       
       totalNormalHours += hours.normal;
       totalOTHours += hours.ot;
@@ -1593,7 +1629,7 @@ app.get('/api/statistics/:employeeId', async (req, res) => {
       weeklyData[dayIdx].normal = hours.normal;
       weeklyData[dayIdx].ot = hours.ot;
       
-      // GÃ¡n OT vÃ o tá»«ng dÃ²ng Ä‘á»ƒ tráº£ vá» cho App hiá»ƒn thá»‹ á»Ÿ má»¥c Lá»‹ch sá»­
+      // Gán OT vào từng dòngo tá»«ng dÃ²ng Ä‘á»ƒ tráº£ vá» cho App hiá»ƒn thá»‹ á»Ÿ má»¥c Lá»‹ch sá»­
       row.ot_hours = approvedOT;
       
       // Kiá»ƒm tra Ä‘i muá»™n (So vá»›i work_start_time trong config)

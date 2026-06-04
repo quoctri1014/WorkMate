@@ -24,5 +24,9 @@
   "week": "Tuần",
   "month": "Tháng",
   "upcoming_schedule": "Lịch trình sắp tới",
-  "no_meeting_today": "Không có lịch họp hôm nay"
+  "no_meeting_today": "Không có lịch họp hôm nay",
+  "attendance_completed": "Hoàn tất",
+  "forgot_checkout": "Quên check out",
+  "forgot_checkout_penalty": "Quên check out (Phạt)",
+  "working": "Đang làm"
 }
